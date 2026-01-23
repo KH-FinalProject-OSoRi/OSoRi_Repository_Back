@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="memberMapper">
+
+	<!-- 
+	 테이블을 설계 할 때, LAST_LOGIN은 가입 할 때, 디폴트 값을 두지 않았다.
+	 이러한 이유는 회원 가입만 한거지 실제로 로그인 한 것은 아니기 때문에 LAST_LOGIN을 SYSDATE 값을 바로 주면 안된다.
+	 
+	 이러한 의미가 있어서 insertMember에는 LAST_LOGIN 컬럼을 넣지 않았습니다.
+	 -->
+    <insert id="insertMember" parameterType="Member">
+    	INSERT INTO MEMBER(MEM_ID,
+    					   MEM_NAME,
+    					   MEM_PWD,
+    					   VEHICLE_ID,
+    					   EMAIL,
+    					   PHONENUM)
+    	VALUES(#{memId},#{memName},#{memPwd},#{vehicleId},#{email},#{phoneNum})				   
+    </insert> 
+    
+    <select id="selectMember" parameterType="Member" resultType="Member">
+    	SELECT MEM_ID,
+    		   MEM_NAME,
+    		   MEM_PWD,
+    		   VEHICLE_ID,
+    		   EMAIL,
+    		   PHONENUM,
+    		   STATUS,
+    		   LAST_LOGIN  		    	
+    	FROM MEMBER
+    	WHERE MEM_ID= #{memId}
+    	
+    </select>
+    
+    
+    <select id="selectMember2" parameterType="string" resultType="string">
+    	SELECT MEM_ID
+    	FROM MEMBER
+    	WHERE MEM_ID= #{inputId}
+    </select>
+  	
+  	<!-- 현재 로그인 시점과 마지막 로그인 시점이 30일이상 차이나면 STATUS H로 강제 변경 -->
+  	<!-- 변경하고나서 마이페이지로 이동하게 하기 -->
+  	<!-- 30일보다 적으면 LAST_LOGIN유지는 그대로 -->
+  	<!-- 점심먹고오면 최초 로그인 할 때도 생각을 해줘야한다. 왜냐면 LAST_LOGIN이 null인 경우도 생각해야함.-->
+  	<update id="updateDate" parameterType="Member">
+  		UPDATE MEMBER
+  		SET 
+  			STATUS 	= 	CASE
+  							WHEN SYSDATE - LAST_LOGIN &gt;= 30 THEN 'H'
+  							ELSE STATUS
+  					 	END,
+  			LAST_LOGIN = CASE
+  			    			WHEN SYSDATE - LAST_LOGIN &lt; 30 THEN SYSDATE
+  			    			WHEN LAST_LOGIN IS NULL THEN SYSDATE
+  			    			ELSE LAST_LOGIN
+  			    		 END
+  		WHERE MEM_ID = #{memId}
+  		
+  		<!-- 로그인 한 시점이랑 마지막 로그인 시점이랑 차이가 30일이상 나면 휴면 처리 (STATUS -> 'H'로 바꾼게 STATUS ~)
+  			 LAST_LOGIN은 위에 말한 두 시점의 차이가 30일 미만이면 LAST_LOGIN -> SYSDATE로
+  			 근데 맨 처음에 로그인을 할때(즉, 회원 가입 이후 최초 로그인 할 때)는 LAST_LOGIN이 NULL이므로 이 경우는 로그인 한 시점으로 갱신
+  		 -->	    		 			 	
+  	</update>
+  	
+  	<!-- 휴면 -> 강제로 이동 시킨다음에 수정을 해야 Y로 // 수정을 안한다? H그대로 -->
+  	<update id="updateMember" parameterType="Member">
+  		UPDATE MEMBER
+  		SET MEM_NAME = #{memName}, 			
+  			VEHICLE_ID = #{vehicleId},
+  			EMAIL = #{email},
+  			PHONENUM = #{phoneNum},
+  			STATUS = 'Y',
+  			LAST_LOGIN = CASE 
+  							WHEN SYSDATE - LAST_LOGIN &gt;=30 THEN SYSDATE
+  							ELSE LAST_LOGIN
+  						 END
+ 		WHERE MEM_ID = #{memId} 		
+ 		
+ 		<!-- 마지막 로그인 시점 현재 로그인 시점이 30일 이상 차이난다? 
+ 			 LAST_LOGIN -> 현재 시점으로 이 구문을 거치지 않으면 계속 휴면 처리
+ 			 	
+ 		 -->				 	
+  	</update>
+  	
+  	<update id="deleteMember" parameterType="Member">
+  		UPDATE MEMBER
+  		SET STATUS = 'N'
+  		WHERE MEM_ID = #{memId} 
+  	</update>
+  	
+  	<update id="changeMemberPwd" parameterType="Member">
+  		UPDATE MEMBER
+  		SET MEM_PWD = #{memPwd}
+  		WHERE MEM_ID = #{memId}
+  	</update>
+</mapper>

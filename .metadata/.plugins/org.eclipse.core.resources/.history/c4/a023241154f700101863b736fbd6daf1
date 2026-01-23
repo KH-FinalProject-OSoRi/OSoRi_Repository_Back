@@ -1,0 +1,63 @@
+package com.kh.osori.user.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.kh.osori.user.model.service.UserService;
+
+import jakarta.servlet.http.HttpSession;
+import lombok.extern.slf4j.Slf4j;
+
+@RestController
+@Slf4j
+@RequestMapping("/user")
+public class UserController {
+	
+	@Autowired
+	private UserService service; // 자동으로 빈 주입. 
+	
+	@Autowired
+	private BCryptPasswordEncoder bcrypt; // 암호화하는 빈 주입. 
+	
+	//로그인 처리 및 휴면 판단 메소드 
+	@RequestMapping("/login")
+	public ResponseEntity<?> loginMember(@RequestBody User user) { 
+		
+		User loginUser = service.selectUser(user); // 아이디와 비밀번호로 데이터베이스에 접근 후, 조회, 휴면 처리까지 싹 다하기
+		
+		if(loginUser!=null && bcrypt.matches(user.getPassword(), loginUser.getMemPwd())) { // 평문과 암호화된 비밀번호가 일치하는지 검증
+			
+			if(loginUser.getStatus().equals("Y") || loginUser.getStatus()==null) { // STATUS가 Y면 로그인 바로 하게 하기 
+				
+				session.setAttribute("alertMsg", "로그인 완료!");
+				session.setAttribute("loginMember", loginMember); // 세션에 로그인 정보 담기
+					
+			} else if(loginUser.getStatus().equals("H")) { // STATUS가 H면 휴면 계정이니까 강제로 이동 
+				
+				session.setAttribute("alertMsg", "휴면 계정입니다. 마이 페이지에서 휴면 해지를 하지 않으면 상태가 유지 됩니다.");
+				session.setAttribute("loginMember", loginMember); // 세션에 로그인 정보 담기
+				
+				//마이페이지로 이동 할 시 회원 정보도 유지해줘야 한다.
+				
+				return "member/mypage"; 
+			} else if(loginMember.getStatus().equals("N")) { // 탈퇴 했고 DB에 STATUS = 'N'인 경우 
+				session.setAttribute("alertMsg", "회원 정보가 없습니다.");
+			}
+			 
+		} else {
+			session.setAttribute("alertMsg", "로그인 실패!");
+		}
+		
+		return "redirect:/"; // 메인 페이지로 재요청. 
+
+	}
+	
+	
+
+}
