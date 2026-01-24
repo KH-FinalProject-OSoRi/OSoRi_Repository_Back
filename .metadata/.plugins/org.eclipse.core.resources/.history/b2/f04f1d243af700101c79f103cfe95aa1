@@ -1,0 +1,6 @@
+package com.kh.osori.user.model.service;
+
+public interface UserService {
+	
+	
+}

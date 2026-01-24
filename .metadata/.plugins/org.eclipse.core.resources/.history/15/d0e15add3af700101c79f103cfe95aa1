@@ -1,0 +1,15 @@
+package com.kh.osori.user.model.service;
+
+import com.kh.osori.user.model.vo.User;
+
+public interface UserService {
+	
+	int insertMember(User user); // 회원 가입 메소드 
+	String selectMember2(String inputId); // 아이디 중복 체크 메소드 
+	User selectMember(User user); // 회원 조회, 마지막 로그인 날짜 갱신 및 휴면 계정 처리 메소드 
+	int updateMember(User loginUser); // 정보 수정 
+	int deleteMember(User loginUser);
+	int changeMemberPwd(User loginUser);
+	
+	
+}
