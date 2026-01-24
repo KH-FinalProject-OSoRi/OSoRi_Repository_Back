@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kh.osori.user.model.service.UserService;
@@ -48,9 +49,9 @@ public class UserController {
 				
 				String token = jwtUtil.generateToken(loginUser.getLoginId()); // 아이디를 기반으로 토큰 가져오기 
 				
-				loginUser.setPassword(null);
+				loginUser.setPassword(null); // 암호화 된 비밀번호이므로 null 처리 
 				
-				map.put("token",token);
+				map.put("token",token); // 옮기려는 토큰 맵에 담기 
 				map.put("user",loginUser);
 				
 				return ResponseEntity.ok(map); 
@@ -116,50 +117,53 @@ public class UserController {
 		return ResponseEntity.ok("로그아웃 되었습니다."); 
 	}
 	
-	//아이디 중복 체크
-	@GetMapping("/checkId/{userId}")
-	public ResponseEntity<?> idCheck(@PathVariable String loginId) {
-		
-		int count = service.idCheck(loginId);
-		
-		// count가 1이상이다? 중복 없으면 0
-		
-		if(count > 0) {
+	//아이디 중복 체크 (UNIQUE 제약 조건으로 인해 중복 체크 해줘야한다.)
+	@GetMapping("/checkId")
+	public ResponseEntity<?> idCheck(@RequestParam("loginId") String loginId) {
 			
-			return ResponseEntity.ok("이미 사용 중인 아이디입니다. 다른 아이디를 입력해 주세요.");
+		String v = (loginId == null) ? "" : loginId.trim();
+		
+		int count = service.idCheck(v);
 			
-		} else {
-			return ResponseEntity.ok("사용 가능한 아이디입니다."); 
-		}
-	
-	}
-	
-	//닉네임 중복 체크
-	@GetMapping("/checkNickName/{nickName}")
-	public ResponseEntity<?> nickNameCheck(@PathVariable String nickName) {
+		HashMap<String, Object> resp = new HashMap<>();
 		
-		int count = service.nickNameCheck(nickName); 
+		resp.put("count", count);
 		
-		if (count > 0) {
-			return ResponseEntity.ok("이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해 주세요.");
-		} else {
-			return ResponseEntity.ok("사용 가능한 닉네임입니다."); 
-		}
+		return ResponseEntity.ok(resp);
 		
 	}
-	
-	//이메일 중복 체크
-	@GetMapping("/checkEmail/{email}")
-	public ResponseEntity<?> emailCheck(@PathVariable String email) {
 		
-		int count = service.emailCheck(email);
+	//닉네임 중복 체크 (UNIQUE 제약 조건으로 인해 중복 체크 해줘야한다.)
+	@GetMapping("/checkNickName")
+	public ResponseEntity<?> nickNameCheck(@RequestParam("nickName") String nickName) {
+			
+		//count만 JSON으로 응답
+		String v = (nickName == null) ? "" : nickName.trim();
+			
+		int count = service.nickNameCheck(v);
+			
+		HashMap<String, Object> resp = new HashMap<>();
+			
+		resp.put("count", count);
+			
+		return ResponseEntity.ok(resp);
+	}
 		
-		if(count > 0) {
-			return ResponseEntity.ok("이미 사용 중인 이메일입니다. 다른 이메일을 입력해 주세요.");
-		} else {
-			return ResponseEntity.ok("사용 가능한 이메일입니다."); 
-		}
+	//이메일 중복 체크 (UNIQUE 제약 조건으로 인해 중복 체크 해줘야한다.)
+	@GetMapping("/checkEmail")
+	public ResponseEntity<?> emailCheck(@RequestParam("email") String email) {
+			
 		
+		// 이메일은 대소문자/공백 때문에 헷갈릴 수 있어서 trim + lower 처리
+		String v = (email == null) ? "" : email.trim().toLowerCase();
+			
+		int count = service.emailCheck(v);
+			
+		HashMap<String, Object> resp = new HashMap<>();
+			
+		resp.put("count", count);
+			
+		return ResponseEntity.ok(resp);
 	}
 	
 	
