@@ -12,6 +12,7 @@ public interface UserService {
 	int updateUser(User loginUser); // 정보 수정 
 	int deleteUser(User loginUser);
 	int changeUserPwd(User loginUser);
+	User selectByLoginId(String loginId); 
 	
 	
 }

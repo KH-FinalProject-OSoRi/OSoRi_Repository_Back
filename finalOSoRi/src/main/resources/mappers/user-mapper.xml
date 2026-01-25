@@ -41,6 +41,12 @@
     	WHERE LOGIN_ID= #{loginId}
     </select>
     
+    <select id="selectByLoginId" parameterType="string" resultType="User">
+    	SELECT *
+    	FROM USERS
+    	WHERE LOGIN_ID = #{loginId}
+    </select>
+    
     
     <select id="idCheck" parameterType="string" resultType="int">
     	SELECT COUNT(*)

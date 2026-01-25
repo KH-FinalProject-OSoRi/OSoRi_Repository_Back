@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -65,6 +65,7 @@ public class UserController {
 				
 				map.put("token", token);
 				map.put("user", loginUser);
+				map.put("message", "휴면 회원 입니다. 휴면 상태를 해제해주세요.");
 				
 				return ResponseEntity.ok(map);
 				
@@ -153,7 +154,6 @@ public class UserController {
 	@GetMapping("/checkEmail")
 	public ResponseEntity<?> emailCheck(@RequestParam("email") String email) {
 			
-		
 		// 이메일은 대소문자/공백 때문에 헷갈릴 수 있어서 trim + lower 처리
 		String v = (email == null) ? "" : email.trim().toLowerCase();
 			
@@ -164,6 +164,45 @@ public class UserController {
 		resp.put("count", count);
 			
 		return ResponseEntity.ok(resp);
+	}
+	
+	@PatchMapping("/update")
+	public ResponseEntity<?> updateUser(@RequestBody User loginUser) {
+		
+		HashMap<String,Object> res = new HashMap<>();
+		
+		System.out.println(loginUser);
+		
+		int result = service.updateUser(loginUser);
+		
+		if(result > 0) {
+			
+			if(loginUser.getStatus().equals("H")) {
+				
+				loginUser = service.selectUser(loginUser); // 이렇게 안하면 DB만 업데이트 된다.
+				
+				loginUser.setPassword(null); // 토큰에 비밀번호 안 남기게 하기 
+				
+				res.put("user", loginUser);
+				res.put("message", "휴면 상태가 해제 됐습니다.");
+			
+				return ResponseEntity.ok(res);
+			}
+			
+			loginUser = service.selectUser(loginUser);
+			
+			loginUser.setPassword(null); // 토큰에 비밀번호 안 남기게 하기 
+			
+			res.put("user", loginUser);
+			res.put("message", "정보를 수정했습니다.");
+			
+			return ResponseEntity.ok(res); 
+			
+		} else {
+			
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("정보 수정 실패했습니다.");
+		}
+		
 	}
 	
 	
