@@ -295,6 +295,8 @@ public class UserController {
 		
 		if(bcrypt.matches(currentPassword, loginUser.getPassword())) {
 			
+			loginUser.setPassword(bcrypt.encode(newPassword)); // 암호화 된 비밀번호를 기존 유저의 비밀번호에다가 세팅. 
+			
 			int result = service.changeUserPwd(loginUser);
 			
 			if(result > 0) {
@@ -310,6 +312,10 @@ public class UserController {
 		}
 		
 	}
+	
+	
+	
+	
 	
 	
 	
