@@ -1,0 +1,2 @@
+INDEX VERSION 1.134+C:\OSORI_GIT_REPO\OSoRi_Repository_Back\finalOSoRi\.metadata\.plugins\org.eclipse.jdt.core
+1865797976.index
