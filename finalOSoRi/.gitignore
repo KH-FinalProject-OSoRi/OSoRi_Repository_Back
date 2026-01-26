@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# STS/Eclipse metadata
+.metadata/
+.project
+.classpath
+.settings/
+.factorypath
+bin/
