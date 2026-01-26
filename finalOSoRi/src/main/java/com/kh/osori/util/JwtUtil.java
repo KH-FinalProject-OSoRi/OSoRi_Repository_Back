@@ -2,6 +2,7 @@ package com.kh.osori.util;
 
 import java.util.Date;
 
+
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -51,13 +52,13 @@ public class JwtUtil {
 	//사용자 로그인시 jwt 토큰을 생성하는 메소드
 	//매개변수 : userId : 토큰에 포함할 사용자 식별자데이터
 	//반환값 : 생성된 JWT 토큰 반환열
-	public String generateToken(String userId) {
+	public String generateToken(String loginId) {
 		Date now = new Date(); // 현재 시간을 토큰 발급시간으로 지정하기
 		Date expiryDate = new Date(now.getTime()+expiration); // 현재시간 + 만료시간
 		
 		//JWT 토큰 빌더를 이용해서 사용
 		return Jwts.builder()
-					.setSubject(userId) // subject : 토큰의 주제(누구에 대한 토큰인지, 일반적으로 사용자 ID나 이메일 사용)
+					.setSubject(loginId) // subject : 토큰의 주제(누구에 대한 토큰인지, 일반적으로 사용자 ID나 이메일 사용)
 					.setIssuedAt(now) // issueDat : 토큰이 언제 발급되었는지 기록
 					.setExpiration(expiryDate) // expiration : 토큰이 언제 만료되는지 
 					.signWith(getSignKey()) //signWith : 생성된 암호화키로 토크에 디지털 서명(위조 방지) 
@@ -68,7 +69,7 @@ public class JwtUtil {
 	//매개변수 : token - 파싱할 JWT 토큰 문자열
 	//반환값 : 토큰에 저장된 사용자 ID
 	//의도 : API 요청시 토큰으로부터 현재 사용자가 누구인지 파악하기 위함
-	public String getUserIdFromToken(String token) {
+	public String getloginIdFromToken(String token) {
 		//JWT 파서를 이용하여 토큰 해독
 		Claims claims = Jwts.parserBuilder() // JWT파서 빌더 시작
 							.setSigningKey(getSignKey()) // 서명검증을 위한 키 (토큰 생성시 사용한 키를 이용해야함)

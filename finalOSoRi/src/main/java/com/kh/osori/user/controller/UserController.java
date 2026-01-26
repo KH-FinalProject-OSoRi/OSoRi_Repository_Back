@@ -2,18 +2,22 @@ package com.kh.osori.user.controller;
 
 import java.util.HashMap;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+import com.kh.osori.FinalOSoRiApplication;
 import com.kh.osori.user.model.service.UserService;
 import com.kh.osori.user.model.vo.User;
 import com.kh.osori.util.JwtUtil;
@@ -24,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequestMapping("/user")
 public class UserController {
+
+    private final FinalOSoRiApplication finalOSoRiApplication;
 	
 	@Autowired
 	private UserService service; // 자동으로 빈 주입. 
@@ -32,7 +38,11 @@ public class UserController {
 	private BCryptPasswordEncoder bcrypt; // 암호화하는 빈 주입. 
 	
 	@Autowired
-	private JwtUtil jwtUtil; // 토큰 빈 주입 
+	private JwtUtil jwtUtil;
+
+    UserController(FinalOSoRiApplication finalOSoRiApplication) {
+        this.finalOSoRiApplication = finalOSoRiApplication;
+    } // 토큰 빈 주입 
 	
 	//로그인 처리 및 휴면 판단 메소드 
 	@PostMapping("/login")
@@ -166,6 +176,7 @@ public class UserController {
 		return ResponseEntity.ok(resp);
 	}
 	
+	//정보 수정 메소드
 	@PatchMapping("/update")
 	public ResponseEntity<?> updateUser(@RequestBody User loginUser) {
 		
@@ -205,10 +216,100 @@ public class UserController {
 		
 	}
 	
+	//회원 탈퇴 메소드 
+	@DeleteMapping("/delete")
+	public ResponseEntity<?> deleteUser(@RequestHeader(value = "Authorization", required = false) String authorization, @RequestBody Map<String, String> passwordMap) {
+		
+		// 비밀번호는 그대로 가지고 오기가 힘들다. (보안 상 문제가 생길 수 있음 -> 토큰으로 DB에서 데이터를 갖고 오기 (암호화 된 비밀번호) 
+		
+		HashMap<String, String> res = new HashMap<>(); // 정보를 담기 위한 맵. 
+		
+		int result = 0; // delete 구문이 제대로 수행 됐는지 보기 위한 변수 
+		
+		//토큰 및 입력한 비밀번호 갖고오기 
+		
+		String password = passwordMap.get("password");
+		
+		String token = authorization.substring("Bearer ".length()).trim();
+		
+		System.out.println(authorization.substring("Bearer ".length())); // 확인용 
+		 
+		System.out.println(token); // 확인용 
+
+		//갖고 온 토큰이 유효한지 검증을 해야 한다. (토큰에도 유효 시간이 있음.)
+		
+		if(!jwtUtil.validateToken(token)) { // 토큰이 유효하지 않으면
+			
+			res.put("message", "토큰 시간이 만료 되어 유효하지 않은 토큰입니다. 다시 로그인 해주세요.");
+			
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(res);
+			
+		}
+		
+		String loginId = jwtUtil.getloginIdFromToken(token); // 토큰에서 아이디를 갖고 오기
+		
+		User loginUser = service.selectByLoginId(loginId); // 로그인 아이디를 바탕으로 유저 정보 갖고 오기
+		
+		if(bcrypt.matches(password, loginUser.getPassword())) {
+			
+			result = service.deleteUser(loginUser);
+			
+			if(result > 0) {
+				
+				res.put("message", "회원 탈퇴 처리했습니다."); 
+				
+				return ResponseEntity.ok(res);  
+				
+			} else { // 비밀번호는 일치 하나 서버에 오류가 생겼을 경우
+				
+				res.put("message", "회원 탈퇴 처리 중 서버 오류가 발생했습니다."); 
+				
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res); 
+			}
+			
+		} else { // 평문과 암호화 된 비밀번호랑 일치하지 않는 경우
+			
+			res.put("message", "비밀번호가 일치하지 않습니다. 다시 입력해주세요."); 
+			
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res); 
+			
+		}
 	
+	}
 	
-	
-	
+	//비밀번호 변경 메소드 
+	@PatchMapping("/updatePassword")
+	public ResponseEntity<?> changeUserPwd(@RequestHeader(value = "Authorization", required = false) String authorization, @RequestBody Map<String,String> passwordMap) {
+		
+		HashMap<String, String> res = new HashMap<>(); 
+		
+		String currentPassword = passwordMap.get("currentPassword"); // 프론트에서 현재 비밀번호 갖고 오기 
+		
+		String newPassword = passwordMap.get("newPassword"); // 프론트에서 새 비밀번호 갖고 오기 
+		
+		String token = authorization.substring("Bearer ".length()).trim();
+		
+		String loginId = jwtUtil.getloginIdFromToken(token); 
+		
+		User loginUser = service.selectByLoginId(loginId); // 아이디와 비밀번호를 갖고와서 아이디에 맞는 회원 비밀번호를 바꿀 수 있다. 
+		
+		if(bcrypt.matches(currentPassword, loginUser.getPassword())) {
+			
+			int result = service.changeUserPwd(loginUser);
+			
+			if(result > 0) {
+				return ResponseEntity.ok("비밀번호가 수정됐습니다.");
+			} else {
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버에 문제가 있어서 비밀번호를 변경하지 못했습니다."); 
+			}
+			
+		} else {
+			
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("현재 비밀번호를 잘못 입력하셨습니다.");
+				
+		}
+		
+	}
 	
 	
 	
