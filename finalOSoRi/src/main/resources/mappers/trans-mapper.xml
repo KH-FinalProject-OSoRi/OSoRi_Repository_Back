@@ -27,8 +27,29 @@
         #{memo},
         #{userId},
         #{groupTransId})
-		
-		
+	</insert>
+	
+	<insert id="groupTransSave" parameterType="grouptrans">
+	INSERT INTO GROUPTRANS(
+        TRAN_ID,
+		TITLE,
+		TRANS_DATE,
+		ORIGINAL_AMOUNT,
+		CATEGORY,
+		TYPE,
+		MEMO,
+		GROUPB_ID,
+		NICKNAME)
+    	VALUES(
+        SEQ_FNO.NEXTVAL,
+        #{title},
+        #{transDate},
+        #{originalAmount},
+        #{category},
+        #{type},
+        #{memo},
+        #{groupBId},
+        #{nickName})
 	</insert>
 
 
