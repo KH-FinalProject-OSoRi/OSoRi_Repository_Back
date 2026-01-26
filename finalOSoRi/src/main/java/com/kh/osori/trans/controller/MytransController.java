@@ -58,6 +58,7 @@ public class MytransController {
 	@GetMapping("/user/{userId}")
 	public ResponseEntity<?> getMyTransactions(@PathVariable int userId) {
 	    log.info("내 거래내역 조회 userId={}", userId);
+	    //거내내역 주석
 
 	    return ResponseEntity.ok(service.getMyTransactions(userId));
 	}
