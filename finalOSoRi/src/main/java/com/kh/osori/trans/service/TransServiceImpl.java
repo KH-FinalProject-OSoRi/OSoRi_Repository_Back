@@ -2,19 +2,19 @@ package com.kh.osori.trans.service;
 
 import java.util.List;
 
-import org.apache.ibatis.session.SqlSession;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.kh.osori.trans.dao.MytransDao;
+import com.kh.osori.trans.dao.TransDao;
+import com.kh.osori.trans.model.vo.Grouptrans;
 import com.kh.osori.trans.model.vo.Mytrans;
 
 @Service
-public class MytransServiceImpl implements MytransService{
+public class TransServiceImpl implements TransService{
 	
 	@Autowired
-	private MytransDao dao;
+	private TransDao dao;
 	
 	@Autowired
 	private SqlSessionTemplate sqlSession;
@@ -24,8 +24,23 @@ public class MytransServiceImpl implements MytransService{
 		return dao.myTransSave(sqlSession,mt);
 	}
 
+	public int GroupTransSave(Grouptrans gt) {
+		
+		return dao.groupTransSave(sqlSession,gt);
+	}
+	
 	public List<Mytrans> getMyTransactions(int userId) {
 		return dao.selectMyTrans(sqlSession, userId);
+	}
+
+	public int updateTrans(Mytrans mt) {
+		
+		return dao.updateTrans(sqlSession,mt);
+	}
+
+	public int deleteTrans(int transId) {
+		
+		return dao.deleteTrans(sqlSession,transId);
 	}
 
 
