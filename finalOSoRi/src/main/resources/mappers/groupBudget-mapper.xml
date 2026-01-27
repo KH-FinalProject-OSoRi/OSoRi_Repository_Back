@@ -61,16 +61,14 @@
  		)
  	</insert>
  	
- 	<select id="groupTransactionList" parameterType="int" resultType="com.kh.osori.groupBudget.model.vo.GroupTrans">
+ 	<select id="groupTransactionList" parameterType="int" resultType="com.kh.osori.trans.model.vo.Grouptrans">
 	    SELECT 
-	        TRAN_ID AS tranId,
-	        TITLE AS title,
+	        TRAN_ID AS transId,        TITLE AS title,
 	        TRANS_DATE AS transDate,
 	        ORIGINAL_AMOUNT AS originalAmount,
 	        CATEGORY AS category,
 	        TYPE AS type,
-	        NICKNAME AS nickname
-	    FROM GROUPTRANS
+	        NICKNAME AS nickName       FROM GROUPTRANS
 	    WHERE GROUPB_ID = #{groupbId}
 	    ORDER BY TRANS_DATE DESC
 	</select>

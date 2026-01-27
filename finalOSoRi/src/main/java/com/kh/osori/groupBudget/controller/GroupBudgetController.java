@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kh.osori.groupBudget.model.service.GroupBudgetService;
 import com.kh.osori.groupBudget.model.vo.BudgetMem;
 import com.kh.osori.groupBudget.model.vo.GroupBudget;
-import com.kh.osori.groupBudget.model.vo.GroupTrans;
 import com.kh.osori.user.model.vo.User;
+import com.kh.osori.trans.model.vo.Grouptrans;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -91,10 +91,9 @@ public class GroupBudgetController {
 	
 	
 	//기존 /gbDetail
-	@GetMapping("/gbTrans") // 상세 내역을 가져오는 새로운 주소
+	@GetMapping("/gbTrans")
 	public ResponseEntity<?> groupTransactionList(@RequestParam("groupbId") int groupbId) {
-	    // 해당 그룹 가계부(groupbId)에 기록된 모든 지출/수입 내역 조회
-	    List<GroupTrans> list = service.groupTransactionList(groupbId); 
+	    List<Grouptrans> list = service.groupTransactionList(groupbId); 
 	    
 	    if(list != null) {
 	        return ResponseEntity.ok(list);

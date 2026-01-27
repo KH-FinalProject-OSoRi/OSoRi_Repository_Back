@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import com.kh.osori.groupBudget.model.vo.BudgetMem;
 import com.kh.osori.groupBudget.model.vo.GroupBudget;
-import com.kh.osori.groupBudget.model.vo.GroupTrans;
+import com.kh.osori.trans.model.vo.Grouptrans;
 import com.kh.osori.user.model.vo.User;
 
 @Repository
@@ -33,7 +33,7 @@ public class GroupBudgetDao {
 		return sqlSession.insert("groupBudgetMapper.addGroupMember",mem);
 	}
 
-	public List<GroupTrans> groupTransactionList(SqlSessionTemplate sqlSession, int groupbId) {
+	public List<Grouptrans> groupTransactionList(SqlSessionTemplate sqlSession, int groupbId) {
 	    return sqlSession.selectList("groupBudgetMapper.groupTransactionList", groupbId);
 	}
 
