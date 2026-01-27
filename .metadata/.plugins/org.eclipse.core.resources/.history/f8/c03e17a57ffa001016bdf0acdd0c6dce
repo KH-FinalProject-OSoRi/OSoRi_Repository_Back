@@ -1,0 +1,23 @@
+package com.kh.osori.trans.dao;
+
+import java.util.List;
+
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.stereotype.Repository;
+
+import com.kh.osori.trans.model.vo.Mytrans;
+
+@Repository
+public class MytransDao {
+
+	public int myTransSave(SqlSessionTemplate sqlSession, Mytrans mt) {
+	
+		return sqlSession.insert("transMapper.myTransSave",mt);
+	}
+
+	public List<Mytrans> getMyTransactions(SqlSessionTemplate sqlSession, int userId) {
+		return sqlSession.selectList("mytransMapper.selectMyTransactions",userId);
+	}
+
+
+}

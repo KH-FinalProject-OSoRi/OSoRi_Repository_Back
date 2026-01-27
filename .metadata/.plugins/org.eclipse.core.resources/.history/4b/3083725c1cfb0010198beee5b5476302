@@ -1,0 +1,14 @@
+package com.kh.osori.group.dao;
+
+import java.util.List;
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.stereotype.Repository;
+import com.kh.osori.group.model.vo.GroupBudget;
+
+@Repository
+public class GroupBudgetDao {
+
+    public List<GroupBudget> selectGroupList(SqlSessionTemplate sqlSession, int userId) {
+        return sqlSession.selectList("groupMapper.selectGroupList", userId);
+    }
+}

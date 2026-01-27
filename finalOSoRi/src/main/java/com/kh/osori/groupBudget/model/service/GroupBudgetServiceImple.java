@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.kh.osori.groupBudget.model.dao.GroupBudgetDao;
 import com.kh.osori.groupBudget.model.vo.BudgetMem;
 import com.kh.osori.groupBudget.model.vo.GroupBudget;
+import com.kh.osori.trans.model.vo.Grouptrans;
 import com.kh.osori.user.model.vo.User;
 
 @Service
@@ -68,6 +69,11 @@ public class GroupBudgetServiceImple implements GroupBudgetService {
 	public void updateGroupBudget() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public List<Grouptrans> groupTransactionList(int groupbId) {
+		return dao.groupTransactionList(sqlSession, groupbId);
 	}
 
 }

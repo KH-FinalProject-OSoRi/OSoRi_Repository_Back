@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+ <mapper namespace="groupBudgetMapper">
+ 	<select id="groupBudgetList" resultType="GroupBudget" parameterType="int">
+ 		SELECT GROUPB_ID,TITLE,B_AMOUNT,START_DATE,END_DATE
+		FROM GROUPBUDGET B JOIN BUDGETMEM M USING(GROUPB_ID)
+		WHERE USER_ID = #{userId}
+		AND END_DATE &gt;= SYSDATE
+		AND B.STATUS = 'Y'
+ 	</select>
+ 	
+ 	<insert id="addNewGroupB" parameterType="GroupBudget">
+	    <selectKey keyProperty="groupbId" resultType="int" order="BEFORE">
+	        SELECT SEQ_GBNO.NEXTVAL FROM DUAL
+	    </selectKey>
+	 		INSERT INTO GROUPBUDGET (
+	        GROUPB_ID,
+	        TITLE,
+	        B_AMOUNT,
+	        START_DATE,
+	        END_DATE,
+	        CREATED_AT,
+	        STATUS
+		    )
+		    VALUES (
+		        #{groupbId},
+		        #{title},
+		        #{bAmount},
+		        #{startDate},
+		        #{endDate},
+		        SYSDATE,
+		        'Y'
+		    )
+	</insert>
+ 	
+ 	<insert id="addGroupAdmin" parameterType="BudgetMem">
+ 		INSERT INTO BUDGETMEM
+ 		VALUES(
+ 			#{groupbId},
+ 			#{userId},
+ 			#{role},
+ 			'ACCEPTED'
+ 		)
+ 	</insert>
+ 	
+ 	<select id="searchGroupMemberList" parameterType="String" resultType="User">
+ 		SELECT USER_ID,LOGIN_ID,EMAIL
+		FROM USERS
+		WHERE EMAIL LIKE '%'||#{keyword}||'%'
+ 	</select>
+ 	
+ 	<insert id="addGroupMember" parameterType="BudgetMem">
+ 		INSERT INTO BUDGETMEM
+ 		VALUES(
+ 			#{groupbId},
+ 			#{userId},
+ 			#{role},
+ 			'PENDING'
+ 		)
+ 	</insert>
+ 	
+ 	<select id="groupTransactionList" parameterType="int" resultType="com.kh.osori.groupBudget.model.vo.GroupTrans">
+	    SELECT 
+	        TRAN_ID AS tranId,
+	        TITLE AS title,
+	        TRANS_DATE AS transDate,
+	        ORIGINAL_AMOUNT AS originalAmount,
+	        CATEGORY AS category,
+	        TYPE AS type,
+	        NICKNAME AS nickname,
+	        STATUS AS status 
+	    FROM GROUPTRANS
+	    WHERE GROUPB_ID = #{groupbId}
+	    AND STATUS = 'Y'
+	    ORDER BY TRANS_DATE DESC
+	</select>
+	
+	<select id="groupBudgetList" parameterType="int" resultType="com.kh.osori.groupBudget.model.vo.GroupBudget">
+	    SELECT 
+	        B.GROUPB_ID AS groupbId,
+	        B.TITLE AS title,
+	        B.B_AMOUNT AS bAmount,
+	        B.START_DATE AS startDate,
+	        B.END_DATE AS endDate
+	    FROM GROUPBUDGET B 
+	    JOIN BUDGETMEM M ON (B.GROUPB_ID = M.GROUPB_ID)
+	    WHERE M.USER_ID = #{userId}
+	      AND B.STATUS = 'Y'
+	      AND B.END_DATE &gt;= SYSDATE 
+	</select>
+ 	
+ 	
+ 	
+ </mapper>
