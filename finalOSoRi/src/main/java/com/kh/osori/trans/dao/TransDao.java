@@ -1,5 +1,7 @@
 package com.kh.osori.trans.dao;
 
+import java.util.List;
+
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -17,6 +19,10 @@ public class TransDao {
 	public int groupTransSave(SqlSessionTemplate sqlSession, Grouptrans gt) {
 
 		return sqlSession.insert("transMapper.groupTransSave",gt);
+	}
+	
+	public List<Mytrans> selectMyTrans(SqlSessionTemplate sqlSession, int userId) {
+		return sqlSession.selectList("transMapper.selectMyTrans", userId);
 	}
 
 }

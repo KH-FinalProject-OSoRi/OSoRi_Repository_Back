@@ -1,5 +1,7 @@
 package com.kh.osori.trans.service;
 
+import java.util.List;
+
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,10 @@ public class TransServiceImpl implements TransService{
 	public int GroupTransSave(Grouptrans gt) {
 		
 		return dao.groupTransSave(sqlSession,gt);
+	}
+	
+	public List<Mytrans> getMyTransactions(int userId) {
+		return dao.selectMyTrans(sqlSession, userId);
 	}
 
 

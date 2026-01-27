@@ -51,6 +51,17 @@
         #{groupBId},
         #{nickName})
 	</insert>
+	
+	<select id="selectMyTrans" parameterType="int" resultType="mytrans">
+	    SELECT *
+	    FROM MYTRANS
+	    WHERE USER_ID = #{userId}
+	    ORDER BY TRANS_DATE DESC
+	</select>
+	
+	
+
+	
 
 
 </mapper>
