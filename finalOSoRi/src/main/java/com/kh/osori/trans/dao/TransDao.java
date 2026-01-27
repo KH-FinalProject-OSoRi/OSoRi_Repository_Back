@@ -25,4 +25,14 @@ public class TransDao {
 		return sqlSession.selectList("transMapper.selectMyTrans", userId);
 	}
 
+	public int updateTrans(SqlSessionTemplate sqlSession, Mytrans mt) {
+	
+		return sqlSession.update("transMapper.updateTrans",mt);
+	}
+
+	public int deleteTrans(SqlSessionTemplate sqlSession, int transId) {
+		
+		return sqlSession.delete("transMapper.deleteTrans",transId);
+	}
+
 }

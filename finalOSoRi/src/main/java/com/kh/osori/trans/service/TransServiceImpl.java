@@ -33,6 +33,16 @@ public class TransServiceImpl implements TransService{
 		return dao.selectMyTrans(sqlSession, userId);
 	}
 
+	public int updateTrans(Mytrans mt) {
+		
+		return dao.updateTrans(sqlSession,mt);
+	}
+
+	public int deleteTrans(int transId) {
+		
+		return dao.deleteTrans(sqlSession,transId);
+	}
+
 
 
 }

@@ -52,13 +52,39 @@
         #{nickName})
 	</insert>
 	
-	<select id="selectMyTrans" parameterType="int" resultType="mytrans">
-	    SELECT *
-	    FROM MYTRANS
-	    WHERE USER_ID = #{userId}
-	    ORDER BY TRANS_DATE DESC
+	<select id="selectMyTrans" resultType="mytrans">
+	    SELECT 
+		    TRAN_ID        AS "transId", 
+		    TITLE          AS "title",
+		    TRANS_DATE     AS "transDate",
+		    ORIGINAL_AMOUNT AS "originalAmount",
+		    CATEGORY       AS "category",
+		    TYPE           AS "type",
+		    MEMO           AS "memo",
+		    USER_ID        AS "userId",
+		    IS_SHARED      AS "isShared",
+		    GROUP_TRAN_ID  AS "groupTransId"
+		FROM MYTRANS 
+		WHERE USER_ID = #{userId}
 	</select>
 	
+	<update id="updateTrans" parameterType="mytrans">
+		UPDATE MYTRANS
+		SET 
+		TITLE = #{title},
+		TRANS_DATE = #{transDate},
+		ORIGINAL_AMOUNT = #{originalAmount},
+		CATEGORY = #{category} ,
+		TYPE = #{type},
+		MEMO = #{memo}
+		WHERE TRAN_ID = #{transId}
+	</update>
+	
+	<delete id="deleteTrans">
+		DELETE FROM MYTRANS
+		WHERE
+		TRAN_ID = #{transId}
+	</delete>
 	
 
 	
