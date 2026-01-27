@@ -1,7 +1,6 @@
 package com.kh.osori.user.controller;
 
 import java.util.HashMap;
-
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.kh.osori.FinalOSoRiApplication;
 import com.kh.osori.user.model.service.UserService;
 import com.kh.osori.user.model.vo.User;
@@ -313,14 +313,74 @@ public class UserController {
 		
 	}
 	
+	//아이디 찾기 메소드
+	@PostMapping("/findId")
+	public ResponseEntity<?> findLoginIdByEmail(@RequestBody Map<String,String> emailMap) {
+		
+		HashMap<String,String> res = new HashMap<>(); 
+		
+		String email = emailMap.get("email");
+		
+		User loginUser = service.findLoginIdByEmail(email); // 이메일 기반으로 유저 찾기
+		
+		if(loginUser!=null) {
+			
+			res.put("loginId", loginUser.getLoginId());
+			
+			return ResponseEntity.ok(res);
+			
+		} else {
+			
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("회원 정보가 없습니다.");
+			
+		}
+		
+	}
 	
+	//비밀번호 찾기 1단계
+	@PostMapping("/findPassword")
+	public ResponseEntity<?> findPassword(@RequestBody Map<String,String> loginIdMap) {
+		
+		HashMap<String, String> res = new HashMap<>(); 
+		
+		String loginId = loginIdMap.get("loginId");
+		
+		User loginUser = service.selectByLoginId(loginId);
+		
+		if(loginUser != null) {
+			
+			return ResponseEntity.ok("회원 정보가 조회 되어 비밀번호 재설정 페이지로 이동합니다.");
+			
+		} else {
+			
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("회원 정보가 없습니다.");
+			
+		}
+		
+	}
 	
+	//비밀번호 재설정 2단계
+	@PatchMapping("/resetPassword")
+	public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> userMap) {
+		
+		String newPassword = userMap.get("newPassword"); // 비밀번호 재설정 페이지에서 사용자가 입력한 비밀번호 갖고 오기 
+		
+		newPassword = bcrypt.encode(newPassword); // 갖고 온 비밀번호를 암호화 
+		
+		userMap.put("newPassword", newPassword); // 맵에 있는 값을 수정 
+		
+		int result = service.resetPassword(userMap); // 수정한 값을 바탕으로 집어넣기 
+		
+		if(result > 0) {
+			
+			return ResponseEntity.ok("비밀번호가 수정 됐습니다.");
+			
+		} else {
+			
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버에 문제가 생겨서 비밀번호 수정을 실패 했습니다."); 
+			
+		}
+		
+	}
 	
-	
-	
-	
-	
-	
-	
-
 }

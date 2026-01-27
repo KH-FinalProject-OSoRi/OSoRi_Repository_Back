@@ -1,5 +1,7 @@
 package com.kh.osori.user.model.service;
 
+import java.util.Map;
+
 import com.kh.osori.user.model.vo.User;
 
 public interface UserService {
@@ -13,6 +15,8 @@ public interface UserService {
 	int deleteUser(User loginUser); // 회원 탈퇴 메소드
 	int changeUserPwd(User loginUser); // 비밀번호 변경 메소드
 	User selectByLoginId(String loginId); // 아이디로 회원 정보 조회하는 메소드 
+	User findLoginIdByEmail(String email);
+	int resetPassword(Map<String, String> userMap); 
 	
 	
 }
