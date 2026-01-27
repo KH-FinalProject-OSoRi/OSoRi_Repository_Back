@@ -27,9 +27,68 @@
         #{memo},
         #{userId},
         #{groupTransId})
-		
-		
 	</insert>
+	
+	<insert id="groupTransSave" parameterType="grouptrans">
+	INSERT INTO GROUPTRANS(
+        TRAN_ID,
+		TITLE,
+		TRANS_DATE,
+		ORIGINAL_AMOUNT,
+		CATEGORY,
+		TYPE,
+		MEMO,
+		GROUPB_ID,
+		NICKNAME)
+    	VALUES(
+        SEQ_FNO.NEXTVAL,
+        #{title},
+        #{transDate},
+        #{originalAmount},
+        #{category},
+        #{type},
+        #{memo},
+        #{groupBId},
+        #{nickName})
+	</insert>
+	
+	<select id="selectMyTrans" resultType="mytrans">
+	    SELECT 
+		    TRAN_ID        AS "transId", 
+		    TITLE          AS "title",
+		    TRANS_DATE     AS "transDate",
+		    ORIGINAL_AMOUNT AS "originalAmount",
+		    CATEGORY       AS "category",
+		    TYPE           AS "type",
+		    MEMO           AS "memo",
+		    USER_ID        AS "userId",
+		    IS_SHARED      AS "isShared",
+		    GROUP_TRAN_ID  AS "groupTransId"
+		FROM MYTRANS 
+		WHERE USER_ID = #{userId}
+	</select>
+	
+	<update id="updateTrans" parameterType="mytrans">
+		UPDATE MYTRANS
+		SET 
+		TITLE = #{title},
+		TRANS_DATE = #{transDate},
+		ORIGINAL_AMOUNT = #{originalAmount},
+		CATEGORY = #{category} ,
+		TYPE = #{type},
+		MEMO = #{memo}
+		WHERE TRAN_ID = #{transId}
+		AND USER_ID = #{userId}
+	</update>
+	
+	<delete id="deleteTrans">
+		DELETE FROM MYTRANS
+		WHERE
+		TRAN_ID = #{transId}
+	</delete>
+	
+
+	
 
 
 </mapper>

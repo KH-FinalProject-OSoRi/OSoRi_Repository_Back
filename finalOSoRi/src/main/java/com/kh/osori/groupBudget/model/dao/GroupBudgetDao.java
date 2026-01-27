@@ -1,0 +1,41 @@
+package com.kh.osori.groupBudget.model.dao;
+
+import java.util.List;
+
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.stereotype.Repository;
+
+import com.kh.osori.groupBudget.model.vo.BudgetMem;
+import com.kh.osori.groupBudget.model.vo.GroupBudget;
+import com.kh.osori.trans.model.vo.Grouptrans;
+import com.kh.osori.user.model.vo.User;
+
+@Repository
+public class GroupBudgetDao {
+
+	public List<GroupBudget> groupBudgetList(SqlSessionTemplate sqlSession, int userId) {
+		return (List)sqlSession.selectList("groupBudgetMapper.groupBudgetList",userId);
+	}
+
+	public int addNewGroupB(SqlSessionTemplate sqlSession, GroupBudget gb) {
+		return sqlSession.insert("groupBudgetMapper.addNewGroupB",gb);
+	}
+
+	public int addGroupAdmin(SqlSessionTemplate sqlSession, BudgetMem newMem) {
+		return sqlSession.insert("groupBudgetMapper.addGroupAdmin",newMem);
+	}
+
+	public List<User> searchGroupMemberList(SqlSessionTemplate sqlSession, String keyword) {
+		return sqlSession.selectList("groupBudgetMapper.searchGroupMemberList",keyword);
+	}
+
+	public int addGroupMember(SqlSessionTemplate sqlSession, BudgetMem mem) {
+		return sqlSession.insert("groupBudgetMapper.addGroupMember",mem);
+	}
+
+	public List<Grouptrans> groupTransactionList(SqlSessionTemplate sqlSession, int groupbId) {
+	    return sqlSession.selectList("groupBudgetMapper.groupTransactionList", groupbId);
+	}
+
+	
+}
