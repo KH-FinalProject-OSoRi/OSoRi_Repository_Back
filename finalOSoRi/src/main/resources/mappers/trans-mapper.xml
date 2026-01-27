@@ -30,26 +30,30 @@
 	</insert>
 	
 	<insert id="groupTransSave" parameterType="grouptrans">
-	INSERT INTO GROUPTRANS(
-        TRAN_ID,
-		TITLE,
-		TRANS_DATE,
-		ORIGINAL_AMOUNT,
-		CATEGORY,
-		TYPE,
-		MEMO,
-		GROUPB_ID,
-		NICKNAME)
-    	VALUES(
-        SEQ_FNO.NEXTVAL,
-        #{title},
-        #{transDate},
-        #{originalAmount},
-        #{category},
-        #{type},
-        #{memo},
-        #{groupBId},
-        #{nickName})
+    INSERT INTO GROUPTRANS (
+        				TRAN_ID, 
+        				TITLE, 
+        				TRANS_DATE, 
+        				ORIGINAL_AMOUNT, 
+        				CATEGORY, 
+        				TYPE, 
+        				MEMO, 
+        				GROUPB_ID, 
+        				USER_ID, 
+        				NICKNAME
+   			 )
+			    SELECT 
+			        SEQ_FNO.NEXTVAL,
+			        #{title},
+			        #{transDate},
+			        #{originalAmount},
+			        #{category},
+			        #{type},
+			        #{memo},
+			        #{groupBId},
+			        #{userId}, 
+			        (SELECT NICKNAME FROM USERS WHERE USER_ID = #{userId}) 
+			    FROM DUAL
 	</insert>
 	
 	<select id="selectMyTrans" resultType="mytrans">
@@ -88,20 +92,49 @@
 	</delete>
 	
 	<select id="selectGroupTrans" resultType="Grouptrans">
-	    SELECT 
-		    TRAN_ID        AS "transId", 
-		    TITLE          AS "title",
-		    TRANS_DATE     AS "transDate",
-		    ORIGINAL_AMOUNT AS "originalAmount",
-		    CATEGORY       AS "category",
-		    TYPE           AS "type",
-		    MEMO           AS "memo",
-		    GROUPB_ID      AS "groupBId",
-		    NICKNAME		   AS "nickName"
-		FROM MYTRANS 
-		WHERE USER_ID = #{userId}
-	</select>
+    SELECT 
+        G.TRAN_ID        AS "transId", 
+        G.TITLE          AS "title",
+        G.TRANS_DATE     AS "transDate",
+        G.ORIGINAL_AMOUNT AS "originalAmount",
+        G.CATEGORY       AS "category",
+        G.TYPE           AS "type",
+        G.MEMO           AS "memo",
+        G.GROUPB_ID      AS "groupBId",
+        U.NICKNAME       AS "nickname" 
+    FROM GROUPTRANS G
+    JOIN USERS U ON (G.USER_ID = U.USER_ID)
+    WHERE G.GROUPB_ID = #{groupBId}
+    ORDER BY G.TRANS_DATE DESC
+</select>
 	
+	<update id="updateGroupTrans" parameterType="Grouptrans">
+		UPDATE GROUPTRANS
+		SET 
+		TITLE = #{title},
+		TRANS_DATE = #{transDate},
+		ORIGINAL_AMOUNT = #{originalAmount},
+		CATEGORY = #{category} ,
+		TYPE = #{type},
+		MEMO = #{memo}
+		WHERE TRAN_ID = #{transId}
+	</update>
+	
+	<delete id="deleteGroupTrans">
+		DELETE FROM GROUPTRANS
+		WHERE
+		TRAN_ID = #{transId}
+	</delete>
+	
+	<select id="groupInfo" parameterType="_int" resultType="map">
+	    SELECT 
+		    TITLE AS "title",
+	        B_AMOUNT                          AS "budget",
+	        TO_CHAR(START_DATE, 'YYYY-MM-DD') AS "startDate", 
+	        TO_CHAR(END_DATE, 'YYYY-MM-DD')   AS "endDate"
+	    FROM GROUPBUDGET  
+	    WHERE GROUPB_ID = #{groupId}
+</select>
 
 	
 

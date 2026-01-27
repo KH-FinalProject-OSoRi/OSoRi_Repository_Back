@@ -96,4 +96,34 @@ public class TransController {
 		}
 
 	}
+	
+	@PutMapping("/updateGroupTrans")
+	public ResponseEntity<?> updateGroupTrans(@RequestBody Grouptrans gt) {
+
+		int result = service.updateGroupTrans(gt);
+
+		if (result > 0) {
+			return ResponseEntity.ok("게시글 수정 성공");
+		} else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("게시글 정보 수정 실패!");
+		}
+	}
+
+	@DeleteMapping("/deleteGroupTrans/{transId}")
+	public ResponseEntity<?> deleteGroupTrans(@PathVariable int transId) {
+
+		int result = service.deleteGroupTrans(transId);
+
+		if (result > 0) {
+			return ResponseEntity.ok("게시글 삭제 성공");
+		} else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("게시글 삭제 실패!");
+		}
+	}
+	
+	@GetMapping("/groupInfo/{groupId}")
+	public ResponseEntity<?> groupInfo(@PathVariable int groupId){
+		return ResponseEntity.ok(service.groupInfo(groupId));
+	}
+	
 }
