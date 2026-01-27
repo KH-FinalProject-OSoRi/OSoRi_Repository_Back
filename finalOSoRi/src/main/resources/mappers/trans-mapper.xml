@@ -87,6 +87,21 @@
 		TRAN_ID = #{transId}
 	</delete>
 	
+	<select id="selectGroupTrans" resultType="Grouptrans">
+	    SELECT 
+		    TRAN_ID        AS "transId", 
+		    TITLE          AS "title",
+		    TRANS_DATE     AS "transDate",
+		    ORIGINAL_AMOUNT AS "originalAmount",
+		    CATEGORY       AS "category",
+		    TYPE           AS "type",
+		    MEMO           AS "memo",
+		    GROUPB_ID      AS "groupBId",
+		    NICKNAME		   AS "nickName"
+		FROM MYTRANS 
+		WHERE USER_ID = #{userId}
+	</select>
+	
 
 	
 

@@ -35,4 +35,9 @@ public class TransDao {
 		return sqlSession.delete("transMapper.deleteTrans",transId);
 	}
 
+	public List<Grouptrans> getGroupTransactions(SqlSessionTemplate sqlSession, int groupId) {
+		
+		return sqlSession.selectList("transMapper.selectGroupTrans");
+	}
+
 }

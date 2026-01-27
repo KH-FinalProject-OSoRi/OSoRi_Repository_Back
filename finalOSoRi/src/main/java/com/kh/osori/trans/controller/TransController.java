@@ -65,6 +65,12 @@ public class TransController {
 
 		return ResponseEntity.ok(service.getMyTransactions(userId));
 	}
+	
+	@GetMapping("/groupTransList/{groupId}")
+	public ResponseEntity<?> getGroupTransactions(@PathVariable int groupId) {
+
+		return ResponseEntity.ok(service.getGroupTransactions(groupId));
+	}
 
 	@PutMapping("/updateTrans")
 	public ResponseEntity<?> updateTrans(@RequestBody Mytrans mt) {
