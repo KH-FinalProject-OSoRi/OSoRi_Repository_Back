@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 public class GroupBudgetController {
 	@Autowired
 	private GroupBudgetService service;
-	
+	 
 	@GetMapping("/gbList")
 	public ResponseEntity<?> groupBudgetList(@RequestParam(value="userId") int userId) {
 		List<GroupBudget> groupBudgetList = service.groupBudgetList(userId);

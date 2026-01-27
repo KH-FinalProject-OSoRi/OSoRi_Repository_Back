@@ -3,12 +3,6 @@ target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-.metadata/
-.settings/
-.project
-.classpath
-bin/
-target/
 
 ### STS ###
 .apt_generated
@@ -37,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# STS/Eclipse metadata
+.metadata/
+.project
+.classpath
+.settings/
+.factorypath
+bin/
