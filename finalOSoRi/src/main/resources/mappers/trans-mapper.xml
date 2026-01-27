@@ -78,6 +78,7 @@
 		TYPE = #{type},
 		MEMO = #{memo}
 		WHERE TRAN_ID = #{transId}
+		AND USER_ID = #{userId}
 	</update>
 	
 	<delete id="deleteTrans">
