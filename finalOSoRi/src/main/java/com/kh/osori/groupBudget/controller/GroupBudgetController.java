@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,13 +16,16 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kh.osori.groupBudget.model.service.GroupBudgetService;
 import com.kh.osori.groupBudget.model.vo.BudgetMem;
 import com.kh.osori.groupBudget.model.vo.GroupBudget;
+import com.kh.osori.groupBudget.model.vo.GroupTrans;
 import com.kh.osori.user.model.vo.User;
 
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/group")
+@CrossOrigin(origins = "http://localhost:5173")
 @Slf4j
+
 public class GroupBudgetController {
 	@Autowired
 	private GroupBudgetService service;
@@ -39,12 +43,15 @@ public class GroupBudgetController {
 	
 	@PostMapping("/gbAdd")
 	public ResponseEntity<?> addNewGroupB(@RequestBody GroupBudget gb){
+		System.out.println("gb"+gb);
 		int reuslt1 = service.addNewGroupB(gb);
 		int result2 = 0;
 		
 		if(reuslt1 > 0) {
 			int generatedId = gb.getGroupbId(); 
 
+			System.out.println("generatedId : "+generatedId);
+			
 			//그룹 관리자 추가
 			BudgetMem newMem = new BudgetMem();
 			newMem.setGroupbId(generatedId);
@@ -82,9 +89,18 @@ public class GroupBudgetController {
 		}
 	}
 	
-	@GetMapping("/gbDetail")
-	public void groupBudgetDetail(@RequestParam("groupId") int groupId) {
-		
+	
+	//기존 /gbDetail
+	@GetMapping("/gbTrans") // 상세 내역을 가져오는 새로운 주소
+	public ResponseEntity<?> groupTransactionList(@RequestParam("groupbId") int groupbId) {
+	    // 해당 그룹 가계부(groupbId)에 기록된 모든 지출/수입 내역 조회
+	    List<GroupTrans> list = service.groupTransactionList(groupbId); 
+	    
+	    if(list != null) {
+	        return ResponseEntity.ok(list);
+	    } else {
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("거래 내역이 없습니다.");
+	    }
 	}
 	
 }

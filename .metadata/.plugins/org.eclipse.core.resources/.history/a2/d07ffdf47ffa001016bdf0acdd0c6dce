@@ -1,0 +1,42 @@
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="transMapper">
+
+	<insert id="myTransSave" parameterType="Mytrans">
+	INSERT INTO MYTRANS(
+        TRAN_ID,
+		TITLE,
+		TRANS_DATE,
+		ORIGINAL_AMOUNT,
+		IS_SHARED,
+		CATEGORY,
+		TYPE,
+		MEMO,
+		USER_ID,
+		GROUP_TRAN_ID)
+    	VALUES(
+        SEQ_MYTRANS.NEXTVAL,
+        #{title},
+        #{transDate},
+        #{originalAmount},
+        #{isShared},
+        #{category},
+        #{type},
+        #{memo},
+        #{userId},
+        #{groupTransId})
+		
+	</insert>
+	
+	<select id="selectMyTransactions" parameterType="int" resultType="mytrans">
+    SELECT *
+    FROM MYTRANS
+    WHERE USER_ID = #{userId}
+    ORDER BY TRANS_DATE DESC
+</select>
+	
+
+
+</mapper>

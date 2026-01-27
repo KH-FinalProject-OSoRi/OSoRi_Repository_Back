@@ -1,0 +1,5 @@
+package com.kh.osori.group.service;
+
+public class GroupBudgetServiceImpl {
+
+}

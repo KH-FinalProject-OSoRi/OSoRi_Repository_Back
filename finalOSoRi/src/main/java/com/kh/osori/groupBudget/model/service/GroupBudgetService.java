@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.kh.osori.groupBudget.model.vo.BudgetMem;
 import com.kh.osori.groupBudget.model.vo.GroupBudget;
+import com.kh.osori.groupBudget.model.vo.GroupTrans;
 import com.kh.osori.user.model.vo.User;
 
 public interface GroupBudgetService {
@@ -16,4 +17,5 @@ public interface GroupBudgetService {
 	public void deleteGroupBudget(); //그룹가계부 삭제
 	public void updateGroupBudget(); //그룹가계부 수정
 	public int addGroupMember(BudgetMem mem); //회원 추가
+	public List<GroupTrans> groupTransactionList(int groupbId);
 }
