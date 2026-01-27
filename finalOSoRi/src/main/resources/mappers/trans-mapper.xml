@@ -70,6 +70,7 @@
 		    GROUP_TRAN_ID  AS "groupTransId"
 		FROM MYTRANS 
 		WHERE USER_ID = #{userId}
+		ORDER BY TRAN_ID DESC
 	</select>
 	
 	<update id="updateTrans" parameterType="mytrans">
@@ -105,7 +106,7 @@
     FROM GROUPTRANS G
     JOIN USERS U ON (G.USER_ID = U.USER_ID)
     WHERE G.GROUPB_ID = #{groupBId}
-    ORDER BY G.TRANS_DATE DESC
+    ORDER BY G.TRAN_ID DESC
 </select>
 	
 	<update id="updateGroupTrans" parameterType="Grouptrans">
