@@ -110,5 +110,13 @@ public class UserServiceImpl implements UserService {
 			
 		return result; 
 	}
+	
+	//loginId를 기반으로 사용자 정보 갖고오는 메소드 
+	@Override
+	public User selectByLoginId(String loginId) {
+		User loginUser = dao.selectByLoginId(sqlSession, loginId);
+		
+		return loginUser; 
+	}
 
 }

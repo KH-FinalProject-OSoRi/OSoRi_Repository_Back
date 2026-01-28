@@ -41,6 +41,12 @@
     	WHERE LOGIN_ID= #{loginId}
     </select>
     
+    <select id="selectByLoginId" parameterType="string" resultType="User">
+    	SELECT *
+    	FROM USERS
+    	WHERE LOGIN_ID = #{loginId}
+    </select>
+    
     
     <select id="idCheck" parameterType="string" resultType="int">
     	SELECT COUNT(*)
@@ -114,4 +120,19 @@
   		SET PASSWORD = #{password}
   		WHERE LOGIN_ID = #{loginId}
   	</update>
+  	
+  	<insert id="insertNotification" parameterType="Notification">
+  		<selectKey keyProperty="notiId" resultType="int" order="BEFORE">
+	        SELECT SEQ_NOTI_NO.NEXTVAL FROM DUAL
+	    </selectKey>
+  		INSERT INTO NOTIFICATION
+  		VALUES (#{notiId},
+  				#{message},
+  				#{isRead},
+  				#{nType},
+  				SYSDATE,
+  				#{receiver},
+  				#{sender},
+  				#{inviteNum})
+  	</insert>
 </mapper>

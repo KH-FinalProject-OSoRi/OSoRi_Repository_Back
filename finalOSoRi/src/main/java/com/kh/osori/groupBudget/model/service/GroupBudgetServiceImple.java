@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.kh.osori.groupBudget.model.dao.GroupBudgetDao;
 import com.kh.osori.groupBudget.model.vo.BudgetMem;
 import com.kh.osori.groupBudget.model.vo.GroupBudget;
+import com.kh.osori.notification.model.vo.Notification;
 import com.kh.osori.user.model.vo.User;
 
 @Service
@@ -28,7 +29,6 @@ public class GroupBudgetServiceImple implements GroupBudgetService {
 	@Override
 	public int addNewGroupB(GroupBudget gb) {
 		return dao.addNewGroupB(sqlSession,gb);
-		
 	}
 	
 	@Override
@@ -47,27 +47,43 @@ public class GroupBudgetServiceImple implements GroupBudgetService {
 	}
 
 	@Override
-	public void editBAmount() {
-		// TODO Auto-generated method stub
-		
+	public int deleteGroupBudget(int groupbId) {
+		return dao.deleteGroupBudget(sqlSession,groupbId);
 	}
 
+	@Override
+	public int updateBAmount(GroupBudget gb) {
+		return dao.updateBAmount(sqlSession,gb);
+	}
+	
 	@Override
 	public void deleteUser() {
-		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void deleteGroupBudget() {
-		// TODO Auto-generated method stub
-		
+	public String getAdminId(int groupbId) {
+		return dao.getAdminId(sqlSession,groupbId);
 	}
 
 	@Override
-	public void updateGroupBudget() {
-		// TODO Auto-generated method stub
-		
+	public String getLoginid(int userId) {
+		return dao.getLoginid(sqlSession,userId);
+	}
+
+	@Override
+	public int updateInviStatus(BudgetMem update) {
+		return dao.updateInviStatus(sqlSession,update);
+	}
+
+	@Override
+	public int updateIsRead(int notiId) {
+		return dao.updateIsRead(sqlSession,notiId);
+	}
+
+	@Override
+	public List<Notification> notiList(String loginId) {
+		return dao.notiList(sqlSession,loginId);
 	}
 
 }

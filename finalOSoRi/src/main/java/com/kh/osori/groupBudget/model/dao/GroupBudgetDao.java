@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import com.kh.osori.groupBudget.model.vo.BudgetMem;
 import com.kh.osori.groupBudget.model.vo.GroupBudget;
+import com.kh.osori.notification.model.vo.Notification;
 import com.kh.osori.user.model.vo.User;
 
 @Repository
@@ -30,6 +31,34 @@ public class GroupBudgetDao {
 
 	public int addGroupMember(SqlSessionTemplate sqlSession, BudgetMem mem) {
 		return sqlSession.insert("groupBudgetMapper.addGroupMember",mem);
+	}
+
+	public int deleteGroupBudget(SqlSessionTemplate sqlSession, int groupbId) {
+		return sqlSession.update("groupBudgetMapper.deleteGroupBudget",groupbId);
+	}
+
+	public int updateBAmount(SqlSessionTemplate sqlSession, GroupBudget gb) {
+		return sqlSession.update("groupBudgetMapper.updateBAmount",gb);
+	}
+
+	public String getAdminId(SqlSessionTemplate sqlSession, int groupbId) {
+		return sqlSession.selectOne("groupBudgetMapper.getAdminId",groupbId);
+	}
+
+	public String getLoginid(SqlSessionTemplate sqlSession, int userId) {
+		return sqlSession.selectOne("groupBudgetMapper.getLoginid",userId);
+	}
+
+	public int updateInviStatus(SqlSessionTemplate sqlSession, BudgetMem update) {
+		return sqlSession.update("groupBudgetMapper.updateInviStatus",update);
+	}
+
+	public int updateIsRead(SqlSessionTemplate sqlSession, int notiId) {
+		return sqlSession.update("groupBudgetMapper.updateIsRead",notiId);
+	}
+
+	public List<Notification> notiList(SqlSessionTemplate sqlSession, String loginId) {
+		return sqlSession.selectList("groupBudgetMapper.notiList", loginId);
 	}
 
 	

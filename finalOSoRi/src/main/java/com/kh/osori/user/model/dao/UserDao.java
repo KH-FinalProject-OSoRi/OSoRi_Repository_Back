@@ -54,4 +54,8 @@ public class UserDao {
 			return sqlSession.update("userMapper.changeUserPwd", loginUser); 
 		}
 
+		public User selectByLoginId(SqlSessionTemplate sqlSession, String loginId) {
+			return sqlSession.selectOne("userMapper.selectByLoginId", loginId); 
+		}
+
 }
