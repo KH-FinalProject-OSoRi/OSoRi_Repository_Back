@@ -5,18 +5,17 @@
 <mapper namespace="transMapper">
 
 	<insert id="myTransSave" parameterType="Mytrans">
-	INSERT INTO MYTRANS(
+    INSERT INTO MYTRANS (
         TRAN_ID,
-		TITLE,
-		TRANS_DATE,
-		ORIGINAL_AMOUNT,
-		IS_SHARED,
-		CATEGORY,
-		TYPE,
-		MEMO,
-		USER_ID,
-		GROUP_TRAN_ID)
-    	VALUES(
+        TITLE,
+        TRANS_DATE,
+        ORIGINAL_AMOUNT,
+        IS_SHARED,
+        CATEGORY,
+        TYPE,
+        MEMO,
+        USER_ID,
+        GROUP_TRAN_ID  ) VALUES (
         SEQ_MYTRANS.NEXTVAL,
         #{title},
         #{transDate},
@@ -26,8 +25,8 @@
         #{type},
         #{memo},
         #{userId},
-        #{groupTransId})
-	</insert>
+        #{groupTransId} )
+</insert>
 	
 	<insert id="groupTransSave" parameterType="grouptrans">
     INSERT INTO GROUPTRANS (
