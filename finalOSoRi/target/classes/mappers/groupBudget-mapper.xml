@@ -65,7 +65,7 @@
 	        AND USER_ID = #{userId}
 	    )
  	</insert>
- 	
+
  	<update id="deleteGroupBudget" parameterType="int">
  		UPDATE GROUPBUDGET
  		SET STATUS = 'N'
@@ -112,7 +112,18 @@
  		WHERE IS_READ = 'N'
  		AND RECEIVER = #{loginId}
  	</select>
- 	
+
+ 	<select id="groupTransactionList" parameterType="int" resultType="com.kh.osori.trans.model.vo.Grouptrans">
+	    SELECT 
+	        TRAN_ID AS transId,        TITLE AS title,
+	        TRANS_DATE AS transDate,
+	        ORIGINAL_AMOUNT AS originalAmount,
+	        CATEGORY AS category,
+	        TYPE AS type,
+	        NICKNAME AS nickName       FROM GROUPTRANS
+	    WHERE GROUPB_ID = #{groupbId}
+	    ORDER BY TRANS_DATE DESC
+	</select> 	
  	
  	
  </mapper>

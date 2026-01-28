@@ -25,6 +25,7 @@ public class User {
 	private String originName; // 프로필 이미지 원본 파일명
 	private String changeName; // 서버 저장 파일명
 	private Date createdAt; // 가입일
-	
+	private int bAmount;	//	B_AMOUNT	NUMBER	Yes		12	예산
+	private int resetDate;	//	RESET_DATE	NUMBER	Yes		13	예산리셋날짜
 
 }

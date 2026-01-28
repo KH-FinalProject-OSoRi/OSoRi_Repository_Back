@@ -135,4 +135,16 @@
   				#{sender},
   				#{inviteNum})
   	</insert>
+
+  	<select id="findLoginIdByEmail" parameterType="string" resultType="User">
+  		SELECT *
+  		FROM USERS
+  		WHERE EMAIL = #{email} 
+  	</select>
+  	
+  	<update id="resetPassword" parameterType="Map">
+  		UPDATE USERS
+  		SET PASSWORD = #{newPassword}
+  		WHERE LOGIN_ID = #{loginId} 	
+  	</update>
 </mapper>

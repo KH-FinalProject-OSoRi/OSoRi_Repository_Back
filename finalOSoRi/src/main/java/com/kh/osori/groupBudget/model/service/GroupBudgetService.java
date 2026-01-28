@@ -5,6 +5,7 @@ import java.util.List;
 import com.kh.osori.groupBudget.model.vo.BudgetMem;
 import com.kh.osori.groupBudget.model.vo.GroupBudget;
 import com.kh.osori.notification.model.vo.Notification;
+import com.kh.osori.trans.model.vo.Grouptrans;
 import com.kh.osori.user.model.vo.User;
 
 public interface GroupBudgetService {
@@ -21,5 +22,5 @@ public interface GroupBudgetService {
 	public int updateInviStatus(BudgetMem update); //초대 요청 상태 변경
 	public int updateIsRead(int notiId); //알림 읽음 처리
 	public List<Notification> notiList(String loginId); //안읽은 알림 목록 조회
-	
+	public List<Grouptrans> groupTransactionList(int groupbId);
 }

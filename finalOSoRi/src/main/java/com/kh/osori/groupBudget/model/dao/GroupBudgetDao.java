@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import com.kh.osori.groupBudget.model.vo.BudgetMem;
 import com.kh.osori.groupBudget.model.vo.GroupBudget;
 import com.kh.osori.notification.model.vo.Notification;
+import com.kh.osori.trans.model.vo.Grouptrans;
 import com.kh.osori.user.model.vo.User;
 
 @Repository
@@ -59,6 +60,10 @@ public class GroupBudgetDao {
 
 	public List<Notification> notiList(SqlSessionTemplate sqlSession, String loginId) {
 		return sqlSession.selectList("groupBudgetMapper.notiList", loginId);
+	}
+	
+	public List<Grouptrans> groupTransactionList(SqlSessionTemplate sqlSession, int groupbId) {
+	    return sqlSession.selectList("groupBudgetMapper.groupTransactionList", groupbId);
 	}
 
 	
