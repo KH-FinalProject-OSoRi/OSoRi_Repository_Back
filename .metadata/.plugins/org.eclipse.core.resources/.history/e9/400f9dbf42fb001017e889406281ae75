@@ -1,0 +1,13 @@
+package com.kh.osori.notification.model.Dao;
+
+import org.mybatis.spring.SqlSessionTemplate;
+
+import com.kh.osori.notification.model.vo.Notification;
+
+public class NotificationDao {
+
+	public int insertNotification(SqlSessionTemplate sqlSession, Notification noti) {
+		return sqlSession.insert("userMapper.insertNotification", noti);
+	}
+
+}

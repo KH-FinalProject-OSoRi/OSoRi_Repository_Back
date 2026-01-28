@@ -1,5 +1,7 @@
 package com.kh.osori.user.model.service;
 
+import java.util.Map;
+
 import org.mybatis.spring.SqlSessionTemplate;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,6 +111,33 @@ public class UserServiceImpl implements UserService {
 		int result = dao.changeUserPwd(sqlSession, loginUser); 
 			
 		return result; 
+	}
+	
+	//loginId를 기반으로 사용자 정보 갖고오는 메소드 
+	@Override
+	public User selectByLoginId(String loginId) {
+		User loginUser = dao.selectByLoginId(sqlSession, loginId);
+		
+		return loginUser; 
+	}
+	
+	//이메일을 기반으로 loginId 찾는 메소드 
+	@Override
+	public User findLoginIdByEmail(String email) {
+		
+		User loginUser = dao.findLoginIdByEmail(sqlSession, email);
+		
+		return loginUser; 
+	}
+	
+	//비밀번호 재설정 하는 메소드
+	@Override
+	public int resetPassword(Map<String, String> userMap) {
+		
+		int result = dao.resetPassword(sqlSession, userMap);
+		
+		return result; 
+		
 	}
 
 }

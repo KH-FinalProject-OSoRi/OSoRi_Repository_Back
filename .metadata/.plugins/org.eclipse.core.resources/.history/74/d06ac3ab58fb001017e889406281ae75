@@ -1,0 +1,36 @@
+package com.kh.osori.notification.model.service;
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
+import com.kh.osori.notification.model.Dao.NotificationDao;
+import com.kh.osori.notification.model.vo.Notification;
+
+@Service
+public class NotificationService {
+    @Autowired
+    private SimpMessagingTemplate messageTemp;
+	
+	@Autowired
+	private NotificationDao dao;
+	
+	@Autowired
+	private SqlSessionTemplate sqlSession;
+	
+	public void sendMessageToMembers(String receiver, String sender, String message, String type, int inviteNum) {
+		Notification noti = Notification.builder()
+										.nType(type)
+										.sender(sender)
+										.receiver(receiver)
+										.isRead("N")
+										.message(message)
+										.inviteNum(inviteNum)
+										.build();
+	
+		dao.insertNotification(sqlSession,noti);
+			
+		// 실시간 WebSocket 개별 전송
+		messageTemp.convertAndSendToUser(receiver, "/notifications", noti);
+	}
+
+}

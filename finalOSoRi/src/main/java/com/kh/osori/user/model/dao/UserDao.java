@@ -1,5 +1,7 @@
 package com.kh.osori.user.model.dao;
 
+import java.util.Map;
+
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -8,7 +10,7 @@ import com.kh.osori.user.model.vo.User;
 @Repository
 public class UserDao {
 	
-	//회원 가입 
+	    //회원 가입 
 		public int insertUser(SqlSessionTemplate sqlSession, User user) {
 			return sqlSession.insert("userMapper.insertUser", user); 
 		}
@@ -52,6 +54,21 @@ public class UserDao {
 		//회원 비밀번호 변경 
 		public int changeUserPwd(SqlSessionTemplate sqlSession, User loginUser) {
 			return sqlSession.update("userMapper.changeUserPwd", loginUser); 
+		}
+
+		//loginId를 바탕으로 사용자 찾기 
+		public User selectByLoginId(SqlSessionTemplate sqlSession, String loginId) {
+			return sqlSession.selectOne("userMapper.selectByLoginId", loginId); 
+		}
+
+		//Email을 바탕으로 사용자 찾기 
+		public User findLoginIdByEmail(SqlSessionTemplate sqlSession, String email) {
+			return sqlSession.selectOne("userMapper.findLoginIdByEmail",email); 
+		}
+
+		//비밀번호 바꾸는 메소드 
+		public int resetPassword(SqlSessionTemplate sqlSession, Map<String, String> userMap) {
+			return sqlSession.update("userMapper.resetPassword", userMap); 
 		}
 
 }
