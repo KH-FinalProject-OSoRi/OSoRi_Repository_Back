@@ -38,7 +38,6 @@ public class TransController {
 	        mt.setIsShared("N");
 	    }
 
-		System.out.println(mt);
 		int result = service.myTransSave(mt);
 
 		if (result > 0) {
@@ -50,8 +49,6 @@ public class TransController {
 
 	@PostMapping("/groupTransSave")
 	public ResponseEntity<?> groupTransSave(@RequestBody Grouptrans gt) {
-
-		System.out.println(gt);
 
 		int result = service.GroupTransSave(gt);
 
@@ -128,5 +125,9 @@ public class TransController {
 		return ResponseEntity.ok(service.groupInfo(groupId));
 	}
 	
+	@GetMapping("/recentTrans/{userId}")
+	public ResponseEntity<?> recentTrans(@PathVariable int userId){
+		return ResponseEntity.ok(service.recentTrans(userId));
+	}
 	
 }
