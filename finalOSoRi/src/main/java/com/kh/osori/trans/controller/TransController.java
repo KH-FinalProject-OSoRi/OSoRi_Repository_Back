@@ -34,9 +34,11 @@ public class TransController {
 	@PostMapping("/myTransSave")
 	public ResponseEntity<?> myTransSave(@RequestBody Mytrans mt) {
 
-		mt.setIsShared("N");
-		mt.setGroupTransId(null);
+		if (mt.getIsShared() == null) {
+	        mt.setIsShared("N");
+	    }
 
+		System.out.println(mt);
 		int result = service.myTransSave(mt);
 
 		if (result > 0) {
@@ -125,5 +127,6 @@ public class TransController {
 	public ResponseEntity<?> groupInfo(@PathVariable int groupId){
 		return ResponseEntity.ok(service.groupInfo(groupId));
 	}
+	
 	
 }

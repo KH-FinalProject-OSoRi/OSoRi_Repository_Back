@@ -1,0 +1,45 @@
+package com.kh.osori.notification.controller;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.kh.osori.notification.model.service.NotificationService;
+
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/api")
+public class NotificationController {
+	
+	@Autowired
+	private final NotificationService service;
+	
+	@PostMapping("/invitation")
+	public void addInvitationNoti(@RequestBody) {
+		
+	}
+
+//    @PostMapping("/transaction")
+//    public String addTransNoti(@RequestBody TransactionDTO dto) {
+//        // 1. 가계부 내역 저장 로직 실행...
+//        
+//        // 2. 같은 가계부 멤버 리스트 조회 (예: user1, user2, user3)
+//        List<String> members = List.of("user1", "user2", "user3");
+//        
+//        // 3. 알림 발송
+//        NotificationVO noti = NotificationVO.builder()
+//                .nType("MONEY")
+//                .message(dto.getAmount() + "원이 입력되었습니다.")
+//                .sender(dto.getUserId())
+//                .build();
+//                
+//        notificationService.sendNotification(members, noti);
+//        
+//        return "success";
+//    }
+}
+

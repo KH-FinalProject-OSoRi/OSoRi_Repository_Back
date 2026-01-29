@@ -1,0 +1,11 @@
+package com.kh.osori.notification.model.Dao;
+
+import com.kh.osori.notification.model.vo.Notification;
+
+public class NotificationDao {
+
+	public int insertNotification(Notification noti) {
+		return 0;
+	}
+
+}

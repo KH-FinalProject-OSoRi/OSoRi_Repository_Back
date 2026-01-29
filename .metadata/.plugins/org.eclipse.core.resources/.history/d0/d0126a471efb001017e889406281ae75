@@ -1,0 +1,180 @@
+package com.kh.osori.user.controller;
+
+import java.util.HashMap;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.kh.osori.user.model.service.UserService;
+import com.kh.osori.user.model.vo.User;
+import com.kh.osori.util.JwtUtil;
+
+import lombok.extern.slf4j.Slf4j;
+
+@RestController
+@Slf4j
+@RequestMapping("/user")
+public class UserController {
+	
+	@Autowired
+	private UserService service; // 자동으로 빈 주입. 
+	
+	@Autowired
+	private BCryptPasswordEncoder bcrypt; // 암호화하는 빈 주입. 
+	
+	@Autowired
+	private JwtUtil jwtUtil; // 토큰 빈 주입 
+	
+	//로그인 처리 및 휴면 판단 메소드 
+	@PostMapping("/login")
+	public ResponseEntity<?> loginMember(@RequestBody User user) { 
+		
+		HashMap<String, Object> map = new HashMap<>(); 
+		
+		//LOGIN_ID로 사용자 조회 (해시 password까지 가져오기) 
+		User loginUser = service.selectUser(user);
+		
+		if(loginUser!=null && bcrypt.matches(user.getPassword(), loginUser.getPassword())) { // 평문과 암호화된 비밀번호 비교, 로그인 유저가 실제로 존재하는 값인지도 보기
+			
+			if("Y".equals(loginUser.getStatus())) {
+				
+				String token = jwtUtil.generateToken(loginUser.getLoginId()); // 아이디를 기반으로 토큰 가져오기 
+				
+				loginUser.setPassword(null); // 암호화 된 비밀번호이므로 null 처리 
+				
+				map.put("token",token); // 옮기려는 토큰 맵에 담기 
+				map.put("user",loginUser);
+				
+				return ResponseEntity.ok(map); 
+				
+			} else if ("H".equals(loginUser.getStatus())) {
+				
+				//마이페이지 보내는 처리는 프론트에서
+				String token = jwtUtil.generateToken(loginUser.getLoginId());
+				
+				loginUser.setPassword(null);
+				
+				map.put("token", token);
+				map.put("user", loginUser);
+				
+				return ResponseEntity.ok(map);
+				
+				
+			} else if ("N".equals(loginUser.getStatus())) {
+				
+				map.put("message", "탈퇴한 회원입니다.");
+				return ResponseEntity.status(HttpStatus.FORBIDDEN).body(map);
+			}
+			
+		} else { 
+			
+			
+			map.put("code", "LOGIN_FAIL");
+			map.put("message", "아이디와 비밀번호를 다시 입력해주세요.");
+			 
+		}
+		
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(map); // 비회원일때 처리 
+		
+		/*
+		// 오류가 있을 경우 
+		map.put("code", "UNKNOWN");
+		map.put("message", "로그인 처리 중 오류");
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
+		*/
+
+	}
+	
+	//회원 가입 
+	@PostMapping("/register")
+	public ResponseEntity<?> insertUser(@RequestBody User user) {
+		
+		user.setPassword(bcrypt.encode(user.getPassword())); // 갖고 온 비밀번호를 평문이 아닌 암호화된 비밀번호로 처리
+		
+		int result = service.insertUser(user); // 회원 가입 처리
+		
+		if(result > 0) {
+			return ResponseEntity.ok("회원 가입에 성공했습니다. 로그인을 해보세요.");
+		} else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("회원가입에 실패했습니다."); 
+		}
+		
+	}
+	
+	
+	//로그아웃
+	@PostMapping("/logout")
+	public ResponseEntity<?> logout() {
+		return ResponseEntity.ok("로그아웃 되었습니다."); 
+	}
+	
+	//아이디 중복 체크 (UNIQUE 제약 조건으로 인해 중복 체크 해줘야한다.)
+	@GetMapping("/checkId")
+	public ResponseEntity<?> idCheck(@RequestParam("loginId") String loginId) {
+			
+		String v = (loginId == null) ? "" : loginId.trim();
+		
+		int count = service.idCheck(v);
+			
+		HashMap<String, Object> resp = new HashMap<>();
+		
+		resp.put("count", count);
+		
+		return ResponseEntity.ok(resp);
+		
+	}
+		
+	//닉네임 중복 체크 (UNIQUE 제약 조건으로 인해 중복 체크 해줘야한다.)
+	@GetMapping("/checkNickName")
+	public ResponseEntity<?> nickNameCheck(@RequestParam("nickName") String nickName) {
+			
+		//count만 JSON으로 응답
+		String v = (nickName == null) ? "" : nickName.trim();
+			
+		int count = service.nickNameCheck(v);
+			
+		HashMap<String, Object> resp = new HashMap<>();
+			
+		resp.put("count", count);
+			
+		return ResponseEntity.ok(resp);
+	}
+		
+	//이메일 중복 체크 (UNIQUE 제약 조건으로 인해 중복 체크 해줘야한다.)
+	@GetMapping("/checkEmail")
+	public ResponseEntity<?> emailCheck(@RequestParam("email") String email) {
+			
+		
+		// 이메일은 대소문자/공백 때문에 헷갈릴 수 있어서 trim + lower 처리
+		String v = (email == null) ? "" : email.trim().toLowerCase();
+			
+		int count = service.emailCheck(v);
+			
+		HashMap<String, Object> resp = new HashMap<>();
+			
+		resp.put("count", count);
+			
+		return ResponseEntity.ok(resp);
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+}
