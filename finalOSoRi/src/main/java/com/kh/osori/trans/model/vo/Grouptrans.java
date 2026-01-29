@@ -23,7 +23,6 @@ public class Grouptrans {
 	private String category; //카테고리
 	private String memo; //메모
 	private int groupBId; //소속된 그룹가계부 id
-	private String nickName; //수입지출 입력한사랑
-	
-
+	private int userId; //수입지출 입력한사랑
+	private String nickname;
 }
