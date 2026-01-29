@@ -50,8 +50,6 @@ public class TransController {
 	@PostMapping("/groupTransSave")
 	public ResponseEntity<?> groupTransSave(@RequestBody Grouptrans gt) {
 
-		System.out.println(gt);
-
 		int result = service.GroupTransSave(gt);
 
 		if (result > 0) {
