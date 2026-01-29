@@ -38,6 +38,7 @@ public class TransController {
 	        mt.setIsShared("N");
 	    }
 
+		System.out.println(mt);
 		int result = service.myTransSave(mt);
 
 		if (result > 0) {
