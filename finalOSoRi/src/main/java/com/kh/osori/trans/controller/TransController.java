@@ -125,5 +125,9 @@ public class TransController {
 		return ResponseEntity.ok(service.groupInfo(groupId));
 	}
 	
+	@GetMapping("/recentTrans/{userId}")
+	public ResponseEntity<?> recentTrans(@PathVariable int userId){
+		return ResponseEntity.ok(service.recentTrans(userId));
+	}
 	
 }

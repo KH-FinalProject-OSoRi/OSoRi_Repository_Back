@@ -68,6 +68,11 @@ public class TransServiceImpl implements TransService{
 		return dao.groupInfo(sqlSession,groupId);
 	}
 
+	public List<Mytrans> recentTrans(int userId) {
+		
+		return dao.recentTrans(sqlSession,userId);
+	}
+
 
 
 
