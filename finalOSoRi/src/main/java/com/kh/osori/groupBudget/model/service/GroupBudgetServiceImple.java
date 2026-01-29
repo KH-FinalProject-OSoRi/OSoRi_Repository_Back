@@ -5,6 +5,8 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.kh.osori.challenges.model.vo.Challenges;
+import com.kh.osori.challenges.model.vo.GroupChall;
 import com.kh.osori.groupBudget.model.dao.GroupBudgetDao;
 import com.kh.osori.groupBudget.model.vo.BudgetMem;
 import com.kh.osori.groupBudget.model.vo.GroupBudget;
@@ -24,7 +26,11 @@ public class GroupBudgetServiceImple implements GroupBudgetService {
 	@Override
 	public List<GroupBudget> groupBudgetList(int userId) {
 		return dao.groupBudgetList(sqlSession,userId);
-		
+	}
+	
+	@Override
+	public List<GroupBudget> oldGroupBudgetList(int userId) {
+		return dao.oldGroupBudgetList(sqlSession,userId);
 	}
 	
 	@Override
@@ -53,8 +59,8 @@ public class GroupBudgetServiceImple implements GroupBudgetService {
 	}
 
 	@Override
-	public int updateBAmount(GroupBudget gb) {
-		return dao.updateBAmount(sqlSession,gb);
+	public int updateGroupB(GroupBudget gb) {
+		return dao.updateGroupB(sqlSession,gb);
 	}
 	
 	@Override
@@ -90,6 +96,21 @@ public class GroupBudgetServiceImple implements GroupBudgetService {
 	@Override
 	public List<Grouptrans> groupTransactionList(int groupbId) {
 		return dao.groupTransactionList(sqlSession, groupbId);
+	}
+
+	@Override
+	public int groupCheckAdmin(int groupbId) {
+		return dao.groupCheckAdmin(sqlSession,groupbId);
+	}
+
+	@Override
+	public List<Challenges> groupChallList() {
+		return dao.groupChallList(sqlSession);
+	}
+
+	@Override
+	public int addGroupChall(GroupChall chall) {
+		return dao.addGroupChall(sqlSession,chall);
 	}
 
 }

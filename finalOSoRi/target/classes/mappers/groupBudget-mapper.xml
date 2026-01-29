@@ -14,6 +14,16 @@
 		ORDER BY CREATED_AT
  	</select>
  	
+ 	<select id="oldGroupBudgetList" resultType="GroupBudget" parameterType="int">
+ 		SELECT GROUPB_ID,TITLE,B_AMOUNT,START_DATE,END_DATE
+		FROM GROUPBUDGET B JOIN BUDGETMEM M USING(GROUPB_ID)
+		WHERE USER_ID = #{userId}
+		AND END_DATE &lt; SYSDATE
+		AND B.STATUS = 'Y'
+		AND M.STATUS = 'ACCEPTED'
+		ORDER BY CREATED_AT
+ 	</select>
+ 	
  	<insert id="addNewGroupB" parameterType="GroupBudget">
 	    <selectKey keyProperty="groupbId" resultType="int" order="BEFORE">
 	        SELECT SEQ_GBNO.NEXTVAL FROM DUAL
@@ -49,7 +59,7 @@
  	</insert>
  	
  	<select id="searchGroupMemberList" parameterType="String" resultType="User">
- 		SELECT USER_ID,LOGIN_ID,EMAIL
+ 		SELECT USER_ID,NICKNAME,EMAIL
 		FROM USERS
 		WHERE EMAIL LIKE '%'||#{keyword}||'%'
  	</select>
@@ -74,7 +84,8 @@
  	
  	<update id="updateBAmount" parameterType="GroupBudget">
  		UPDATE GROUPBUDGET
- 		SET B_AMOUNT = #{bAmount}
+ 		SET TITLE = #{title},
+ 			B_AMOUNT = #{bAmount}
  		WHERE GROUPB_ID = #{groupbId}
  	</update>
  	
@@ -124,6 +135,34 @@
 	    WHERE GROUPB_ID = #{groupbId}
 	    ORDER BY TRANS_DATE DESC
 	</select> 	
+	
+	<select id="groupCheckAdmin" parameterType="int" resultType="int">
+		SELECT USER_ID
+		FROM BUDGETMEM
+		WHERE GROUPB_ID = #{groupbId}
+		AND ROLE='ADMIN'
+	</select>
+	
+	<select id="groupChallList" resultType="Challenges">
+		SELECT CHALLENGE_ID,
+			   DESCRIPTION,
+			   TARGET,
+			   DURATION,
+			   CATEGORY,
+			   TYPE
+		FROM CHALLENGES
+		WHERE CHALLENGE_MODE = 'GROUP'
+		AND STATUS = 'Y'
+	</select>
+	
+	<insert id="addGroupChall" parameterType="GroupChall">
+		INSERT INTO GROUPCHALL
+		VALUES (#{challengeId},
+				#{groupbId},
+				'PROCEEDING',
+				SYSDATE,
+				SYSDATE)
+	</insert>
  	
  	
  </mapper>
