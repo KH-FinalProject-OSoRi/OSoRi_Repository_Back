@@ -87,6 +87,44 @@
 		TRAN_ID = #{transId}
 	</delete>
 	
+	<!-- [추가] 고정지출 -> MYTRANS 자동 반영 (매일 실행용) -->
+	<insert id="mergeFixedToMyTrans">
+	  MERGE INTO MYTRANS m
+	  USING (
+	    SELECT
+	      f.FIXED_ID,
+	      f.USER_ID,
+	      f.NAME AS TITLE,
+	      TRUNC(SYSDATE) AS TRANS_DATE,
+	      f.AMOUNT AS ORIGINAL_AMOUNT,
+	      'N' AS IS_SHARED,
+	      f.CATEGORY,
+	      'OUT' AS TYPE,
+	      '고정지출 자동등록' AS MEMO
+	    FROM FIXEDTRANS f
+	    WHERE
+	      TO_NUMBER(TO_CHAR(TRUNC(SYSDATE), 'DD')) =
+	      LEAST(
+	        f.PAY_DAY,
+	        TO_NUMBER(TO_CHAR(LAST_DAY(TRUNC(SYSDATE)), 'DD'))
+	      )
+	  ) s
+	  ON (
+	    m.FIXED_ID = s.FIXED_ID
+	    AND TRUNC(m.TRANS_DATE) = s.TRANS_DATE
+	  )
+	  WHEN NOT MATCHED THEN
+	    INSERT (
+	      TRAN_ID, TITLE, TRANS_DATE, ORIGINAL_AMOUNT,
+	      IS_SHARED, CATEGORY, TYPE, MEMO, USER_ID, GROUP_TRAN_ID, FIXED_ID
+	    )
+	    VALUES (
+	      SEQ_MYTRANS.NEXTVAL, s.TITLE, s.TRANS_DATE, s.ORIGINAL_AMOUNT,
+	      s.IS_SHARED, s.CATEGORY, s.TYPE, s.MEMO, s.USER_ID, NULL, s.FIXED_ID
+	    )
+	</insert>
+	
+	
 
 	
 

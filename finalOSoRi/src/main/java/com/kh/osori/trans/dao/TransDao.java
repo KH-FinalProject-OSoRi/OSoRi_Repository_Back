@@ -34,5 +34,10 @@ public class TransDao {
 		
 		return sqlSession.delete("transMapper.deleteTrans",transId);
 	}
+	
+	// [추가] 고정지출 -> MYTRANS 자동반영 MERGE 실행
+	public int mergeFixedToMyTrans(SqlSessionTemplate sqlSession) {
+	  return sqlSession.insert("transMapper.mergeFixedToMyTrans");
+	}
 
 }
