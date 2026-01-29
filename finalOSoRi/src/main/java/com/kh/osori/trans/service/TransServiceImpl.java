@@ -49,6 +49,26 @@ public class TransServiceImpl implements TransService{
 	}
 
 
+	public List<Grouptrans> getGroupTransactions(int groupId) {
+		return dao.getGroupTransactions(sqlSession,groupId);
+	}
+	
+	public int updateGroupTrans(Grouptrans gt) {
+			
+			return dao.updateGroupTrans(sqlSession,gt);
+		}
+
+	public int deleteGroupTrans(int transId) {
+		
+		return dao.deleteGroupTrans(sqlSession,transId);
+	}
+
+	public Object groupInfo(int groupId) {
+		
+		return dao.groupInfo(sqlSession,groupId);
+	}
+
+
 
 
 }

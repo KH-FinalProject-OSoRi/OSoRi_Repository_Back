@@ -1,0 +1,5 @@
+package com.kh.osori.notification.model.Dao;
+
+public class NotificationDao {
+
+}

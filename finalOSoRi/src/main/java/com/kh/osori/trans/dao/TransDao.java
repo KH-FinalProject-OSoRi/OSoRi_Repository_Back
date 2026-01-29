@@ -12,7 +12,7 @@ import com.kh.osori.trans.model.vo.Mytrans;
 public class TransDao {
 
 	public int myTransSave(SqlSessionTemplate sqlSession, Mytrans mt) {
-	
+		System.out.println("TransDao mt : "+mt);
 		return sqlSession.insert("transMapper.myTransSave",mt);
 	}
 
@@ -39,5 +39,27 @@ public class TransDao {
 	public int mergeFixedToMyTrans(SqlSessionTemplate sqlSession) {
 	  return sqlSession.insert("transMapper.mergeFixedToMyTrans");
 	}
+
+	public List<Grouptrans> getGroupTransactions(SqlSessionTemplate sqlSession, int groupId) {
+		
+		return sqlSession.selectList("transMapper.selectGroupTrans",groupId);
+	}
+
+	public int updateGroupTrans(SqlSessionTemplate sqlSession, Grouptrans gt) {
+		
+		return sqlSession.update("transMapper.updateGroupTrans",gt);
+	}
+
+	public int deleteGroupTrans(SqlSessionTemplate sqlSession, int transId) {
+		
+		return sqlSession.delete("transMapper.deleteGroupTrans",transId);
+	}
+
+	public Object groupInfo(SqlSessionTemplate sqlSession, int groupId) {
+		
+		return sqlSession.selectOne("transMapper.groupInfo",groupId);
+	}
+
+	
 
 }

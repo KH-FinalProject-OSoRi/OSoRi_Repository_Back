@@ -1,0 +1,5 @@
+package com.kh.osori.websocket.model.vo;
+
+public class WebSocketConfig {
+
+}

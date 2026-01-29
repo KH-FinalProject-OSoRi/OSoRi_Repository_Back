@@ -3,6 +3,8 @@ package com.kh.osori.user.controller;
 import java.util.HashMap;
 import java.util.Map;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.kh.osori.FinalOSoRiApplication;
 import com.kh.osori.user.model.service.UserService;
 import com.kh.osori.user.model.vo.User;
@@ -235,6 +236,7 @@ public class UserController {
 		System.out.println(authorization.substring("Bearer ".length())); // 확인용 
 		 
 		System.out.println(token); // 확인용 
+
 
 		//갖고 온 토큰이 유효한지 검증을 해야 한다. (토큰에도 유효 시간이 있음.)
 		
