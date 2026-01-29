@@ -15,7 +15,8 @@
         TYPE,
         MEMO,
         USER_ID,
-        GROUP_TRAN_ID  ) VALUES (
+        GROUPB_ID) 
+        VALUES (
         SEQ_MYTRANS.NEXTVAL,
         #{title},
         #{transDate},
@@ -25,7 +26,7 @@
         #{type},
         #{memo},
         #{userId},
-        #{groupTransId} )
+        #{groupBId} )
 </insert>
 	
 	<insert id="groupTransSave" parameterType="grouptrans">
@@ -66,7 +67,7 @@
 		    MEMO           AS "memo",
 		    USER_ID        AS "userId",
 		    IS_SHARED      AS "isShared",
-		    GROUP_TRAN_ID  AS "groupTransId"
+		    GROUPB_ID  	   AS "groupBId"
 		FROM MYTRANS 
 		WHERE USER_ID = #{userId}
 		ORDER BY TRAN_ID DESC
@@ -134,7 +135,9 @@
 	        TO_CHAR(END_DATE, 'YYYY-MM-DD')   AS "endDate"
 	    FROM GROUPBUDGET  
 	    WHERE GROUPB_ID = #{groupId}
-</select>
+	</select>
+	
+	
 
 	
 

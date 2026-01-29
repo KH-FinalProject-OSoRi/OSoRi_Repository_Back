@@ -3,6 +3,7 @@ package com.kh.osori.trans.model.vo;
 import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,7 +24,8 @@ public class Mytrans {
 	private int originalAmount; //금액
 	private String isShared; //그룹에서 가지고 온지 여부
 	private String category; //카테고리
-	private Integer groupTransId; //그룹id
+	@JsonProperty("groupTransId") 
+	private Integer groupBId; // //그룹id
 	private String memo; //메모
 	private int userId; //사용자id
 
