@@ -55,6 +55,11 @@ public class TransDao {
 		return sqlSession.selectOne("transMapper.groupInfo",groupId);
 	}
 
+	public List<Mytrans> recentTrans(SqlSessionTemplate sqlSession, int userId) {
+		
+		return sqlSession.selectList("transMapper.recentTrans",userId);
+	}
+
 	
 
 }
