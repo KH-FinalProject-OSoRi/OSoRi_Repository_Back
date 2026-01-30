@@ -42,6 +42,12 @@ public class TransServiceImpl implements TransService{
 		
 		return dao.deleteTrans(sqlSession,transId);
 	}
+	
+	// [추가] 고정지출 -> MYTRANS 자동반영 MERGE 실행
+	public int mergeFixedToMyTrans() {
+	  return dao.mergeFixedToMyTrans(sqlSession);
+	}
+
 
 	public List<Grouptrans> getGroupTransactions(int groupId) {
 		return dao.getGroupTransactions(sqlSession,groupId);
