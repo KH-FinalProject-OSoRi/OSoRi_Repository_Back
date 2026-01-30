@@ -6,10 +6,8 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,14 +15,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kh.osori.challenges.model.vo.Challenges;
+import com.kh.osori.challenges.model.vo.GroupChall;
 import com.kh.osori.groupBudget.model.service.GroupBudgetService;
 import com.kh.osori.groupBudget.model.vo.BudgetMem;
 import com.kh.osori.groupBudget.model.vo.GroupBudget;
 import com.kh.osori.notification.model.service.NotificationService;
 import com.kh.osori.notification.model.vo.Notification;
+import com.kh.osori.trans.model.vo.Grouptrans;
 import com.kh.osori.user.controller.UserController;
 import com.kh.osori.user.model.vo.User;
-import com.kh.osori.trans.model.vo.Grouptrans;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,9 +60,22 @@ public class GroupBudgetController {
 		}
 	}
 	
+	@GetMapping("/gbOldList")
+	public ResponseEntity<?> oldGroupBudgetList(@RequestParam(value="userId") int userId) {
+		List<GroupBudget> oldGroupBudgetList = service.oldGroupBudgetList(userId);
+
+		if(oldGroupBudgetList != null && !oldGroupBudgetList.isEmpty()) {			
+			return ResponseEntity.ok(oldGroupBudgetList);
+		}else if(oldGroupBudgetList.size() == 0){
+			return ResponseEntity.status(HttpStatus.NO_CONTENT).body("불러올 그룹가계부 목록이 없습니다.");
+		}else {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("이전 그룹가계부 목록조회를 실패했습니다.");
+		}
+	}
+	
+	
 	@PostMapping("/gbAdd")
 	public ResponseEntity<?> addNewGroupB(@RequestBody GroupBudget gb){
-		System.out.println("gb"+gb);
 		int reuslt1 = service.addNewGroupB(gb);
 		int result2 = 0;
 		
@@ -159,20 +172,31 @@ public class GroupBudgetController {
 		}
 	}
 	
-	
-	@PutMapping("/gbEditBAmount/{groupbId}")
-	public ResponseEntity<?> updateBAmount(@RequestBody GroupBudget gb){
-		int result = service.updateBAmount(gb);
-		
-		if(result > 0) {
-			return ResponseEntity.ok("예산 금액 수정 성공");
+	@GetMapping("/gbCheckAdmin")
+	public ResponseEntity<?> groupCheckAdmin(@RequestParam(value="groupbId") int groupbId) {
+		int groupAdminId = service.groupCheckAdmin(groupbId);
+
+		if(groupAdminId > 0) {			
+			return ResponseEntity.ok(groupAdminId);
 		}else {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("예산 금액 수정에 실패했습니다");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("그룹 관리자 조회에 실패했습니다");
 		}
 	}
 	
-	@DeleteMapping("/gbDelete")
-	public ResponseEntity<?> deleteGroupBudget(@PathVariable int groupbId){
+	@PostMapping("/gbUpdate")
+	public ResponseEntity<?> updateGroupB(@RequestBody GroupBudget gb){
+		int result = service.updateGroupB(gb);
+		
+		if(result > 0) {
+			return ResponseEntity.ok("그룹 가계부 수정 성공");
+		}else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("그룹 가계부 수정에 실패했습니다");
+		}
+	}
+	
+	@PostMapping("/gbDelete")
+	public ResponseEntity<?> deleteGroupBudget(@RequestParam(value="groupbId") int groupbId){
+		System.out.println(groupbId);
 		int result = service.deleteGroupBudget(groupbId);
 		
 		if(result > 0) {
@@ -182,7 +206,6 @@ public class GroupBudgetController {
 		}
 	}
 	
-	//기존 /gbDetail
 	@GetMapping("/gbTrans")
 	public ResponseEntity<?> groupTransactionList(@RequestParam("groupbId") int groupbId) {
 	    List<Grouptrans> list = service.groupTransactionList(groupbId); 
@@ -194,5 +217,25 @@ public class GroupBudgetController {
 	    }
 	}
 	
+	@GetMapping("/gbChallList")
+	public ResponseEntity<?> groupChallList(){
+		List<Challenges> list = service.groupChallList();
+		
+		if(list != null) {
+	        return ResponseEntity.ok(list);
+	    } else {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("그룹가계부 챌린지 목록 조회를 실패했습니다.");
+	    }
+	}
 	
+	@PostMapping("/gbAddChall")
+	public ResponseEntity<?> addGroupChall(@RequestBody GroupChall chall){
+		int result = service.addGroupChall(chall);
+		
+		if(result > 0) {
+			return ResponseEntity.status(HttpStatus.CREATED).body("그룹 챌린지 추가 성공");
+		}else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("그룹 챌린지 추가에 실패했습니다");
+		}
+	}
 }

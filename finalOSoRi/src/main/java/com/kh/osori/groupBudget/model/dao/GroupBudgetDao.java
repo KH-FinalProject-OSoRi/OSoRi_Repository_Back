@@ -5,6 +5,8 @@ import java.util.List;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.kh.osori.challenges.model.vo.Challenges;
+import com.kh.osori.challenges.model.vo.GroupChall;
 import com.kh.osori.groupBudget.model.vo.BudgetMem;
 import com.kh.osori.groupBudget.model.vo.GroupBudget;
 import com.kh.osori.notification.model.vo.Notification;
@@ -16,6 +18,10 @@ public class GroupBudgetDao {
 
 	public List<GroupBudget> groupBudgetList(SqlSessionTemplate sqlSession, int userId) {
 		return (List)sqlSession.selectList("groupBudgetMapper.groupBudgetList",userId);
+	}
+	
+	public List<GroupBudget> oldGroupBudgetList(SqlSessionTemplate sqlSession, int userId) {
+		return (List)sqlSession.selectList("groupBudgetMapper.oldGroupBudgetList",userId);
 	}
 
 	public int addNewGroupB(SqlSessionTemplate sqlSession, GroupBudget gb) {
@@ -38,7 +44,7 @@ public class GroupBudgetDao {
 		return sqlSession.update("groupBudgetMapper.deleteGroupBudget",groupbId);
 	}
 
-	public int updateBAmount(SqlSessionTemplate sqlSession, GroupBudget gb) {
+	public int updateGroupB(SqlSessionTemplate sqlSession, GroupBudget gb) {
 		return sqlSession.update("groupBudgetMapper.updateBAmount",gb);
 	}
 
@@ -64,6 +70,18 @@ public class GroupBudgetDao {
 	
 	public List<Grouptrans> groupTransactionList(SqlSessionTemplate sqlSession, int groupbId) {
 	    return sqlSession.selectList("groupBudgetMapper.groupTransactionList", groupbId);
+	}
+
+	public int groupCheckAdmin(SqlSessionTemplate sqlSession, int groupbId) {
+		return sqlSession.selectOne("groupBudgetMapper.groupCheckAdmin", groupbId);
+	}
+
+	public List<Challenges> groupChallList(SqlSessionTemplate sqlSession) {
+		return sqlSession.selectList("groupBudgetMapper.groupChallList");
+	}
+
+	public int addGroupChall(SqlSessionTemplate sqlSession, GroupChall chall) {
+		return sqlSession.insert("groupBudgetMapper.addGroupChall",chall);
 	}
 
 	
