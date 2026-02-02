@@ -252,25 +252,49 @@
   
   <!-- 그룹챌린지 관련 -->
    <insert id="joinGroupChallenge" parameterType="GroupChall">
-    	INSERT INTO GROUPCHALL (
-	        CHALLENGE_ID,
-	        GROUPB_ID,
-	        START_DATE,
-	        END_DATE
-	    ) VALUES (
-	        #{challengeId},
-	        #{groupbId},
-	        #{startDate},
-	        #{endDate}
-	    )
+		<choose>
+	        <when test="challengeId == 'group_reduceZero_competition'">
+	            INSERT INTO GROUPCHALL (
+	                CHALLENGE_ID,
+	                GROUPB_ID,
+	                START_DATE,
+	                END_DATE,
+	                STATUS
+	            )
+	            SELECT 
+	                #{challengeId},
+	                #{groupbId},
+	                SYSDATE,
+	                END_DATE, 
+	                'PROCEEDING'
+	            FROM GROUPBUDGET
+	            WHERE GROUPB_ID = #{groupbId}
+	        </when>
+	
+	        <otherwise>
+	            INSERT INTO GROUPCHALL (
+	                CHALLENGE_ID,
+	                GROUPB_ID,
+	                START_DATE,
+	                END_DATE,
+	                STATUS
+	            ) VALUES (
+	                #{challengeId},
+	                #{groupbId},
+	                #{startDate},
+	                #{endDate},       
+	                'PROCEEDING'
+	            )
+	        </otherwise>
+	    </choose>
 	</insert>
 	
 	<select id="getGroupJoinList" resultType="GroupChall">
 	   SELECT 
 	       CHALLENGE_ID as challengeId,
 	       GROUPB_ID as groupbId,
-	       STATUS as status
-	   FROM GROUPCHALL
+	       STATUS as status,
+	       START_DATE as startDate,  END_DATE as endDate      FROM GROUPCHALL
 	   WHERE GROUPB_ID = #{groupbId}
 	</select>
 	
@@ -282,6 +306,61 @@
 	      AND CHALLENGE_ID = 'group_zero_challenge'
 	      AND STATUS = 'PROCEEDING'
 	</update>
+	
+	<!--지출 적게 쓰기 챌린지 순위 매기기 함수-->
+	<select id="selectCompetitionRanking" resultType="map">
+	    SELECT 
+	        USER_ID AS "userId",
+	        NICKNAME AS "nickname",
+	        SUM(ORIGINAL_AMOUNT) AS "totalAmount",
+	        -- 지출이 적을수록 높은 순위(1등) 부여
+	        RANK() OVER (ORDER BY SUM(ORIGINAL_AMOUNT) ASC) AS "rank"
+	    FROM GROUPTRANS
+	    WHERE GROUPB_ID = #{groupbId}
+	      AND TYPE = 'OUT'
+	      AND TRANS_DATE BETWEEN 
+	          (SELECT START_DATE FROM GROUPCHALL 
+	           WHERE GROUPB_ID = #{groupbId} AND CHALLENGE_ID = #{challengeId} AND STATUS = 'PROCEEDING')
+	          AND 
+	          (SELECT END_DATE FROM GROUPCHALL 
+	           WHERE GROUPB_ID = #{groupbId} AND CHALLENGE_ID = #{challengeId} AND STATUS = 'PROCEEDING')
+	    GROUP BY USER_ID, NICKNAME
+	    ORDER BY "rank" ASC
+	</select>
+	
+	<!--그룹 과거 내역-->
+	<select id="getGroupPastChallengeList" resultType="GroupChall">
+	    SELECT 
+	        gc.CHALLENGE_ID as challengeId,
+	        gc.GROUPB_ID    as groupbId,
+	        gc.STATUS       as status,
+	        gc.START_DATE   as startDate,
+	        gc.END_DATE     as endDate,
+	        c.DESCRIPTION   as description,  c.CATEGORY      as category,     c.TYPE          as type,         c.DURATION      as duration,     c.TARGET        as target,       c.TARGET_COUNT  as targetCount   FROM GROUPCHALL gc
+	    JOIN CHALLENGES c ON gc.CHALLENGE_ID = c.CHALLENGE_ID
+	    WHERE gc.GROUPB_ID = #{groupbId}
+	      AND gc.STATUS IN ('SUCCESS', 'FAILED')
+	    ORDER BY gc.END_DATE DESC
+	</select>
+	
+	<select id="getGroupRanking" resultType="map">
+	    SELECT 
+	        USER_ID AS "userId",
+	        NICKNAME AS "nickname",
+	        SUM(ORIGINAL_AMOUNT) AS "totalAmount",
+	        RANK() OVER (ORDER BY SUM(ORIGINAL_AMOUNT) ASC) AS "rank"
+	    FROM GROUPTRANS
+	    WHERE GROUPB_ID = #{groupbId}
+	      AND TYPE = 'OUT'
+	      AND TRANS_DATE BETWEEN 
+	          (SELECT START_DATE FROM GROUPCHALL 
+	           WHERE GROUPB_ID = #{groupbId} AND CHALLENGE_ID = #{challengeId} AND STATUS = 'PROCEEDING')
+	          AND 
+	          (SELECT END_DATE FROM GROUPCHALL 
+	           WHERE GROUPB_ID = #{groupbId} AND CHALLENGE_ID = #{challengeId} AND STATUS = 'PROCEEDING')
+	    GROUP BY USER_ID, NICKNAME
+	    ORDER BY "rank" ASC
+	</select>
 	
 
 

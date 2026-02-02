@@ -3,6 +3,7 @@ package com.kh.osori.challenges.service;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.kh.osori.challenges.model.vo.Challenge;
 import com.kh.osori.challenges.model.vo.GroupChall;
@@ -33,8 +34,14 @@ public interface ChallengeService {
 	
 	List<GroupChall> getGroupJoinList(int groupbId);
 
-
 	int failActiveZeroChallenge(int groupBId);
+	
+	List<Map<String, Object>> getGroupRanking(int groupbId, String challengeId);
+
+
+	List<GroupChall> getGroupPastChallengeList(int groupbId);
+
+
 	
 	
 	

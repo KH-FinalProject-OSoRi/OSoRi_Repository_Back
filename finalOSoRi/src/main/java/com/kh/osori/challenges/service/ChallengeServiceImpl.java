@@ -450,6 +450,8 @@ public class ChallengeServiceImpl implements ChallengeService {
 	    }
 	    return false;
 	}
+	
+	//그룹 챌린지
 
 	@Override
 	public int joinGroupChallenge(GroupChall groupChall) {
@@ -461,13 +463,25 @@ public class ChallengeServiceImpl implements ChallengeService {
 		return dao.getGroupJoinList(sqlSession, groupbId);
 	}
 	
-	// ChallengeServiceImpl.java (챌린지 패키지)
 
 	@Override
 	public int failActiveZeroChallenge(int groupbId) {
 		// 이전에 만든 MyBatis Mapper의 id="failActiveZeroChallenge"를 호출함
 	    return dao.failActiveZeroChallenge(sqlSession, groupbId);
 	}
+	
+	public List<Map<String, Object>> getGroupRanking(int groupbId, String challengeId) {
+	    Map<String, Object> params = new HashMap<>();
+	    params.put("groupbId", groupbId);
+	    params.put("challengeId", challengeId);
+	    return dao.selectCompetitionRanking(sqlSession, params);
+	}
+
+	@Override
+	public List<GroupChall> getGroupPastChallengeList(int groupbId) {
+		return dao.getGroupPastChallengeList(sqlSession, groupbId);
+	}
+
 }
 
 
