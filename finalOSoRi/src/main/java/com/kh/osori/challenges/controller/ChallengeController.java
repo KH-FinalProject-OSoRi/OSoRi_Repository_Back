@@ -1,6 +1,7 @@
 package com.kh.osori.challenges.controller;
 
 import java.util.ArrayList;
+
 import java.util.HashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,8 +14,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kh.osori.challenges.model.dto.JoinMyChallengeRequest;
 import com.kh.osori.challenges.model.vo.Challenge;
 import com.kh.osori.challenges.model.vo.GroupChall;
+import com.kh.osori.challenges.model.vo.MyChall;
+import com.kh.osori.challenges.model.vo.MyChallHistory;
 import com.kh.osori.challenges.service.ChallengeService;
 
 @RestController
@@ -26,18 +30,101 @@ public class ChallengeController {
 	
 	@GetMapping
 	public ResponseEntity<?> getChallengeList(@RequestParam String challengeMode) {
-		
-		ArrayList<Challenge> list = service.getChallengeList(challengeMode); 
-		
-		HashMap<String, Object> res = new HashMap<>(); 
-		
-		if(list != null) {
-			return ResponseEntity.ok(list); 
+
+		ArrayList<Challenge> list = service.getChallengeList(challengeMode);
+
+		HashMap<String, Object> res = new HashMap<>();
+
+		if (list != null) {
+			return ResponseEntity.ok(list);
 		} else {
 			res.put("message", "챌린지 목록을 조회 할 수 없습니다.");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
 		}
-		
+	}
+
+	// 참여하기 (잔액 검증 포함)
+	@PostMapping("/mychallenges")
+	public ResponseEntity<?> joinMyChallenge(@RequestBody JoinMyChallengeRequest req) {
+
+		HashMap<String, Object> res = new HashMap<>();
+
+	    try {
+	        MyChall myChall = MyChall.builder()
+	                .challengeId(req.getChallengeId())
+	                .userId(req.getUserId())
+	                .startDate(req.getStartDate())
+	                .endDate(req.getEndDate())
+	                .build();
+
+	        int result = service.joinMyChallengeWithBalanceCheck(
+	                myChall,
+	                req.getExpenseSum(),
+	                req.getExpenseCount()
+	        );
+
+	        if (result > 0) {
+	            return ResponseEntity.ok("챌린지 등록 성공했습니다.");
+	        } else {
+	            res.put("message", "서버에 문제가 생겨서 챌린지 등록을 실패했습니다.");
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
+	        }
+
+	    } catch (IllegalArgumentException e) {
+	        // 검증 실패는 400 + 메시지로 내리기
+	        res.put("message", e.getMessage());
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+
+	    } catch (IllegalStateException e) {
+	        res.put("message", e.getMessage());
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+
+	    } catch (Exception e) {
+	        res.put("message", "서버에 문제가 생겨서 챌린지 등록을 실패했습니다.");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
+	    }
+	}
+
+	// 참여 목록 조회
+	@GetMapping("/mychallenges")
+	public ResponseEntity<?> getMyChallengeList(@RequestParam int userId,
+			@RequestParam(required = false) String challengeMode) {
+
+		HashMap<String, Object> req = new HashMap<>();
+
+		req.put("userId", userId);
+		req.put("challengeMode", challengeMode);
+
+		ArrayList<MyChall> list = service.getMyChallengeList(req);
+
+		HashMap<String, Object> res = new HashMap<>();
+
+		if (list != null) {
+			return ResponseEntity.ok(list);
+		} else {
+			res.put("message", "내 챌린지 목록을 조회 할 수 없습니다.");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
+		}
+	}
+
+	// 지난 챌린지 (END_DATE 지난 것만 / SUCCESS, FAILED)
+	@GetMapping("/mychallenges/past")
+	public ResponseEntity<?> getMyPastChallengeList(@RequestParam int userId,
+			@RequestParam(required = false) String challengeMode) {
+
+		HashMap<String, Object> req = new HashMap<>();
+		req.put("userId", userId);
+		req.put("challengeMode", challengeMode);
+
+		ArrayList<MyChallHistory> list = service.getMyPastChallengeList(req);
+
+		HashMap<String, Object> res = new HashMap<>();
+		if (list != null) {
+			return ResponseEntity.ok(list);
+		} else {
+			res.put("message", "지난 챌린지 목록을 조회 할 수 없습니다.");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
+		}
 	}
 	
 	@PostMapping("/group")
@@ -55,3 +142,4 @@ public class ChallengeController {
 	
 
 }
+
