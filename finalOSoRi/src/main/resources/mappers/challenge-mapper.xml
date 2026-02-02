@@ -5,10 +5,12 @@
   
 <mapper namespace="challengeMapper"> 
 
-	<select id="getChallengeList" parameterType="string" resultType="Challenge">
-		SELECT *
+	<select id="getChallengeList" resultType="Challenge">
+	    SELECT *
 		FROM CHALLENGES
 		WHERE CHALLENGE_MODE = #{challengeMode}
 	</select>
+	
+
 
 </mapper> 

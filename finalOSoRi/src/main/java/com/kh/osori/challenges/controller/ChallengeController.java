@@ -7,11 +7,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kh.osori.challenges.model.vo.Challenge;
+import com.kh.osori.challenges.model.vo.GroupChall;
 import com.kh.osori.challenges.service.ChallengeService;
 
 @RestController
@@ -36,5 +39,19 @@ public class ChallengeController {
 		}
 		
 	}
+	
+	@PostMapping("/group")
+	public ResponseEntity<?> joinGroupChallenge(@RequestBody GroupChall groupChall) {
+
+		int result = service.joinGroupChallenge(groupChall);
+		
+		if(result > 0) {
+			return ResponseEntity.ok(groupChall);
+		}else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("그룹챌린지 참여 불가");
+		}
+		
+	}
+	
 
 }
