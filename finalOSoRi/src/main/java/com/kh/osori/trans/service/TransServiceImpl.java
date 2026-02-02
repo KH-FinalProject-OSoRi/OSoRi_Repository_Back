@@ -6,6 +6,7 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.kh.osori.challenges.service.ChallengeService;
 import com.kh.osori.trans.dao.TransDao;
 import com.kh.osori.trans.model.vo.Grouptrans;
 import com.kh.osori.trans.model.vo.Mytrans;
@@ -18,10 +19,14 @@ public class TransServiceImpl implements TransService{
 	
 	@Autowired
 	private SqlSessionTemplate sqlSession;
+	
+	//추가
+	@Autowired
+	private ChallengeService challengeService;
 
-	public int myTransSave(Mytrans mt) {
-		
+	public int myTransSave(Mytrans mt) {	
 		return dao.myTransSave(sqlSession,mt);
+				
 	}
 
 	public int GroupTransSave(Grouptrans gt) {
@@ -33,8 +38,7 @@ public class TransServiceImpl implements TransService{
 		return dao.selectMyTrans(sqlSession, userId);
 	}
 
-	public int updateTrans(Mytrans mt) {
-		
+	public int updateTrans(Mytrans mt) {	
 		return dao.updateTrans(sqlSession,mt);
 	}
 
