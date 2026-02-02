@@ -5,6 +5,7 @@ import java.util.List;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.kh.osori.challenges.service.ChallengeService;
 import com.kh.osori.trans.dao.TransDao;
@@ -29,10 +30,22 @@ public class TransServiceImpl implements TransService{
 				
 	}
 
+	@Transactional
+	@Override
 	public int GroupTransSave(Grouptrans gt) {
-		
-		return dao.groupTransSave(sqlSession,gt);
-	}
+        // 1. 기존 거래 내역 저장 로직 실행
+        int result = dao.groupTransSave(sqlSession, gt);
+
+        // 2. 저장 성공(result > 0) 및 지출(OUT) 타입인지 확인
+        if (result > 0 && "OUT".equalsIgnoreCase(gt.getTransType())) {
+            // 3. Challenge 서비스의 실패 처리 메서드 호출
+            // gt.getGroupbId()를 통해 현재 가계부의 챌린지만 골라 실패 처리함
+        	System.out.println("지출 감지! 챌린지 실패 로직 실행. 가계부ID: " + gt.getGroupBId());
+            challengeService.failActiveZeroChallenge(gt.getGroupBId());
+        }
+
+        return result;
+    }
 	
 	public List<Mytrans> getMyTransactions(int userId) {
 		return dao.selectMyTrans(sqlSession, userId);

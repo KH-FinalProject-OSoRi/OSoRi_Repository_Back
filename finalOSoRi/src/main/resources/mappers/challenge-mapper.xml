@@ -248,22 +248,44 @@
     GROUP BY TRUNC(TRANS_DATE)
     ORDER BY TRUNC(TRANS_DATE)
   </select>
+  
+  
+  <!-- 그룹챌린지 관련 -->
+   <insert id="joinGroupChallenge" parameterType="GroupChall">
+    	INSERT INTO GROUPCHALL (
+	        CHALLENGE_ID,
+	        GROUPB_ID,
+	        START_DATE,
+	        END_DATE
+	    ) VALUES (
+	        #{challengeId},
+	        #{groupbId},
+	        #{startDate},
+	        #{endDate}
+	    )
+	</insert>
+	
+	<select id="getGroupJoinList" resultType="GroupChall">
+	   SELECT 
+	       CHALLENGE_ID as challengeId,
+	       GROUPB_ID as groupbId,
+	       STATUS as status
+	   FROM GROUPCHALL
+	   WHERE GROUPB_ID = #{groupbId}
+	</select>
+	
+	<!-- 24시간 무지출 챌린지 실시간 검사 -->
+	<update id="failActiveZeroChallenge" parameterType="int">
+	    UPDATE GROUPCHALL
+	    SET STATUS = 'FAILED'
+	    WHERE GROUPB_ID = #{groupbId}
+	      AND CHALLENGE_ID = 'group_zero_challenge'
+	      AND STATUS = 'PROCEEDING'
+	</update>
+	
+
+
 
 </mapper>
 
 
-
-
-<<<<<<< HEAD
-	<select id="getChallengeList" resultType="Challenge">
-	    SELECT *
-		FROM CHALLENGES
-		WHERE CHALLENGE_MODE = #{challengeMode}
-	</select>
-	
-
-
-</mapper> 
-=======
-
->>>>>>> origin/jeon

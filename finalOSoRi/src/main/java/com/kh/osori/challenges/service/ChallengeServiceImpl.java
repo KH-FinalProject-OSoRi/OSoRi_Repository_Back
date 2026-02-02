@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import com.kh.osori.challenges.model.dao.ChallengeDao;
 import com.kh.osori.challenges.model.vo.Challenge;
+import com.kh.osori.challenges.model.vo.GroupChall;
 import com.kh.osori.challenges.model.vo.MyChall;
 import com.kh.osori.challenges.model.vo.MyChallHistory;
 
@@ -449,6 +451,23 @@ public class ChallengeServiceImpl implements ChallengeService {
 	    return false;
 	}
 
+	@Override
+	public int joinGroupChallenge(GroupChall groupChall) {
+		return dao.joinGroupChallenge(sqlSession, groupChall);
+	}
+
+	@Override
+	public List<GroupChall> getGroupJoinList(int groupbId) {
+		return dao.getGroupJoinList(sqlSession, groupbId);
+	}
+	
+	// ChallengeServiceImpl.java (챌린지 패키지)
+
+	@Override
+	public int failActiveZeroChallenge(int groupbId) {
+		// 이전에 만든 MyBatis Mapper의 id="failActiveZeroChallenge"를 호출함
+	    return dao.failActiveZeroChallenge(sqlSession, groupbId);
+	}
 }
 
 

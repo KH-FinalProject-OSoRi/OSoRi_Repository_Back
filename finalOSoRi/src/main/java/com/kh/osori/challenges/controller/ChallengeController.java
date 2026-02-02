@@ -3,6 +3,7 @@ package com.kh.osori.challenges.controller;
 import java.util.ArrayList;
 
 import java.util.HashMap;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -138,6 +139,13 @@ public class ChallengeController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("그룹챌린지 참여 불가");
 		}
 		
+	}
+	
+	@GetMapping("/myJoinedList")
+	public ResponseEntity<?> getMyJoinedList(@RequestParam("groupbId") int groupbId) {
+	    List<GroupChall> list = service.getGroupJoinList(groupbId);
+	    
+	    return ResponseEntity.ok(list);
 	}
 	
 
