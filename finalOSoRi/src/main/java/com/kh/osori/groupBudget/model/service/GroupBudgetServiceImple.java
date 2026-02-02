@@ -103,14 +103,4 @@ public class GroupBudgetServiceImple implements GroupBudgetService {
 		return dao.groupCheckAdmin(sqlSession,groupbId);
 	}
 
-	@Override
-	public List<Challenges> groupChallList() {
-		return dao.groupChallList(sqlSession);
-	}
-
-	@Override
-	public int addGroupChall(GroupChall chall) {
-		return dao.addGroupChall(sqlSession,chall);
-	}
-
 }
