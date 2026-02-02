@@ -96,6 +96,12 @@
   		SET USER_NAME = #{userName},
   			NICKNAME = #{nickName},			
   			EMAIL = #{email},
+  			<if test="originName != null">
+            ORIGIN_NAME = #{originName},
+        		</if>
+	        <if test="changeName != null">
+	            CHANGE_NAME = #{changeName},
+	        </if>
   			STATUS = 'Y',
   			LAST_LOGIN = CASE 
   							WHEN SYSDATE - LAST_LOGIN &gt;=30 THEN SYSDATE

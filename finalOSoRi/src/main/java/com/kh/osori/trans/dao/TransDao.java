@@ -12,7 +12,7 @@ import com.kh.osori.trans.model.vo.Mytrans;
 public class TransDao {
 
 	public int myTransSave(SqlSessionTemplate sqlSession, Mytrans mt) {
-		System.out.println("TransDao mt : "+mt);
+	
 		return sqlSession.insert("transMapper.myTransSave",mt);
 	}
 
