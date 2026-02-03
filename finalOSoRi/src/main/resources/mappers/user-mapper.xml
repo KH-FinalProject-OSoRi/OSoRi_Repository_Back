@@ -147,4 +147,21 @@
   		SET PASSWORD = #{newPassword}
   		WHERE LOGIN_ID = #{loginId} 	
   	</update>
+  	
+  	<select id="selectUserId" resultType="int">
+  		SELECT SEQ_USERS_ID.CURRVAL
+  		FROM DUAL
+  	</select>
+  	
+  	<insert id="insertAuthAccount" parameterType="Map">
+  		INSERT INTO AUTH_ACCOUNT(
+  			USER_ID,
+  			LOGIN_TYPE,
+  			PROVIDER_USER_ID 
+  		) VALUES (
+  			#{currentUserId},
+  			#{loginType},
+  			#{providerUserId} 
+  		)
+  	</insert>
 </mapper>
