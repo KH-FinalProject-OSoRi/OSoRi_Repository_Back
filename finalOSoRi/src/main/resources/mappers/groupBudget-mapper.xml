@@ -142,27 +142,6 @@
 		WHERE GROUPB_ID = #{groupbId}
 		AND ROLE='ADMIN'
 	</select>
-	
-	<select id="groupChallList" resultType="Challenges">
-		SELECT CHALLENGE_ID,
-			   DESCRIPTION,
-			   TARGET,
-			   DURATION,
-			   CATEGORY,
-			   TYPE
-		FROM CHALLENGES
-		WHERE CHALLENGE_MODE = 'GROUP'
-		AND STATUS = 'Y'
-	</select>
-	
-	<insert id="addGroupChall" parameterType="GroupChall">
-		INSERT INTO GROUPCHALL
-		VALUES (#{challengeId},
-				#{groupbId},
-				'PROCEEDING',
-				SYSDATE,
-				SYSDATE)
-	</insert>
  	
  	
  </mapper>

@@ -34,11 +34,6 @@ public class TransDao {
 		
 		return sqlSession.delete("transMapper.deleteTrans",transId);
 	}
-	
-	// [추가] 고정지출 -> MYTRANS 자동반영 MERGE 실행
-	public int mergeFixedToMyTrans(SqlSessionTemplate sqlSession) {
-	  return sqlSession.insert("transMapper.mergeFixedToMyTrans");
-	}
 
 	public List<Grouptrans> getGroupTransactions(SqlSessionTemplate sqlSession, int groupId) {
 		
@@ -54,17 +49,32 @@ public class TransDao {
 		
 		return sqlSession.delete("transMapper.deleteGroupTrans",transId);
 	}
+	
+	// [추가] 고정지출 -> MYTRANS 자동반영 MERGE 실행
+	public int mergeFixedToMyTrans(SqlSessionTemplate sqlSession) {
+		return sqlSession.insert("transMapper.mergeFixedToMyTrans");
+	}	
 
 	public Object groupInfo(SqlSessionTemplate sqlSession, int groupId) {
 		
 		return sqlSession.selectOne("transMapper.groupInfo",groupId);
 	}
 
+	public List<String> getGroupMemberIds(SqlSessionTemplate sqlSession, int groupBId) {
+		return sqlSession.selectList("transMapper.getGroupMemberIds",groupBId);
+	}
+
+	public String getLoginId(SqlSessionTemplate sqlSession, int userId) {
+		return sqlSession.selectOne("groupBudgetMapper.getLoginid",userId);
+	}
+
+	public String getGroupTitle(SqlSessionTemplate sqlSession, int groupBId) {
+		return sqlSession.selectOne("transMapper.getGroupTitle", groupBId);
+	}
+
 	public List<Mytrans> recentTrans(SqlSessionTemplate sqlSession, int userId) {
 		
 		return sqlSession.selectList("transMapper.recentTrans",userId);
 	}
-
-	
 
 }

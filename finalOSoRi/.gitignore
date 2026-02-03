@@ -30,3 +30,5 @@ replay_pid*
 .classpath
 *.iml
 /bin/
+/finalOSoRi/target/
+/finalOSoRi/.settings/
