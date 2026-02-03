@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kh.osori.challenges.model.dao.ChallengeDao;
+
 import com.kh.osori.challenges.model.vo.Challenge;
 import com.kh.osori.challenges.model.vo.GroupChall;
 import com.kh.osori.challenges.model.vo.MyChall;
@@ -467,7 +468,6 @@ public class ChallengeServiceImpl implements ChallengeService {
 
 	@Override
 	public int failActiveZeroChallenge(int groupbId) {
-		// 이전에 만든 MyBatis Mapper의 id="failActiveZeroChallenge"를 호출함
 	    return dao.failActiveZeroChallenge(sqlSession, groupbId);
 	}
 	
@@ -489,7 +489,6 @@ public class ChallengeServiceImpl implements ChallengeService {
 	    int groupResult = dao.updateGroupChallengeSuccess(sqlSession);
 	    
 	    if(groupResult > 0) {
-	        System.out.println("[스케줄러] 마감된 그룹 챌린지: " + groupResult + "건)");
 	    }
 	}
 

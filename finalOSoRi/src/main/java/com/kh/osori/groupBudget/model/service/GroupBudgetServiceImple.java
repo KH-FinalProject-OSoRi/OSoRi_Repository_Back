@@ -5,7 +5,6 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.kh.osori.challenges.model.vo.Challenges;
 import com.kh.osori.challenges.model.vo.GroupChall;
 import com.kh.osori.groupBudget.model.dao.GroupBudgetDao;
 import com.kh.osori.groupBudget.model.vo.BudgetMem;
@@ -101,16 +100,6 @@ public class GroupBudgetServiceImple implements GroupBudgetService {
 	@Override
 	public int groupCheckAdmin(int groupbId) {
 		return dao.groupCheckAdmin(sqlSession,groupbId);
-	}
-
-	@Override
-	public List<Challenges> groupChallList() {
-		return dao.groupChallList(sqlSession);
-	}
-
-	@Override
-	public int addGroupChall(GroupChall chall) {
-		return dao.addGroupChall(sqlSession,chall);
 	}
 
 }

@@ -170,7 +170,6 @@ public class ChallengeController {
 	        @RequestParam("groupbId") int groupbId,
 	        @RequestParam("challengeId") String challengeId) {
 	    
-	    // 가계부ID와 챌린지ID를 넘겨 해당 그룹 멤버들의 순위를 가져옵니다.
 	    List<Map<String, Object>> rankingList = service.getGroupRanking(groupbId, challengeId);
 	    
 	    if (rankingList != null) {
@@ -183,7 +182,6 @@ public class ChallengeController {
 	
 	@GetMapping("/group/past")
 	public ResponseEntity<?> getGroupPastChallengeList(@RequestParam("groupbId") int groupbId) {
-	    // Service를 통해 과거 그룹 챌린지 목록 조회
 	    List<GroupChall> list = service.getGroupPastChallengeList(groupbId);
 
 	    if (list != null) {
@@ -197,4 +195,3 @@ public class ChallengeController {
 	
 
 }
-

@@ -335,7 +335,13 @@
 	        gc.STATUS       as status,
 	        gc.START_DATE   as startDate,
 	        gc.END_DATE     as endDate,
-	        c.DESCRIPTION   as description,  c.CATEGORY      as category,     c.TYPE          as type,         c.DURATION      as duration,     c.TARGET        as target,       c.TARGET_COUNT  as targetCount   FROM GROUPCHALL gc
+	        c.DESCRIPTION   as description,  
+	        c.CATEGORY      as category,     
+	        c.TYPE          as type,         
+	        c.DURATION      as duration,     
+	        c.TARGET        as target,       
+	        c.TARGET_COUNT  as targetCount   
+	    FROM GROUPCHALL gc
 	    JOIN CHALLENGES c ON gc.CHALLENGE_ID = c.CHALLENGE_ID
 	    WHERE gc.GROUPB_ID = #{groupbId}
 	      AND gc.STATUS IN ('SUCCESS', 'FAILED')
