@@ -98,7 +98,6 @@ public class ChallengeDao {
 
 	public int failActiveZeroChallenge(SqlSessionTemplate sqlSession, int groupbId) {
 		return sqlSession.update("challengeMapper.failActiveZeroChallenge", groupbId);
-		
 	}
 	
 	public List<Map<String, Object>> selectCompetitionRanking(SqlSessionTemplate sqlSession, Map<String, Object> params) {
@@ -110,7 +109,11 @@ public class ChallengeDao {
 	}
 	
 	public List<Map<String, Object>> getGroupRanking(SqlSessionTemplate sqlSession, Map<String, Object> params) {
-	    return sqlSession.selectList("challengeMapper.selectCompetitionRanking", params);
+	    return sqlSession.selectList("challengeMapper.getGroupRanking", params);
+	}
+	
+	public int updateGroupChallengeSuccess(SqlSessionTemplate sqlSession) {
+	    return sqlSession.update("challengeMapper.updateGroupChallengeSuccess");
 	}
 
 }

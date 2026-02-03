@@ -11,6 +11,7 @@ import java.util.Map;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.kh.osori.challenges.model.dao.ChallengeDao;
 import com.kh.osori.challenges.model.vo.Challenge;
@@ -474,12 +475,22 @@ public class ChallengeServiceImpl implements ChallengeService {
 	    Map<String, Object> params = new HashMap<>();
 	    params.put("groupbId", groupbId);
 	    params.put("challengeId", challengeId);
-	    return dao.selectCompetitionRanking(sqlSession, params);
+	    return dao.getGroupRanking(sqlSession, params);
 	}
 
 	@Override
 	public List<GroupChall> getGroupPastChallengeList(int groupbId) {
 		return dao.getGroupPastChallengeList(sqlSession, groupbId);
+	}
+	
+	@Transactional
+	@Override
+	public void closeExpiredChallenges() {
+	    int groupResult = dao.updateGroupChallengeSuccess(sqlSession);
+	    
+	    if(groupResult > 0) {
+	        System.out.println("[스케줄러] 마감된 그룹 챌린지: " + groupResult + "건)");
+	    }
 	}
 
 }

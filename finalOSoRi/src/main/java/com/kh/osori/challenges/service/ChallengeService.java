@@ -42,6 +42,9 @@ public interface ChallengeService {
 	List<GroupChall> getGroupPastChallengeList(int groupbId);
 
 
+	void closeExpiredChallenges();
+
+
 	
 	
 	

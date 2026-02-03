@@ -298,7 +298,7 @@
 	   WHERE GROUPB_ID = #{groupbId}
 	</select>
 	
-	<!-- 24시간 무지출 챌린지 실시간 검사 -->
+	<!-- 24시간 무지출 챌린지 실시간 검사(지출 등록되면 탈락!) -->
 	<update id="failActiveZeroChallenge" parameterType="int">
 	    UPDATE GROUPCHALL
 	    SET STATUS = 'FAILED'
@@ -308,21 +308,20 @@
 	</update>
 	
 	<!--지출 적게 쓰기 챌린지 순위 매기기 함수-->
-	<select id="selectCompetitionRanking" resultType="map">
+	<select id="getGroupRanking" resultType="map">
 	    SELECT 
 	        USER_ID AS "userId",
 	        NICKNAME AS "nickname",
 	        SUM(ORIGINAL_AMOUNT) AS "totalAmount",
-	        -- 지출이 적을수록 높은 순위(1등) 부여
 	        RANK() OVER (ORDER BY SUM(ORIGINAL_AMOUNT) ASC) AS "rank"
 	    FROM GROUPTRANS
 	    WHERE GROUPB_ID = #{groupbId}
 	      AND TYPE = 'OUT'
 	      AND TRANS_DATE BETWEEN 
-	          (SELECT START_DATE FROM GROUPCHALL 
+	          (SELECT TRUNC(START_DATE) FROM GROUPCHALL 
 	           WHERE GROUPB_ID = #{groupbId} AND CHALLENGE_ID = #{challengeId} AND STATUS = 'PROCEEDING')
 	          AND 
-	          (SELECT END_DATE FROM GROUPCHALL 
+	          (SELECT TRUNC(END_DATE) + 0.99999 FROM GROUPCHALL 
 	           WHERE GROUPB_ID = #{groupbId} AND CHALLENGE_ID = #{challengeId} AND STATUS = 'PROCEEDING')
 	    GROUP BY USER_ID, NICKNAME
 	    ORDER BY "rank" ASC
@@ -343,27 +342,16 @@
 	    ORDER BY gc.END_DATE DESC
 	</select>
 	
-	<select id="getGroupRanking" resultType="map">
-	    SELECT 
-	        USER_ID AS "userId",
-	        NICKNAME AS "nickname",
-	        SUM(ORIGINAL_AMOUNT) AS "totalAmount",
-	        RANK() OVER (ORDER BY SUM(ORIGINAL_AMOUNT) ASC) AS "rank"
-	    FROM GROUPTRANS
-	    WHERE GROUPB_ID = #{groupbId}
-	      AND TYPE = 'OUT'
-	      AND TRANS_DATE BETWEEN 
-	          (SELECT START_DATE FROM GROUPCHALL 
-	           WHERE GROUPB_ID = #{groupbId} AND CHALLENGE_ID = #{challengeId} AND STATUS = 'PROCEEDING')
-	          AND 
-	          (SELECT END_DATE FROM GROUPCHALL 
-	           WHERE GROUPB_ID = #{groupbId} AND CHALLENGE_ID = #{challengeId} AND STATUS = 'PROCEEDING')
-	    GROUP BY USER_ID, NICKNAME
-	    ORDER BY "rank" ASC
-	</select>
+	<!-- 기간이 끝날때까지 proceeding 이면 성공 처리 -->
+	<update id="updateGroupChallengeSuccess">
+	    UPDATE GROUPCHALL
+	    SET STATUS = 'SUCCESS'
+	    WHERE STATUS = 'PROCEEDING'
+	      AND END_DATE &lt; SYSDATE
+	</update>
 	
 
-
+	
 
 </mapper>
 
