@@ -25,4 +25,7 @@ public class Grouptrans {
 	private int groupBId; //소속된 그룹가계부 id
 	private int userId; //수입지출 입력한사랑
 	private String nickname;
+	public String getTransType() {
+		return this.type;
+	}
 }

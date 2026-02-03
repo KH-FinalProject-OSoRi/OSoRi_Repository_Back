@@ -1,14 +1,364 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="challengeMapper">
+
+  <select id="getChallengeList"
+          resultType="com.kh.osori.challenges.model.vo.Challenge">
+    SELECT *
+    FROM CHALLENGES
+    WHERE STATUS = 'Y'
+      AND CHALLENGE_MODE = #{challengeMode}
+  </select>
   
-<mapper namespace="challengeMapper"> 
+  <!-- 추가 -->
+  <insert id="joinMyChallenge"
+          parameterType="com.kh.osori.challenges.model.vo.MyChall">
+    INSERT INTO MYCHALL (
+      CHALLENGE_ID,
+      USER_ID,
+      STATUS,
+      START_DATE,
+      END_DATE
+    )
+    VALUES (
+      #{challengeId},
+      #{userId},
+      #{status},  #{startDate},
+      #{endDate}
+    )
+  </insert>
 
-	<select id="getChallengeList" parameterType="string" resultType="Challenge">
-		SELECT *
-		FROM CHALLENGES
-		WHERE CHALLENGE_MODE = #{challengeMode}
+  <select id="getMyChallengeList"
+          parameterType="map"
+          resultType="com.kh.osori.challenges.model.vo.MyChall">
+    SELECT
+      CHALLENGE_ID AS challengeId,
+      USER_ID      AS userId,
+      STATUS       AS status,
+      START_DATE   AS startDate,
+      END_DATE     AS endDate
+    FROM MYCHALL
+    WHERE USER_ID = #{userId}
+    <if test="challengeMode != null and challengeMode != ''">
+      AND CHALLENGE_ID IN (
+        SELECT CHALLENGE_ID
+        FROM CHALLENGES
+        WHERE CHALLENGE_MODE = #{challengeMode}
+      )
+    </if>
+    AND (
+	  STATUS = 'PROCEEDING'
+	  OR STATUS = 'RESERVED'
+	  OR STATUS = 'SUCCESS'
+	 )
+    ORDER BY START_DATE DESC
+  </select>
+
+  <select id="getMyPastChallengeList"
+          parameterType="map"
+          resultType="com.kh.osori.challenges.model.vo.MyChallHistory">
+    SELECT
+      mc.CHALLENGE_ID  AS challengeId,
+      ch.DESCRIPTION   AS description,
+      ch.TARGET        AS target,
+      ch.TARGET_COUNT  AS targetCount,
+      ch.DURATION      AS duration,
+      ch.CATEGORY      AS category,
+      ch.TYPE          AS type,
+      mc.STATUS        AS status,
+      mc.START_DATE    AS startDate,
+      mc.END_DATE      AS endDate
+    FROM MYCHALL mc
+    JOIN CHALLENGES ch
+      ON mc.CHALLENGE_ID = ch.CHALLENGE_ID
+    WHERE mc.USER_ID = #{userId}
+    <if test="challengeMode != null and challengeMode != ''">
+      AND ch.CHALLENGE_MODE = #{challengeMode}
+    </if>
+    AND (
+     mc.END_DATE &lt; TRUNC(SYSDATE)
+     OR mc.STATUS IN ('SUCCESS', 'FAILED')
+    ) 
+    ORDER BY mc.END_DATE DESC
+  </select>
+
+  <!-- 챌린지 단건 조회 -->
+  <select id="selectChallengeById"
+          parameterType="string"
+          resultType="com.kh.osori.challenges.model.vo.Challenge">
+    SELECT
+      CHALLENGE_ID   AS challengeId,
+      DESCRIPTION    AS description,
+      TARGET         AS target,
+      DURATION       AS duration,
+      CATEGORY       AS category,
+      TYPE           AS type,
+      STATUS         AS status,
+      TARGET_COUNT   AS targetCount,
+      CHALLENGE_MODE AS challengeMode
+    FROM CHALLENGES
+    WHERE CHALLENGE_ID = #{challengeId}
+  </select>
+
+  <!-- 기간 내 수입 요약 (MYTRANS) -->
+  <select id="getIncomeSummaryByRange"
+          parameterType="map"
+          resultType="hashmap">
+    SELECT
+      NVL(SUM(ORIGINAL_AMOUNT), 0) AS "sum",
+      COUNT(*) AS "cnt"
+    FROM MYTRANS
+    WHERE USER_ID = #{userId}
+      AND TYPE = 'IN'
+      AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
+      AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
+  </select>
+
+  <!-- 기간 내 지출 요약 (MYTRANS) -->
+  <select id="getExpenseSummaryByRange"
+          parameterType="map"
+          resultType="hashmap">
+    SELECT
+      NVL(SUM(ORIGINAL_AMOUNT), 0) AS "sum",
+      COUNT(*) AS "cnt"
+    FROM MYTRANS
+    WHERE USER_ID = #{userId}
+      AND TYPE = 'OUT'
+      AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
+      AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
+  </select>
+
+  <!-- ========================= -->
+  <!-- 스케줄러: MYCHALL 상태 자동 갱신 -->
+  <!-- ========================= -->
+
+  <!-- 1) RESERVED -> PROCEEDING (START_DATE 도래) -->
+  <update id="promoteReservedToProceeding">
+    UPDATE MYCHALL
+    SET STATUS = 'PROCEEDING'
+    WHERE STATUS = 'RESERVED'
+      AND TRUNC(START_DATE) &lt;= TRUNC(SYSDATE)
+  </update>
+
+  <!-- 2) 종료된 진행중 챌린지 목록 -->
+  <select id="selectEndedProceedingChallenges"
+          resultType="com.kh.osori.challenges.model.vo.MyChallHistory">
+    SELECT
+      mc.CHALLENGE_ID     AS challengeId,
+      mc.USER_ID          AS userId,
+      mc.STATUS           AS status,
+      mc.START_DATE       AS startDate,
+      mc.END_DATE         AS endDate,
+      ch.DESCRIPTION      AS description,
+      ch.TARGET           AS target,
+      ch.TARGET_COUNT     AS targetCount,
+      ch.DURATION         AS duration,
+      ch.CATEGORY         AS category,
+      ch.TYPE             AS type,
+      ch.CHALLENGE_MODE   AS challengeMode
+    FROM MYCHALL mc
+    JOIN CHALLENGES ch
+      ON mc.CHALLENGE_ID = ch.CHALLENGE_ID
+    WHERE mc.STATUS = 'PROCEEDING'
+      AND TRUNC(mc.END_DATE) &lt; TRUNC(SYSDATE)
+  </select>
+
+  <!-- 스케줄러: 진행 중(종료 안 됨) 챌린지 목록 (즉시 실패 판정 대상) -->
+  <select id="selectActiveProceedingChallenges"
+          resultType="com.kh.osori.challenges.model.vo.MyChallHistory">
+    SELECT
+      mc.CHALLENGE_ID     AS challengeId,
+      mc.USER_ID          AS userId,
+      mc.STATUS           AS status,
+      mc.START_DATE       AS startDate,
+      mc.END_DATE         AS endDate,
+      ch.DESCRIPTION      AS description,
+      ch.TARGET           AS target,
+      ch.TARGET_COUNT     AS targetCount,
+      ch.DURATION         AS duration,
+      ch.CATEGORY         AS category,
+      ch.TYPE             AS type,
+      ch.CHALLENGE_MODE   AS challengeMode
+    FROM MYCHALL mc
+    JOIN CHALLENGES ch
+      ON mc.CHALLENGE_ID = ch.CHALLENGE_ID
+    WHERE mc.STATUS = 'PROCEEDING'
+      AND TRUNC(mc.END_DATE) &gt;= TRUNC(SYSDATE)
+  </select>
+
+  <!-- 3) 상태 업데이트 (기간까지 같이 매칭) -->
+  <update id="updateMyChallStatus"
+          parameterType="map">
+    UPDATE MYCHALL
+    SET STATUS = #{status}
+    WHERE USER_ID = #{userId}
+      AND CHALLENGE_ID = #{challengeId}
+      AND TRUNC(START_DATE) = TRUNC(#{startDate})
+      AND TRUNC(END_DATE) = TRUNC(#{endDate})
+  </update>
+
+  <!-- 기간 내 지출 합계 (카테고리 선택) -->
+  <select id="getExpenseSumByRange"
+          parameterType="map"
+          resultType="hashmap">
+    SELECT NVL(SUM(ORIGINAL_AMOUNT), 0) AS sum
+    FROM MYTRANS
+    WHERE USER_ID = #{userId}
+      AND TYPE = 'OUT'
+      AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
+      AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
+    <if test="category != null and category != ''">
+      AND CATEGORY = #{category}
+    </if>
+  </select>
+
+  <!-- 기간 내 지출 건수 (카테고리 선택) -->
+  <select id="getExpenseCountByRange"
+          parameterType="map"
+          resultType="hashmap">
+    SELECT COUNT(*) AS cnt
+    FROM MYTRANS
+    WHERE USER_ID = #{userId}
+      AND TYPE = 'OUT'
+      AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
+      AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
+    <if test="category != null and category != ''">
+      AND CATEGORY = #{category}
+    </if>
+  </select>
+
+  <!-- 일자별 지출 합계 (하루당 제한형) -->
+  <select id="getDailyExpenseSumsByRange"
+          parameterType="map"
+          resultType="hashmap">
+    SELECT
+      TO_CHAR(TRUNC(TRANS_DATE), 'YYYY-MM-DD') AS day,
+      NVL(SUM(ORIGINAL_AMOUNT), 0)             AS sum
+    FROM MYTRANS
+    WHERE USER_ID = #{userId}
+      AND TYPE = 'OUT'
+      AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
+      AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
+    <if test="category != null and category != ''">
+      AND CATEGORY = #{category}
+    </if>
+    GROUP BY TRUNC(TRANS_DATE)
+    ORDER BY TRUNC(TRANS_DATE)
+  </select>
+  
+  
+  <!-- 그룹챌린지 관련 -->
+   <insert id="joinGroupChallenge" parameterType="GroupChall">
+		<choose>
+	        <when test="challengeId == 'group_reduceZero_competition'">
+	            INSERT INTO GROUPCHALL (
+	                CHALLENGE_ID,
+	                GROUPB_ID,
+	                START_DATE,
+	                END_DATE,
+	                STATUS
+	            )
+	            SELECT 
+	                #{challengeId},
+	                #{groupbId},
+	                SYSDATE,
+	                END_DATE, 
+	                'PROCEEDING'
+	            FROM GROUPBUDGET
+	            WHERE GROUPB_ID = #{groupbId}
+	        </when>
+	
+	        <otherwise>
+	            INSERT INTO GROUPCHALL (
+	                CHALLENGE_ID,
+	                GROUPB_ID,
+	                START_DATE,
+	                END_DATE,
+	                STATUS
+	            ) VALUES (
+	                #{challengeId},
+	                #{groupbId},
+	                #{startDate},
+	                #{endDate},       
+	                'PROCEEDING'
+	            )
+	        </otherwise>
+	    </choose>
+	</insert>
+	
+	<select id="getGroupJoinList" resultType="GroupChall">
+	   SELECT 
+	       CHALLENGE_ID as challengeId,
+	       GROUPB_ID as groupbId,
+	       STATUS as status,
+	       START_DATE as startDate,  END_DATE as endDate      FROM GROUPCHALL
+	   WHERE GROUPB_ID = #{groupbId}
 	</select>
+	
+	<!-- 24시간 무지출 챌린지 실시간 검사(지출 등록되면 탈락!) -->
+	<update id="failActiveZeroChallenge" parameterType="int">
+	    UPDATE GROUPCHALL
+	    SET STATUS = 'FAILED'
+	    WHERE GROUPB_ID = #{groupbId}
+	      AND CHALLENGE_ID = 'group_zero_challenge'
+	      AND STATUS = 'PROCEEDING'
+	</update>
+	
+	<!--지출 적게 쓰기 챌린지 순위 매기기 함수-->
+	<select id="getGroupRanking" resultType="map">
+	    SELECT 
+	        USER_ID AS "userId",
+	        NICKNAME AS "nickname",
+	        SUM(ORIGINAL_AMOUNT) AS "totalAmount",
+	        RANK() OVER (ORDER BY SUM(ORIGINAL_AMOUNT) ASC) AS "rank"
+	    FROM GROUPTRANS
+	    WHERE GROUPB_ID = #{groupbId}
+	      AND TYPE = 'OUT'
+	      AND TRANS_DATE BETWEEN 
+	          (SELECT TRUNC(START_DATE) FROM GROUPCHALL 
+	           WHERE GROUPB_ID = #{groupbId} AND CHALLENGE_ID = #{challengeId} AND STATUS = 'PROCEEDING')
+	          AND 
+	          (SELECT TRUNC(END_DATE) + 0.99999 FROM GROUPCHALL 
+	           WHERE GROUPB_ID = #{groupbId} AND CHALLENGE_ID = #{challengeId} AND STATUS = 'PROCEEDING')
+	    GROUP BY USER_ID, NICKNAME
+	    ORDER BY "rank" ASC
+	</select>
+	
+	<!--그룹 과거 내역-->
+	<select id="getGroupPastChallengeList" resultType="GroupChall">
+	    SELECT 
+	        gc.CHALLENGE_ID as challengeId,
+	        gc.GROUPB_ID    as groupbId,
+	        gc.STATUS       as status,
+	        gc.START_DATE   as startDate,
+	        gc.END_DATE     as endDate,
+	        c.DESCRIPTION   as description,  
+	        c.CATEGORY      as category,     
+	        c.TYPE          as type,         
+	        c.DURATION      as duration,     
+	        c.TARGET        as target,       
+	        c.TARGET_COUNT  as targetCount   
+	    FROM GROUPCHALL gc
+	    JOIN CHALLENGES c ON gc.CHALLENGE_ID = c.CHALLENGE_ID
+	    WHERE gc.GROUPB_ID = #{groupbId}
+	      AND gc.STATUS IN ('SUCCESS', 'FAILED')
+	    ORDER BY gc.END_DATE DESC
+	</select>
+	
+	<!-- 기간이 끝날때까지 proceeding 이면 성공 처리 -->
+	<update id="updateGroupChallengeSuccess">
+	    UPDATE GROUPCHALL
+	    SET STATUS = 'SUCCESS'
+	    WHERE STATUS = 'PROCEEDING'
+	      AND END_DATE &lt; SYSDATE
+	</update>
+	
 
-</mapper> 
+	
+
+</mapper>
+
+

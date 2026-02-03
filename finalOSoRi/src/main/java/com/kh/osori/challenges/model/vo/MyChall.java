@@ -1,6 +1,8 @@
 package com.kh.osori.challenges.model.vo;
-import java.sql.Date;
+
 import java.time.LocalDate;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,19 +11,16 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
 @Builder
-public class GroupChall {
-	private String challengeId;
-	private int groupbId;
-	private String status;
-	private LocalDate startDate;
-	private LocalDate endDate;
+@Data
+public class MyChall {
 	
-	private String description; 
-    private String category;
-    private String type;
-    private int duration;
-    private int target;
-    private int targetCount;
+	private String challengeId;
+	private int userId;
+	private String status;
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+	private LocalDate startDate;
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+	private LocalDate endDate;
+
 }
