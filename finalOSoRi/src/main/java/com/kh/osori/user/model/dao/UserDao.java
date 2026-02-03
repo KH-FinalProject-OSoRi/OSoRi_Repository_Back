@@ -1,5 +1,6 @@
 package com.kh.osori.user.model.dao;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
@@ -69,6 +70,17 @@ public class UserDao {
 		//비밀번호 바꾸는 메소드 
 		public int resetPassword(SqlSessionTemplate sqlSession, Map<String, String> userMap) {
 			return sqlSession.update("userMapper.resetPassword", userMap); 
+		}
+		
+		//현재 시퀀스 번호 갖고오는 메소드
+		public int selectUserId(SqlSessionTemplate sqlSession) {
+			
+			return sqlSession.selectOne("userMapper.selectUserId");
+					
+		}
+
+		public int insertAuthAccount(SqlSessionTemplate sqlSession, HashMap<String, Object> accountMap) {
+			return sqlSession.insert("userMapper.insertAuthAccount", accountMap); 
 		}
 
 }
