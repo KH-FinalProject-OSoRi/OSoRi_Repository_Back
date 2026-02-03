@@ -5,14 +5,18 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.kh.osori.challenges.model.dao.ChallengeDao;
+
 import com.kh.osori.challenges.model.vo.Challenge;
+import com.kh.osori.challenges.model.vo.GroupChall;
 import com.kh.osori.challenges.model.vo.MyChall;
 import com.kh.osori.challenges.model.vo.MyChallHistory;
 
@@ -447,6 +451,45 @@ public class ChallengeServiceImpl implements ChallengeService {
 	        if (totalSum > target) return true;
 	    }
 	    return false;
+	}
+	
+	//그룹 챌린지
+
+	@Override
+	public int joinGroupChallenge(GroupChall groupChall) {
+		return dao.joinGroupChallenge(sqlSession, groupChall);
+	}
+
+	@Override
+	public List<GroupChall> getGroupJoinList(int groupbId) {
+		return dao.getGroupJoinList(sqlSession, groupbId);
+	}
+	
+
+	@Override
+	public int failActiveZeroChallenge(int groupbId) {
+	    return dao.failActiveZeroChallenge(sqlSession, groupbId);
+	}
+	
+	public List<Map<String, Object>> getGroupRanking(int groupbId, String challengeId) {
+	    Map<String, Object> params = new HashMap<>();
+	    params.put("groupbId", groupbId);
+	    params.put("challengeId", challengeId);
+	    return dao.getGroupRanking(sqlSession, params);
+	}
+
+	@Override
+	public List<GroupChall> getGroupPastChallengeList(int groupbId) {
+		return dao.getGroupPastChallengeList(sqlSession, groupbId);
+	}
+	
+	@Transactional
+	@Override
+	public void closeExpiredChallenges() {
+	    int groupResult = dao.updateGroupChallengeSuccess(sqlSession);
+	    
+	    if(groupResult > 0) {
+	    }
 	}
 
 }

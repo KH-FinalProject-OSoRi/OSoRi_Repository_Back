@@ -1,8 +1,11 @@
 package com.kh.osori.trans.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kh.osori.notification.model.service.NotificationService;
 import com.kh.osori.trans.model.vo.Grouptrans;
 import com.kh.osori.trans.model.vo.Mytrans;
 import com.kh.osori.trans.service.TransServiceImpl;
@@ -30,6 +34,9 @@ public class TransController {
 	private TransServiceImpl service;
 	@Autowired
 	private JwtUtil jwtUtil;
+	
+	@Autowired
+	private NotificationService notiService;
 
 	@PostMapping("/myTransSave")
 	public ResponseEntity<?> myTransSave(@RequestBody Mytrans mt) {
@@ -40,20 +47,41 @@ public class TransController {
 
 		int result = service.myTransSave(mt);
 
-		if (result > 0) {
+		if (result > 0) {		
 			return ResponseEntity.status(HttpStatus.CREATED).body("거래내역 등록성공!");
 		} else {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("거래내역 등록실패");
 		}
 	}
 
+	@Transactional
 	@PostMapping("/groupTransSave")
 	public ResponseEntity<?> groupTransSave(@RequestBody Grouptrans gt) {
 
 		int result = service.GroupTransSave(gt);
 
 		if (result > 0) {
-			return ResponseEntity.status(HttpStatus.CREATED).body("거래내역 등록성공!");
+			List<String> memberLoginIds = service.getGroupMemberIds(gt.getGroupBId()); 
+			String insertUser = service.getLoginId(gt.getUserId());
+			String gbTitle = service.getGroupTitle(gt.getGroupBId());
+			String transType = "IN".equals(gt.getType()) ? "수입" : "지출";
+			
+	        String message = String.format("%s님이 %s 가계부에 새로운 %s을 등록했습니다.", 
+	        								insertUser, gbTitle, transType);
+	        
+	        for (String memberId : memberLoginIds) {
+	            if (!memberId.equals(insertUser)) {
+	                notiService.sendMessageToMembers(
+	                    memberId,       // 수신자
+	                    insertUser,   // 발신자 (관리자 혹은 시스템 ID)
+	                    message,        // 내용
+	                    "TRANS",        // 타입
+	                    gt.getGroupBId() // 가계부 번호
+	                );
+	            }
+	        }
+
+	        return ResponseEntity.status(HttpStatus.CREATED).body("거래내역 등록성공!");
 		} else {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("거래내역 등록실패");
 		}

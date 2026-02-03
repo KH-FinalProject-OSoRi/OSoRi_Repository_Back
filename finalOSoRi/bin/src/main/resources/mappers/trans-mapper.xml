@@ -1,0 +1,216 @@
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="transMapper">
+
+	<insert id="myTransSave" parameterType="Mytrans">
+    INSERT INTO MYTRANS (
+        TRAN_ID,
+        TITLE,
+        TRANS_DATE,
+        ORIGINAL_AMOUNT,
+        IS_SHARED,
+        CATEGORY,
+        TYPE,
+        MEMO,
+        USER_ID,
+        GROUPB_ID) 
+        VALUES (
+        SEQ_MYTRANS.NEXTVAL,
+        #{title},
+        #{transDate},
+        #{originalAmount},
+        #{isShared},
+        #{category},
+        #{type},
+        #{memo},
+        #{userId},
+        #{groupBId} )
+</insert>
+	
+	<insert id="groupTransSave" parameterType="grouptrans">
+    INSERT INTO GROUPTRANS (
+        				TRAN_ID, 
+        				TITLE, 
+        				TRANS_DATE, 
+        				ORIGINAL_AMOUNT, 
+        				CATEGORY, 
+        				TYPE, 
+        				MEMO, 
+        				GROUPB_ID, 
+        				USER_ID, 
+        				NICKNAME
+   			 )
+			    SELECT 
+			        SEQ_FNO.NEXTVAL,
+			        #{title},
+			        #{transDate},
+			        #{originalAmount},
+			        #{category},
+			        #{type},
+			        #{memo},
+			        #{groupBId},
+			        #{userId}, 
+			        (SELECT NICKNAME FROM USERS WHERE USER_ID = #{userId}) 
+			    FROM DUAL
+	</insert>
+	
+	<select id="selectMyTrans" resultType="mytrans">
+	    SELECT 
+		    TRAN_ID        AS "transId", 
+		    TITLE          AS "title",
+		    TRANS_DATE     AS "transDate",
+		    ORIGINAL_AMOUNT AS "originalAmount",
+		    CATEGORY       AS "category",
+		    TYPE           AS "type",
+		    MEMO           AS "memo",
+		    USER_ID        AS "userId",
+		    IS_SHARED      AS "isShared",
+		    GROUPB_ID  	   AS "groupBId"
+		FROM MYTRANS 
+		WHERE USER_ID = #{userId}
+		ORDER BY TRAN_ID DESC
+	</select>
+	
+	<update id="updateTrans" parameterType="mytrans">
+		UPDATE MYTRANS
+		SET 
+		TITLE = #{title},
+		TRANS_DATE = #{transDate},
+		ORIGINAL_AMOUNT = #{originalAmount},
+		CATEGORY = #{category} ,
+		TYPE = #{type},
+		MEMO = #{memo}
+		WHERE TRAN_ID = #{transId}
+		AND USER_ID = #{userId}
+	</update>
+	
+	<delete id="deleteTrans">
+		DELETE FROM MYTRANS
+		WHERE
+		TRAN_ID = #{transId}
+	</delete>
+
+	<!-- [추가] 고정지출 -> MYTRANS 자동 반영 (매일 실행용) -->
+	<insert id="mergeFixedToMyTrans">
+	  MERGE INTO MYTRANS m
+	  USING (
+	    SELECT
+	      f.FIXED_ID,
+	      f.USER_ID,
+	      f.NAME AS TITLE,
+	      TRUNC(SYSDATE) AS TRANS_DATE,
+	      f.AMOUNT AS ORIGINAL_AMOUNT,
+	      'N' AS IS_SHARED,
+	      f.CATEGORY,
+	      'OUT' AS TYPE,
+	      '고정지출 자동등록' AS MEMO,
+	      NULL AS GROUPB_ID
+	    FROM FIXEDTRANS f
+	    WHERE
+	      TO_NUMBER(TO_CHAR(TRUNC(SYSDATE), 'DD')) =
+	      LEAST(
+	        f.PAY_DAY,
+	        TO_NUMBER(TO_CHAR(LAST_DAY(TRUNC(SYSDATE)), 'DD'))
+	      )
+	  ) s
+	  ON (
+	    m.FIXED_ID = s.FIXED_ID
+	    AND TRUNC(m.TRANS_DATE) = s.TRANS_DATE
+	    AND m.USER_ID = s.USER_ID
+	  )
+	  WHEN NOT MATCHED THEN
+	    INSERT (
+	      TRAN_ID,
+	      TITLE,
+	      TRANS_DATE,
+	      ORIGINAL_AMOUNT,
+	      IS_SHARED,
+	      CATEGORY,
+	      TYPE,
+	      MEMO,
+	      USER_ID,
+	      GROUPB_ID,
+	      FIXED_ID
+	    )
+	    VALUES (
+	      SEQ_MYTRANS.NEXTVAL,
+	      s.TITLE,
+	      s.TRANS_DATE,
+	      s.ORIGINAL_AMOUNT,
+	      s.IS_SHARED,
+	      s.CATEGORY,
+	      s.TYPE,
+	      s.MEMO,
+	      s.USER_ID,
+	      s.GROUPB_ID,
+	      s.FIXED_ID
+	    )
+	</insert>
+
+
+	<select id="selectGroupTrans" resultType="Grouptrans">
+    SELECT 
+        G.TRAN_ID        AS "transId", 
+        G.TITLE          AS "title",
+        G.TRANS_DATE     AS "transDate",
+        G.ORIGINAL_AMOUNT AS "originalAmount",
+        G.CATEGORY       AS "category",
+        G.TYPE           AS "type",
+        G.MEMO           AS "memo",
+        G.GROUPB_ID      AS "groupBId",
+        U.NICKNAME       AS "nickname" 
+    FROM GROUPTRANS G
+    JOIN USERS U ON (G.USER_ID = U.USER_ID)
+    WHERE G.GROUPB_ID = #{groupBId}
+    ORDER BY G.TRAN_ID DESC
+</select>
+	
+	<update id="updateGroupTrans" parameterType="Grouptrans">
+		UPDATE GROUPTRANS
+		SET 
+		TITLE = #{title},
+		TRANS_DATE = #{transDate},
+		ORIGINAL_AMOUNT = #{originalAmount},
+		CATEGORY = #{category} ,
+		TYPE = #{type},
+		MEMO = #{memo}
+		WHERE TRAN_ID = #{transId}
+	</update>
+	
+	<delete id="deleteGroupTrans">
+		DELETE FROM GROUPTRANS
+		WHERE
+		TRAN_ID = #{transId}
+	</delete>
+	
+	<select id="groupInfo" parameterType="_int" resultType="map">
+	    SELECT 
+		    TITLE AS "title",
+	        B_AMOUNT                          AS "budget",
+	        TO_CHAR(START_DATE, 'YYYY-MM-DD') AS "startDate", 
+	        TO_CHAR(END_DATE, 'YYYY-MM-DD')   AS "endDate"
+	    FROM GROUPBUDGET  
+	    WHERE GROUPB_ID = #{groupId}
+	</select>
+
+	
+	<select id="recentTrans" resultType="mytrans">
+	    SELECT 
+	        TITLE           AS "title",
+	        ORIGINAL_AMOUNT  AS "originalAmount",
+	        CATEGORY        AS "category",
+	        TYPE            AS "type"
+	    FROM MYTRANS 
+	    WHERE USER_ID = #{userId} 
+	      AND IS_SHARED = 'N'
+	    ORDER BY TRAN_ID DESC 
+	    FETCH FIRST 3 ROWS ONLY 
+	</select>
+	
+
+	
+
+
+</mapper>

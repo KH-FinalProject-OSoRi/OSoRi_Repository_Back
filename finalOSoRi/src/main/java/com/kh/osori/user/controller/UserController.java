@@ -1,5 +1,7 @@
 package com.kh.osori.user.controller;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
 
 import com.kh.osori.FinalOSoRiApplication;
 import com.kh.osori.user.model.dto.UserRegisterRequest;
@@ -30,362 +35,392 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/user")
 public class UserController {
 
-    private final FinalOSoRiApplication finalOSoRiApplication;
-	
+	private final FinalOSoRiApplication finalOSoRiApplication;
+
 	@Autowired
-	private UserService service; // 자동으로 빈 주입. 
-	
+	private UserService service; // 자동으로 빈 주입.
+
 	@Autowired
-	private BCryptPasswordEncoder bcrypt; // 암호화하는 빈 주입. 
-	
+	private BCryptPasswordEncoder bcrypt; // 암호화하는 빈 주입.
+
 	@Autowired
 	private JwtUtil jwtUtil;
 
-    UserController(FinalOSoRiApplication finalOSoRiApplication) {
-        this.finalOSoRiApplication = finalOSoRiApplication;
-    } // 토큰 빈 주입 
-	
-	//로그인 처리 및 휴면 판단 메소드 
+	UserController(FinalOSoRiApplication finalOSoRiApplication) {
+		this.finalOSoRiApplication = finalOSoRiApplication;
+	} // 토큰 빈 주입
+
+	// 로그인 처리 및 휴면 판단 메소드
 	@PostMapping("/login")
-	public ResponseEntity<?> loginMember(@RequestBody User user) { 
-		
-		HashMap<String, Object> map = new HashMap<>(); 
-		
-		//LOGIN_ID로 사용자 조회 (해시 password까지 가져오기) 
+	public ResponseEntity<?> loginMember(@RequestBody User user) {
+
+		HashMap<String, Object> map = new HashMap<>();
+
+		// LOGIN_ID로 사용자 조회 (해시 password까지 가져오기)
 		User loginUser = service.selectUser(user);
-		
-		if(loginUser!=null && bcrypt.matches(user.getPassword(), loginUser.getPassword())) { // 평문과 암호화된 비밀번호 비교, 로그인 유저가 실제로 존재하는 값인지도 보기
-			
-			if("Y".equals(loginUser.getStatus())) {
-				
-				String token = jwtUtil.generateToken(loginUser.getLoginId()); // 아이디를 기반으로 토큰 가져오기 
-				
-				loginUser.setPassword(null); // 암호화 된 비밀번호이므로 null 처리 
-				
-				map.put("token",token); // 옮기려는 토큰 맵에 담기 
-				map.put("user",loginUser);
-				
-				return ResponseEntity.ok(map); 
-				
+
+		if (loginUser != null && bcrypt.matches(user.getPassword(), loginUser.getPassword())) { // 평문과 암호화된 비밀번호 비교, 로그인
+																								// 유저가 실제로 존재하는 값인지도 보기
+
+			if ("Y".equals(loginUser.getStatus())) {
+
+				String token = jwtUtil.generateToken(loginUser.getLoginId()); // 아이디를 기반으로 토큰 가져오기
+
+				loginUser.setPassword(null); // 암호화 된 비밀번호이므로 null 처리
+
+				map.put("token", token); // 옮기려는 토큰 맵에 담기
+				map.put("user", loginUser);
+
+				return ResponseEntity.ok(map);
+
 			} else if ("H".equals(loginUser.getStatus())) {
-				
-				//마이페이지 보내는 처리는 프론트에서
+
+				// 마이페이지 보내는 처리는 프론트에서
 				String token = jwtUtil.generateToken(loginUser.getLoginId());
-				
+
 				loginUser.setPassword(null);
-				
+
 				map.put("token", token);
 				map.put("user", loginUser);
 				map.put("message", "휴면 회원 입니다. 휴면 상태를 해제해주세요.");
-				
+
 				return ResponseEntity.ok(map);
-				
-				
+
 			} else if ("N".equals(loginUser.getStatus())) {
-				
+
 				map.put("message", "탈퇴한 회원입니다.");
 				return ResponseEntity.status(HttpStatus.FORBIDDEN).body(map);
 			}
-			
-		} else { 
-			
-			
+
+		} else {
+
 			map.put("code", "LOGIN_FAIL");
 			map.put("message", "아이디와 비밀번호를 다시 입력해주세요.");
-			 
+
 		}
-		
-		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(map); // 비회원일때 처리 
-		
+
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(map); // 비회원일때 처리
+
 		/*
-		// 오류가 있을 경우 
-		map.put("code", "UNKNOWN");
-		map.put("message", "로그인 처리 중 오류");
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
-		*/
+		 * // 오류가 있을 경우 map.put("code", "UNKNOWN"); map.put("message", "로그인 처리 중 오류");
+		 * return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
+		 */
 
 	}
-	
-	//회원 가입 
+
+	//회원 가입
 	@PostMapping("/register")
 	public ResponseEntity<?> insertUser(@RequestBody UserRegisterRequest request) {
-		
+
 		User user = request.getUser();
-		
+
 		user.setPassword(bcrypt.encode(user.getPassword())); // 갖고 온 비밀번호를 평문이 아닌 암호화된 비밀번호로 처리
-		
+
 		int result = service.insertUser(request); // 회원 가입 처리
-		
+
 		if(result >= 2) {
 			return ResponseEntity.ok("회원 가입에 성공했습니다. 로그인을 해보세요.");
 		} else {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("회원가입에 실패했습니다."); 
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("회원가입에 실패했습니다.");
 		}
-		
+
 	}
-	
-	
-	//로그아웃
+
+	// 로그아웃
 	@PostMapping("/logout")
 	public ResponseEntity<?> logout() {
-		return ResponseEntity.ok("로그아웃 되었습니다."); 
+		return ResponseEntity.ok("로그아웃 되었습니다.");
 	}
-	
-	//아이디 중복 체크 (UNIQUE 제약 조건으로 인해 중복 체크 해줘야한다.)
+
+	// 아이디 중복 체크 (UNIQUE 제약 조건으로 인해 중복 체크 해줘야한다.)
 	@GetMapping("/checkId")
 	public ResponseEntity<?> idCheck(@RequestParam("loginId") String loginId) {
-			
+
 		String v = (loginId == null) ? "" : loginId.trim();
-		
+
 		int count = service.idCheck(v);
-			
+
 		HashMap<String, Object> resp = new HashMap<>();
-		
+
 		resp.put("count", count);
-		
+
 		return ResponseEntity.ok(resp);
-		
+
 	}
-		
-	//닉네임 중복 체크 (UNIQUE 제약 조건으로 인해 중복 체크 해줘야한다.)
+
+	// 닉네임 중복 체크 (UNIQUE 제약 조건으로 인해 중복 체크 해줘야한다.)
 	@GetMapping("/checkNickName")
 	public ResponseEntity<?> nickNameCheck(@RequestParam("nickName") String nickName) {
-			
-		//count만 JSON으로 응답
+
+		// count만 JSON으로 응답
 		String v = (nickName == null) ? "" : nickName.trim();
-			
+
 		int count = service.nickNameCheck(v);
-			
+
 		HashMap<String, Object> resp = new HashMap<>();
-			
+
 		resp.put("count", count);
-			
+
 		return ResponseEntity.ok(resp);
 	}
-		
-	//이메일 중복 체크 (UNIQUE 제약 조건으로 인해 중복 체크 해줘야한다.)
+
+	// 이메일 중복 체크 (UNIQUE 제약 조건으로 인해 중복 체크 해줘야한다.)
 	@GetMapping("/checkEmail")
 	public ResponseEntity<?> emailCheck(@RequestParam("email") String email) {
-			
+
 		// 이메일은 대소문자/공백 때문에 헷갈릴 수 있어서 trim + lower 처리
 		String v = (email == null) ? "" : email.trim().toLowerCase();
-			
+
 		int count = service.emailCheck(v);
-			
+
 		HashMap<String, Object> resp = new HashMap<>();
-			
+
 		resp.put("count", count);
-			
+
 		return ResponseEntity.ok(resp);
 	}
-	
-	//정보 수정 메소드
+
+	// 정보 수정 메소드
 	@PatchMapping("/update")
-	public ResponseEntity<?> updateUser(@RequestBody User loginUser) {
+	public ResponseEntity<?> updateUser(@ModelAttribute User loginUser,
+			@RequestParam(value = "profileImage", required = false) MultipartFile profileImage) {
+
+		HashMap<String, Object> res = new HashMap<>();
 		
-		HashMap<String,Object> res = new HashMap<>();
+		String projectPath = System.getProperty("user.dir"); 
+		String savePath = projectPath + File.separator + "upload" + File.separator + "profiles" + File.separator;
 		
-		System.out.println(loginUser);
+		if (profileImage != null && !profileImage.isEmpty()) {
+	        
+	        File folder = new File(savePath);
+	        if (!folder.exists()) {
+	            folder.mkdirs(); 
+	        }
 		
-		int result = service.updateUser(loginUser);
-		
-		if(result > 0) {
+			User currentUser = service.selectUser(loginUser); 
+			if (currentUser != null && currentUser.getChangeName() != null) {
+				File oldFile = new File(savePath + currentUser.getChangeName());
+				if (oldFile.exists()) {
+					oldFile.delete();
+				}
+			}
 			
-			if(loginUser.getStatus().equals("H")) {
-				
+			String originName = profileImage.getOriginalFilename();
+	        String changeName = System.currentTimeMillis() + "_" + loginUser.getLoginId() + "_" + originName;
+
+	        loginUser.setOriginName(originName);
+	        loginUser.setChangeName(changeName);
+
+	        try {
+	            profileImage.transferTo(new File(savePath + changeName));
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("파일 저장 실패");
+	        }
+	    }
+
+		int result = service.updateUser(loginUser);
+
+		if (result > 0) {
+
+			if (loginUser.getStatus().equals("H")) {
+
 				loginUser = service.selectUser(loginUser); // 이렇게 안하면 DB만 업데이트 된다.
-				
-				loginUser.setPassword(null); // 토큰에 비밀번호 안 남기게 하기 
-				
+
+				loginUser.setPassword(null); // 토큰에 비밀번호 안 남기게 하기
+
 				res.put("user", loginUser);
 				res.put("message", "휴면 상태가 해제 됐습니다.");
-			
+
 				return ResponseEntity.ok(res);
 			}
-			
+
 			loginUser = service.selectUser(loginUser);
-			
-			loginUser.setPassword(null); // 토큰에 비밀번호 안 남기게 하기 
-			
+
+			loginUser.setPassword(null); // 토큰에 비밀번호 안 남기게 하기
+
 			res.put("user", loginUser);
 			res.put("message", "정보를 수정했습니다.");
-			
-			return ResponseEntity.ok(res); 
-			
+
+			return ResponseEntity.ok(res);
+
 		} else {
-			
+
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("정보 수정 실패했습니다.");
 		}
-		
+
 	}
-	
-	//회원 탈퇴 메소드 
+
+	// 회원 탈퇴 메소드
 	@DeleteMapping("/delete")
-	public ResponseEntity<?> deleteUser(@RequestHeader(value = "Authorization", required = false) String authorization, @RequestBody Map<String, String> passwordMap) {
-		
-		// 비밀번호는 그대로 가지고 오기가 힘들다. (보안 상 문제가 생길 수 있음 -> 토큰으로 DB에서 데이터를 갖고 오기 (암호화 된 비밀번호) 
-		
-		HashMap<String, String> res = new HashMap<>(); // 정보를 담기 위한 맵. 
-		
-		int result = 0; // delete 구문이 제대로 수행 됐는지 보기 위한 변수 
-		
-		//토큰 및 입력한 비밀번호 갖고오기 
-		
+	public ResponseEntity<?> deleteUser(@RequestHeader(value = "Authorization", required = false) String authorization,
+			@RequestBody Map<String, String> passwordMap) {
+
+		// 비밀번호는 그대로 가지고 오기가 힘들다. (보안 상 문제가 생길 수 있음 -> 토큰으로 DB에서 데이터를 갖고 오기 (암호화 된 비밀번호)
+
+		HashMap<String, String> res = new HashMap<>(); // 정보를 담기 위한 맵.
+
+		int result = 0; // delete 구문이 제대로 수행 됐는지 보기 위한 변수
+
+		// 토큰 및 입력한 비밀번호 갖고오기
+
 		String password = passwordMap.get("password");
-		
+
 		String token = authorization.substring("Bearer ".length()).trim();
-		
-		System.out.println(authorization.substring("Bearer ".length())); // 확인용 
-		 
-		System.out.println(token); // 확인용 
 
+		System.out.println(authorization.substring("Bearer ".length())); // 확인용
 
-		//갖고 온 토큰이 유효한지 검증을 해야 한다. (토큰에도 유효 시간이 있음.)
-		
-		if(!jwtUtil.validateToken(token)) { // 토큰이 유효하지 않으면
-			
+		System.out.println(token); // 확인용
+
+		// 갖고 온 토큰이 유효한지 검증을 해야 한다. (토큰에도 유효 시간이 있음.)
+
+		if (!jwtUtil.validateToken(token)) { // 토큰이 유효하지 않으면
+
 			res.put("message", "토큰 시간이 만료 되어 유효하지 않은 토큰입니다. 다시 로그인 해주세요.");
-			
+
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(res);
-			
+
 		}
-		
+
 		String loginId = jwtUtil.getloginIdFromToken(token); // 토큰에서 아이디를 갖고 오기
-		
+
 		User loginUser = service.selectByLoginId(loginId); // 로그인 아이디를 바탕으로 유저 정보 갖고 오기
-		
-		if(bcrypt.matches(password, loginUser.getPassword())) {
-			
+
+		if (bcrypt.matches(password, loginUser.getPassword())) {
+
 			result = service.deleteUser(loginUser);
-			
-			if(result > 0) {
-				
-				res.put("message", "회원 탈퇴 처리했습니다."); 
-				
-				return ResponseEntity.ok(res);  
-				
+
+			if (result > 0) {
+
+				res.put("message", "회원 탈퇴 처리했습니다.");
+
+				return ResponseEntity.ok(res);
+
 			} else { // 비밀번호는 일치 하나 서버에 오류가 생겼을 경우
-				
-				res.put("message", "회원 탈퇴 처리 중 서버 오류가 발생했습니다."); 
-				
-				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res); 
+
+				res.put("message", "회원 탈퇴 처리 중 서버 오류가 발생했습니다.");
+
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
 			}
-			
+
 		} else { // 평문과 암호화 된 비밀번호랑 일치하지 않는 경우
-			
-			res.put("message", "비밀번호가 일치하지 않습니다. 다시 입력해주세요."); 
-			
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res); 
-			
+
+			res.put("message", "비밀번호가 일치하지 않습니다. 다시 입력해주세요.");
+
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+
 		}
-	
+
 	}
-	
-	//비밀번호 변경 메소드 
+
+	// 비밀번호 변경 메소드
 	@PatchMapping("/updatePassword")
-	public ResponseEntity<?> changeUserPwd(@RequestHeader(value = "Authorization", required = false) String authorization, @RequestBody Map<String,String> passwordMap) {
-		
-		HashMap<String, String> res = new HashMap<>(); 
-		
-		String currentPassword = passwordMap.get("currentPassword"); // 프론트에서 현재 비밀번호 갖고 오기 
-		
-		String newPassword = passwordMap.get("newPassword"); // 프론트에서 새 비밀번호 갖고 오기 
-		
+	public ResponseEntity<?> changeUserPwd(
+			@RequestHeader(value = "Authorization", required = false) String authorization,
+			@RequestBody Map<String, String> passwordMap) {
+
+		HashMap<String, String> res = new HashMap<>();
+
+		String currentPassword = passwordMap.get("currentPassword"); // 프론트에서 현재 비밀번호 갖고 오기
+
+		String newPassword = passwordMap.get("newPassword"); // 프론트에서 새 비밀번호 갖고 오기
+
 		String token = authorization.substring("Bearer ".length()).trim();
-		
-		String loginId = jwtUtil.getloginIdFromToken(token); 
-		
-		User loginUser = service.selectByLoginId(loginId); // 아이디와 비밀번호를 갖고와서 아이디에 맞는 회원 비밀번호를 바꿀 수 있다. 
-		
-		if(bcrypt.matches(currentPassword, loginUser.getPassword())) {
-			
-			loginUser.setPassword(bcrypt.encode(newPassword)); // 암호화 된 비밀번호를 기존 유저의 비밀번호에다가 세팅. 
-			
+
+		String loginId = jwtUtil.getloginIdFromToken(token);
+
+		User loginUser = service.selectByLoginId(loginId); // 아이디와 비밀번호를 갖고와서 아이디에 맞는 회원 비밀번호를 바꿀 수 있다.
+
+		if (bcrypt.matches(currentPassword, loginUser.getPassword())) {
+
+			loginUser.setPassword(bcrypt.encode(newPassword)); // 암호화 된 비밀번호를 기존 유저의 비밀번호에다가 세팅.
+
 			int result = service.changeUserPwd(loginUser);
-			
-			if(result > 0) {
+
+			if (result > 0) {
 				return ResponseEntity.ok("비밀번호가 수정됐습니다.");
 			} else {
-				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버에 문제가 있어서 비밀번호를 변경하지 못했습니다."); 
+				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버에 문제가 있어서 비밀번호를 변경하지 못했습니다.");
 			}
-			
+
 		} else {
-			
+
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("현재 비밀번호를 잘못 입력하셨습니다.");
-				
+
 		}
-		
+
 	}
-	
-	//아이디 찾기 메소드
+
+	// 아이디 찾기 메소드
 	@PostMapping("/findId")
-	public ResponseEntity<?> findLoginIdByEmail(@RequestBody Map<String,String> emailMap) {
-		
-		HashMap<String,String> res = new HashMap<>(); 
-		
+	public ResponseEntity<?> findLoginIdByEmail(@RequestBody Map<String, String> emailMap) {
+
+		HashMap<String, String> res = new HashMap<>();
+
 		String email = emailMap.get("email");
-		
+
 		User loginUser = service.findLoginIdByEmail(email); // 이메일 기반으로 유저 찾기
-		
-		if(loginUser!=null) {
-			
+
+		if (loginUser != null) {
+
 			res.put("loginId", loginUser.getLoginId());
-			
+
 			return ResponseEntity.ok(res);
-			
+
 		} else {
-			
+
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("회원 정보가 없습니다.");
-			
+
 		}
-		
+
 	}
-	
-	//비밀번호 찾기 1단계
+
+	// 비밀번호 찾기 1단계
 	@PostMapping("/findPassword")
-	public ResponseEntity<?> findPassword(@RequestBody Map<String,String> loginIdMap) {
-		
-		HashMap<String, String> res = new HashMap<>(); 
-		
+	public ResponseEntity<?> findPassword(@RequestBody Map<String, String> loginIdMap) {
+
+		HashMap<String, String> res = new HashMap<>();
+
 		String loginId = loginIdMap.get("loginId");
-		
+
 		User loginUser = service.selectByLoginId(loginId);
-		
-		if(loginUser != null) {
-			
+
+		if (loginUser != null) {
+
 			return ResponseEntity.ok("회원 정보가 조회 되어 비밀번호 재설정 페이지로 이동합니다.");
-			
+
 		} else {
-			
+
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("회원 정보가 없습니다.");
-			
+
 		}
-		
+
 	}
-	
-	//비밀번호 재설정 2단계
+
+	// 비밀번호 재설정 2단계
 	@PatchMapping("/resetPassword")
 	public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> userMap) {
-		
-		String newPassword = userMap.get("newPassword"); // 비밀번호 재설정 페이지에서 사용자가 입력한 비밀번호 갖고 오기 
-		
-		newPassword = bcrypt.encode(newPassword); // 갖고 온 비밀번호를 암호화 
-		
-		userMap.put("newPassword", newPassword); // 맵에 있는 값을 수정 
-		
-		int result = service.resetPassword(userMap); // 수정한 값을 바탕으로 집어넣기 
-		
-		if(result > 0) {
-			
+
+		String newPassword = userMap.get("newPassword"); // 비밀번호 재설정 페이지에서 사용자가 입력한 비밀번호 갖고 오기
+
+		newPassword = bcrypt.encode(newPassword); // 갖고 온 비밀번호를 암호화
+
+		userMap.put("newPassword", newPassword); // 맵에 있는 값을 수정
+
+		int result = service.resetPassword(userMap); // 수정한 값을 바탕으로 집어넣기
+
+		if (result > 0) {
+
 			return ResponseEntity.ok("비밀번호가 수정 됐습니다.");
-			
+
 		} else {
-			
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버에 문제가 생겨서 비밀번호 수정을 실패 했습니다."); 
-			
+
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버에 문제가 생겨서 비밀번호 수정을 실패 했습니다.");
+
 		}
-		
+
 	}
+
 	
 	//2월 2일 15시 4분부터 작업
 	@GetMapping("/kakao/callback")
@@ -394,5 +429,5 @@ public class UserController {
         return ResponseEntity.ok(result);
     }
 	
-	
+
 }

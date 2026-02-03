@@ -3,6 +3,8 @@ package com.kh.osori.challenges.controller;
 import java.util.ArrayList;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,8 +16,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kh.osori.challenges.model.dto.JoinGroupChallengeRequest;
 import com.kh.osori.challenges.model.dto.JoinMyChallengeRequest;
 import com.kh.osori.challenges.model.vo.Challenge;
+import com.kh.osori.challenges.model.vo.GroupChall;
 import com.kh.osori.challenges.model.vo.MyChall;
 import com.kh.osori.challenges.model.vo.MyChallHistory;
 import com.kh.osori.challenges.service.ChallengeService;
@@ -125,6 +129,69 @@ public class ChallengeController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
 		}
 	}
+	
+	@PostMapping("/group")
+	public ResponseEntity<?> joinGroupChallenge(
+	        @RequestBody JoinGroupChallengeRequest req
+	) {
+	    GroupChall groupChall = GroupChall.builder()
+	            .challengeId(req.getChallengeId())
+	            .groupbId(req.getGroupbId())
+	            .startDate(req.getStartDate())   
+	            .endDate(req.getEndDate())      
+	            .status("PROCEEDING")
+	            .build();
+
+	    int result = service.joinGroupChallenge(groupChall);
+
+	    if (result > 0) {
+	        return ResponseEntity.ok(groupChall);
+	    } else {
+	        return ResponseEntity
+	                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body("그룹챌린지 참여 불가");
+	    }
+	}
+
+	
+
+
+	
+	@GetMapping("/myJoinedList")
+	public ResponseEntity<?> getMyJoinedList(@RequestParam("groupbId") int groupbId) {
+	    List<GroupChall> list = service.getGroupJoinList(groupbId);
+	    
+	    return ResponseEntity.ok(list);
+	}
+
+	// 순위 조회
+	@GetMapping("/group/ranking")
+	public ResponseEntity<?> getGroupRanking(
+	        @RequestParam("groupbId") int groupbId,
+	        @RequestParam("challengeId") String challengeId) {
+	    
+	    List<Map<String, Object>> rankingList = service.getGroupRanking(groupbId, challengeId);
+	    
+	    if (rankingList != null) {
+	        return ResponseEntity.ok(rankingList);
+	    } else {
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("순위 정보를 불러올 수 없습니다.");
+	    }
+	}
+	
+	
+	@GetMapping("/group/past")
+	public ResponseEntity<?> getGroupPastChallengeList(@RequestParam("groupbId") int groupbId) {
+	    List<GroupChall> list = service.getGroupPastChallengeList(groupbId);
+
+	    if (list != null) {
+	        return ResponseEntity.ok(list);
+	    } else {
+	        HashMap<String, Object> res = new HashMap<>();
+	        res.put("message", "지난 그룹 챌린지 목록을 조회할 수 없습니다.");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
+	    }
+	}
+	
 
 }
-

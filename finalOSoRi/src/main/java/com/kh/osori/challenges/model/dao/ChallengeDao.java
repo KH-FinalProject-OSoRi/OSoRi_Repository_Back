@@ -2,12 +2,14 @@ package com.kh.osori.challenges.model.dao;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.kh.osori.challenges.model.vo.Challenge;
+import com.kh.osori.challenges.model.vo.GroupChall;
 import com.kh.osori.challenges.model.vo.MyChall;
 import com.kh.osori.challenges.model.vo.MyChallHistory;
 
@@ -83,6 +85,37 @@ public class ChallengeDao {
 	public ArrayList<MyChallHistory> selectActiveProceedingChallenges(SqlSessionTemplate sqlSession) {
 	    return (ArrayList) sqlSession.selectList("challengeMapper.selectActiveProceedingChallenges");
 	}
+
+//	그룹챌린지
+	
+	public int joinGroupChallenge(SqlSessionTemplate sqlSession, GroupChall groupChall) {
+		return sqlSession.insert("challengeMapper.joinGroupChallenge", groupChall);
+	}
+
+	public List<GroupChall> getGroupJoinList(SqlSessionTemplate sqlSession, int groupbId) {
+		return sqlSession.selectList("challengeMapper.getGroupJoinList", groupbId);
+	}
+
+	public int failActiveZeroChallenge(SqlSessionTemplate sqlSession, int groupbId) {
+		return sqlSession.update("challengeMapper.failActiveZeroChallenge", groupbId);
+	}
+	
+	public List<Map<String, Object>> selectCompetitionRanking(SqlSessionTemplate sqlSession, Map<String, Object> params) {
+	    return sqlSession.selectList("challengeMapper.selectCompetitionRanking", params);
+	}
+
+	public List<GroupChall> getGroupPastChallengeList(SqlSessionTemplate sqlSession, int groupbId) {
+		return sqlSession.selectList("challengeMapper.getGroupPastChallengeList", groupbId);
+	}
+	
+	public List<Map<String, Object>> getGroupRanking(SqlSessionTemplate sqlSession, Map<String, Object> params) {
+	    return sqlSession.selectList("challengeMapper.getGroupRanking", params);
+	}
+	
+	public int updateGroupChallengeSuccess(SqlSessionTemplate sqlSession) {
+	    return sqlSession.update("challengeMapper.updateGroupChallengeSuccess");
+	}
+
 }
 
 
@@ -221,3 +254,4 @@ public class ChallengeDao {
 //	*/
 //
 //}
+

@@ -26,5 +26,13 @@ public class ChallengeStatusSchedulerConfig {
     // 2) 종료된 PROCEEDING -> SUCCESS/FAILED 판정 후 업데이트
     challengeService.closeExpiredProceedingToResult();
   }
+  
+  
+  //(그룹) 챌린지 종료일이 지난 데이터를 SUCCESS로 변경
+  //실제엔 0 0으로(every hour) 변경할것
+  @Scheduled(cron = " 0 * * * * *")
+  public void checkChallengeExpiry() {
+	  challengeService.closeExpiredChallenges();
+  }
 }
 

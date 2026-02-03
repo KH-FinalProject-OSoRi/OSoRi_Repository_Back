@@ -248,10 +248,117 @@
     GROUP BY TRUNC(TRANS_DATE)
     ORDER BY TRUNC(TRANS_DATE)
   </select>
+  
+  
+  <!-- 그룹챌린지 관련 -->
+   <insert id="joinGroupChallenge" parameterType="GroupChall">
+		<choose>
+	        <when test="challengeId == 'group_reduceZero_competition'">
+	            INSERT INTO GROUPCHALL (
+	                CHALLENGE_ID,
+	                GROUPB_ID,
+	                START_DATE,
+	                END_DATE,
+	                STATUS
+	            )
+	            SELECT 
+	                #{challengeId},
+	                #{groupbId},
+	                SYSDATE,
+	                END_DATE, 
+	                'PROCEEDING'
+	            FROM GROUPBUDGET
+	            WHERE GROUPB_ID = #{groupbId}
+	        </when>
+	
+	        <otherwise>
+	            INSERT INTO GROUPCHALL (
+	                CHALLENGE_ID,
+	                GROUPB_ID,
+	                START_DATE,
+	                END_DATE,
+	                STATUS
+	            ) VALUES (
+	                #{challengeId},
+	                #{groupbId},
+	                #{startDate},
+	                #{endDate},       
+	                'PROCEEDING'
+	            )
+	        </otherwise>
+	    </choose>
+	</insert>
+	
+	<select id="getGroupJoinList" resultType="GroupChall">
+	   SELECT 
+	       CHALLENGE_ID as challengeId,
+	       GROUPB_ID as groupbId,
+	       STATUS as status,
+	       START_DATE as startDate,  END_DATE as endDate      FROM GROUPCHALL
+	   WHERE GROUPB_ID = #{groupbId}
+	</select>
+	
+	<!-- 24시간 무지출 챌린지 실시간 검사(지출 등록되면 탈락!) -->
+	<update id="failActiveZeroChallenge" parameterType="int">
+	    UPDATE GROUPCHALL
+	    SET STATUS = 'FAILED'
+	    WHERE GROUPB_ID = #{groupbId}
+	      AND CHALLENGE_ID = 'group_zero_challenge'
+	      AND STATUS = 'PROCEEDING'
+	</update>
+	
+	<!--지출 적게 쓰기 챌린지 순위 매기기 함수-->
+	<select id="getGroupRanking" resultType="map">
+	    SELECT 
+	        USER_ID AS "userId",
+	        NICKNAME AS "nickname",
+	        SUM(ORIGINAL_AMOUNT) AS "totalAmount",
+	        RANK() OVER (ORDER BY SUM(ORIGINAL_AMOUNT) ASC) AS "rank"
+	    FROM GROUPTRANS
+	    WHERE GROUPB_ID = #{groupbId}
+	      AND TYPE = 'OUT'
+	      AND TRANS_DATE BETWEEN 
+	          (SELECT TRUNC(START_DATE) FROM GROUPCHALL 
+	           WHERE GROUPB_ID = #{groupbId} AND CHALLENGE_ID = #{challengeId} AND STATUS = 'PROCEEDING')
+	          AND 
+	          (SELECT TRUNC(END_DATE) + 0.99999 FROM GROUPCHALL 
+	           WHERE GROUPB_ID = #{groupbId} AND CHALLENGE_ID = #{challengeId} AND STATUS = 'PROCEEDING')
+	    GROUP BY USER_ID, NICKNAME
+	    ORDER BY "rank" ASC
+	</select>
+	
+	<!--그룹 과거 내역-->
+	<select id="getGroupPastChallengeList" resultType="GroupChall">
+	    SELECT 
+	        gc.CHALLENGE_ID as challengeId,
+	        gc.GROUPB_ID    as groupbId,
+	        gc.STATUS       as status,
+	        gc.START_DATE   as startDate,
+	        gc.END_DATE     as endDate,
+	        c.DESCRIPTION   as description,  
+	        c.CATEGORY      as category,     
+	        c.TYPE          as type,         
+	        c.DURATION      as duration,     
+	        c.TARGET        as target,       
+	        c.TARGET_COUNT  as targetCount   
+	    FROM GROUPCHALL gc
+	    JOIN CHALLENGES c ON gc.CHALLENGE_ID = c.CHALLENGE_ID
+	    WHERE gc.GROUPB_ID = #{groupbId}
+	      AND gc.STATUS IN ('SUCCESS', 'FAILED')
+	    ORDER BY gc.END_DATE DESC
+	</select>
+	
+	<!-- 기간이 끝날때까지 proceeding 이면 성공 처리 -->
+	<update id="updateGroupChallengeSuccess">
+	    UPDATE GROUPCHALL
+	    SET STATUS = 'SUCCESS'
+	    WHERE STATUS = 'PROCEEDING'
+	      AND END_DATE &lt; SYSDATE
+	</update>
+	
+
+	
 
 </mapper>
-
-
-
 
 

@@ -25,7 +25,7 @@ public class Mytrans {
 	private String isShared; //그룹에서 가지고 온지 여부
 	private String category; //카테고리
 	@JsonProperty("groupTransId") 
-	private Integer groupBId; // //그룹id
+	private Integer groupBId; //
 	private String memo; //메모
 	private int userId; //사용자id
 

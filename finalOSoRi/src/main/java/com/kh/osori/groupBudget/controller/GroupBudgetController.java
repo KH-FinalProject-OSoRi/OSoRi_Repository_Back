@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kh.osori.challenges.model.vo.Challenges;
-import com.kh.osori.challenges.model.vo.GroupChall;
 import com.kh.osori.groupBudget.model.service.GroupBudgetService;
 import com.kh.osori.groupBudget.model.vo.BudgetMem;
 import com.kh.osori.groupBudget.model.vo.GroupBudget;
@@ -216,26 +214,5 @@ public class GroupBudgetController {
 	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("거래 내역이 없습니다.");
 	    }
 	}
-	
-	@GetMapping("/gbChallList")
-	public ResponseEntity<?> groupChallList(){
-		List<Challenges> list = service.groupChallList();
-		
-		if(list != null) {
-	        return ResponseEntity.ok(list);
-	    } else {
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("그룹가계부 챌린지 목록 조회를 실패했습니다.");
-	    }
-	}
-	
-	@PostMapping("/gbAddChall")
-	public ResponseEntity<?> addGroupChall(@RequestBody GroupChall chall){
-		int result = service.addGroupChall(chall);
-		
-		if(result > 0) {
-			return ResponseEntity.status(HttpStatus.CREATED).body("그룹 챌린지 추가 성공");
-		}else {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("그룹 챌린지 추가에 실패했습니다");
-		}
-	}
+
 }

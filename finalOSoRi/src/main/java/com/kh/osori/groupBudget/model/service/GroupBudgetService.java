@@ -2,7 +2,6 @@ package com.kh.osori.groupBudget.model.service;
 
 import java.util.List;
 
-import com.kh.osori.challenges.model.vo.Challenges;
 import com.kh.osori.challenges.model.vo.GroupChall;
 import com.kh.osori.groupBudget.model.vo.BudgetMem;
 import com.kh.osori.groupBudget.model.vo.GroupBudget;
@@ -27,6 +26,4 @@ public interface GroupBudgetService {
 	public List<Notification> notiList(String loginId); //안읽은 알림 목록 조회
 	public List<Grouptrans> groupTransactionList(int groupbId);
 	public int groupCheckAdmin(int groupbId); //관리자 아이디 조회
-	public List<Challenges> groupChallList(); //그룹 챌린지 목록 조회
-	public int addGroupChall(GroupChall chall); //그룹 챌린지 추가
 }
