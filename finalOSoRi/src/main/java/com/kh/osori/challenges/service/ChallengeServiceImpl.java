@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kh.osori.badge.dao.BadgeDao;
+import com.kh.osori.badge.service.BadgeService;
 import com.kh.osori.challenges.model.dao.ChallengeDao;
 
 import com.kh.osori.challenges.model.vo.Challenge;
@@ -28,6 +30,12 @@ public class ChallengeServiceImpl implements ChallengeService {
 
 	@Autowired
 	private final ChallengeDao dao;
+	
+	@Autowired
+	private final BadgeDao badgeDao;
+	
+	@Autowired
+	private final BadgeService badgeService;
 	
 	@Autowired
 	private final SqlSessionTemplate sqlSession;
@@ -489,6 +497,23 @@ public class ChallengeServiceImpl implements ChallengeService {
 	    int groupResult = dao.updateGroupChallengeSuccess(sqlSession);
 	    
 	    if(groupResult > 0) {
+	    }
+	}
+	
+	@Transactional
+	public void checkAndRewardChallenges() {
+	    // 1. 성공 상태로 업데이트하기 전, 조건에 맞는 유저 ID 리스트 확보 (쿼리 추가 필요)
+	    List<Integer> successUserIds = dao.getUsersToReward(sqlSession); 
+
+	    // 2. 챌린지 상태를 SUCCESS로 업데이트
+	    int updatedCount = dao.updateGroupChallengeSuccess(sqlSession);
+
+	    // 3. 업데이트된 유저들에게 뱃지 지급
+	    if (updatedCount > 0 && successUserIds != null) {
+	        for (int userId : successUserIds) {
+	            // 해당 성공 챌린지에 맞는 특정 badgeId를 부여 (예: 2번 뱃지)
+	            badgeService.insertDefaultBadge(userId, 2); 
+	        }
 	    }
 	}
 

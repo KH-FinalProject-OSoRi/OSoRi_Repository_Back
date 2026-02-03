@@ -8,6 +8,8 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import com.kh.osori.badge.model.vo.Badge;
+
 @Repository
 public class BadgeDao {
 
@@ -15,15 +17,15 @@ public class BadgeDao {
     private SqlSessionTemplate sqlSession;
 
     // 뱃지 지급
-    public int insertDefaultBadge(int userNo, int badgeNo) {
-        Map<String, Object> params = new HashMap();
-        params.put("userNo", userNo);
-        params.put("badgeNo", badgeNo);
+    public int insertDefaultBadge(int userId, int badgeId) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("userId", userId);
+        params.put("badgeId", badgeId);
         return sqlSession.insert("badgeMapper.insertDefaultBadge", params);
     }
 
     // 뱃지 조회
-    public List<Map<String, Object>> selectUserBadges(int userNo) {
-        return sqlSession.selectList("badgeMapper.selectUserBadges", userNo);
+    public List<Badge> selectUserBadges(int userId) {
+        return sqlSession.selectList("badgeMapper.selectUserBadges", userId);
     }
 }

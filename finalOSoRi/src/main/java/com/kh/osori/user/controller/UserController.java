@@ -21,7 +21,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+
 import com.kh.osori.FinalOSoRiApplication;
+import com.kh.osori.user.model.dto.UserRegisterRequest;
 import com.kh.osori.user.model.service.UserService;
 import com.kh.osori.user.model.vo.User;
 import com.kh.osori.util.JwtUtil;
@@ -106,15 +108,17 @@ public class UserController {
 
 	}
 
-	// 회원 가입
+	//회원 가입
 	@PostMapping("/register")
-	public ResponseEntity<?> insertUser(@RequestBody User user) {
+	public ResponseEntity<?> insertUser(@RequestBody UserRegisterRequest request) {
+
+		User user = request.getUser();
 
 		user.setPassword(bcrypt.encode(user.getPassword())); // 갖고 온 비밀번호를 평문이 아닌 암호화된 비밀번호로 처리
 
-		int result = service.insertUser(user); // 회원 가입 처리
+		int result = service.insertUser(request); // 회원 가입 처리
 
-		if (result > 0) {
+		if(result >= 2) {
 			return ResponseEntity.ok("회원 가입에 성공했습니다. 로그인을 해보세요.");
 		} else {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("회원가입에 실패했습니다.");
@@ -416,5 +420,14 @@ public class UserController {
 		}
 
 	}
+
+	
+	//2월 2일 15시 4분부터 작업
+	@GetMapping("/kakao/callback")
+    public ResponseEntity<?> kakaoLogin(@RequestParam String code) {
+        Map<String, Object> result = service.processKakaoLogin(code);
+        return ResponseEntity.ok(result);
+    }
+	
 
 }

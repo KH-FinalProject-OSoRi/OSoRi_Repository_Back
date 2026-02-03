@@ -116,6 +116,10 @@ public class ChallengeDao {
 	    return sqlSession.update("challengeMapper.updateGroupChallengeSuccess");
 	}
 
+	public List<Integer> getUsersToReward(SqlSessionTemplate sqlSession) {
+	    return sqlSession.selectList("challengeMapper.getUsersToReward");
+	}
+
 }
 
 

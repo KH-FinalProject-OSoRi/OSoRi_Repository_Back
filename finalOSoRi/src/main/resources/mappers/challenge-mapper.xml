@@ -356,6 +356,13 @@
 	      AND END_DATE &lt; SYSDATE
 	</update>
 	
+	<select id="getUsersToReward" resultType="int">
+	    SELECT USER_ID
+	    FROM GROUPCHALL
+	    WHERE STATUS = 'PROCEEDING'
+	      AND END_DATE &lt; SYSDATE
+	</select>
+	
 
 	
 

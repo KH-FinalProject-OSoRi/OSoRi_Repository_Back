@@ -3,19 +3,19 @@
   
 <mapper namespace="badgeMapper">
 
-    <select id="selectUserBadges" resultType="map">
+    <select id="selectUserBadges" resultType="Badge">
         SELECT 
-            B.BADGE_ID as "badgeId",
-            B.BADGE_NAME as "badgeName",
-            B.BADGE_ICON_URL as "badgeIconUrl"
+            B.BADGE_ID as badgeId,
+            B.BADGE_NAME as badgeName,
+            B.BADGE_ICON_URL as badgeIconUrl
         FROM USERBADGE UB
         JOIN BADGE B ON UB.BADGE_ID = B.BADGE_ID
-        WHERE UB.USER_ID = #{userNo}
+        WHERE UB.USER_ID = #{userId}
     </select>
 
     <insert id="insertDefaultBadge">
         INSERT INTO USERBADGE (USER_ID, BADGE_ID, EARNED_AT)
-        VALUES (#{userNo}, #{badgeId}, SYSDATE)
+        VALUES (#{userId}, #{badgeId}, SYSDATE)
     </insert>
 
 </mapper>
