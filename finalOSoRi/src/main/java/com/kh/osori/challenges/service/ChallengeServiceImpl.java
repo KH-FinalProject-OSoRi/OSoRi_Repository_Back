@@ -4,15 +4,12 @@ import java.util.ArrayList;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
 
 import com.kh.osori.challenges.model.dao.ChallengeDao;
-
 import com.kh.osori.challenges.model.vo.Challenge;
 
-@RestController
-@RequestMapping("/challenges")
+@Service
 public class ChallengeServiceImpl implements ChallengeService {
 	
 	@Autowired
