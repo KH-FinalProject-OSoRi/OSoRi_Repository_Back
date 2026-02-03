@@ -47,6 +47,12 @@ public class TransServiceImpl implements TransService{
 		
 		return dao.deleteTrans(sqlSession,transId);
 	}
+	
+	// [추가] 고정지출 -> MYTRANS 자동반영 MERGE 실행
+	public int mergeFixedToMyTrans() {
+	  return dao.mergeFixedToMyTrans(sqlSession);
+	}
+
 
 	@Override
 	public List<Grouptrans> getGroupTransactions(int groupId) {
@@ -64,12 +70,6 @@ public class TransServiceImpl implements TransService{
 		
 		return dao.deleteGroupTrans(sqlSession,transId);
 	}
-	
-	@Override
-	// [추가] 고정지출 -> MYTRANS 자동반영 MERGE 실행
-	public int mergeFixedToMyTrans() {
-		return dao.mergeFixedToMyTrans(sqlSession);
-	}
 
 	@Override
 	public Object groupInfo(int groupId) {
@@ -81,6 +81,11 @@ public class TransServiceImpl implements TransService{
 	public List<String> getGroupMemberIds(int groupBId) {
 		return dao.getGroupMemberIds(sqlSession,groupBId);
 	}
+	
+	public List<Mytrans> recentTrans(int userId) {
+		
+		return dao.recentTrans(sqlSession,userId);
+	}
 
 	@Override
 	public String getLoginId(int userId) {
@@ -90,11 +95,5 @@ public class TransServiceImpl implements TransService{
 	public String getGroupTitle(int groupBId) {
 		return dao.getGroupTitle(sqlSession, groupBId);
 	}
-
-	public List<Mytrans> recentTrans(int userId) {
-		
-		return dao.recentTrans(sqlSession,userId);
-	}
-
 
 }

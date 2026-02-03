@@ -2,7 +2,6 @@ package com.kh.osori.groupBudget.model.service;
 
 import java.util.List;
 
-import com.kh.osori.challenges.model.vo.Challenges;
 import com.kh.osori.challenges.model.vo.GroupChall;
 import com.kh.osori.groupBudget.model.vo.BudgetMem;
 import com.kh.osori.groupBudget.model.vo.GroupBudget;

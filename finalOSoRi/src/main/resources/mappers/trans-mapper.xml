@@ -148,8 +148,8 @@
 	      s.FIXED_ID
 	    )
 	</insert>
-	
-	
+
+
 	<select id="selectGroupTrans" resultType="Grouptrans">
     SELECT 
         G.TRAN_ID        AS "transId", 
@@ -194,7 +194,20 @@
 	    FROM GROUPBUDGET  
 	    WHERE GROUPB_ID = #{groupId}
 	</select>
+
 	
+	<select id="recentTrans" resultType="mytrans">
+	    SELECT 
+	        TITLE           AS "title",
+	        ORIGINAL_AMOUNT  AS "originalAmount",
+	        CATEGORY        AS "category",
+	        TYPE            AS "type"
+	    FROM MYTRANS 
+	    WHERE USER_ID = #{userId} 
+	      AND IS_SHARED = 'N'
+	    ORDER BY TRAN_ID DESC 
+	    FETCH FIRST 3 ROWS ONLY 
+	</select>
 	
 	<select id="recentTrans" resultType="mytrans">
 	    SELECT 

@@ -5,7 +5,7 @@ import java.util.List;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
-import com.kh.osori.challenges.model.vo.Challenges;
+import com.kh.osori.challenges.model.vo.Challenge;
 import com.kh.osori.challenges.model.vo.GroupChall;
 import com.kh.osori.groupBudget.model.vo.BudgetMem;
 import com.kh.osori.groupBudget.model.vo.GroupBudget;
@@ -76,7 +76,7 @@ public class GroupBudgetDao {
 		return sqlSession.selectOne("groupBudgetMapper.groupCheckAdmin", groupbId);
 	}
 
-	public List<Challenges> groupChallList(SqlSessionTemplate sqlSession) {
+	public List<Challenge> groupChallList(SqlSessionTemplate sqlSession) {
 		return sqlSession.selectList("groupBudgetMapper.groupChallList");
 	}
 

@@ -156,5 +156,4 @@ public class TransController {
 		return ResponseEntity.ok(service.recentTrans(userId));
 	}
 	
-	
 }

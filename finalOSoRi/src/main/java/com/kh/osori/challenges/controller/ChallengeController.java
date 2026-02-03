@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kh.osori.challenges.model.vo.Challenges;
-import com.kh.osori.challenges.model.service.ChallengeService;
+import com.kh.osori.challenges.model.vo.Challenge;
+import com.kh.osori.challenges.service.ChallengeService;
 
 @RestController
 @RequestMapping("/challenges")
@@ -24,7 +24,7 @@ public class ChallengeController {
 	@GetMapping
 	public ResponseEntity<?> getChallengeList(@RequestParam String challengeMode) {
 		
-		ArrayList<Challenges> list = service.getChallengeList(challengeMode); 
+		ArrayList<Challenge> list = service.getChallengeList(challengeMode); 
 		
 		HashMap<String, Object> res = new HashMap<>(); 
 		

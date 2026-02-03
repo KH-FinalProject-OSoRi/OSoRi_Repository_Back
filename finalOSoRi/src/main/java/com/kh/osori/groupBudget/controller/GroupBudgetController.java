@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.kh.osori.challenges.model.vo.Challenges;
-import com.kh.osori.challenges.model.vo.GroupChall;
 import com.kh.osori.groupBudget.model.service.GroupBudgetService;
 import com.kh.osori.groupBudget.model.vo.BudgetMem;
 import com.kh.osori.groupBudget.model.vo.GroupBudget;
