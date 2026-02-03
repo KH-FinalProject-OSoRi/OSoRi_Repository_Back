@@ -18,4 +18,5 @@ public interface UserService {
 	User findLoginIdByEmail(String email);
 	int resetPassword(Map<String, String> userMap); 	
 	
+	
 }

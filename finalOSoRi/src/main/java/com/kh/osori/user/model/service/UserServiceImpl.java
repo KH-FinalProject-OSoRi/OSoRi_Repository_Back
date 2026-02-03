@@ -22,12 +22,18 @@ public class UserServiceImpl implements UserService {
 	
 	@Override // 회원 가입 
 	public int insertUser(User user) {
-		
-		int result = dao.insertUser(sqlSession, user);
-		
-		return result; 
-		
-	}
+	        
+	        int result = dao.insertUser(sqlSession, user);
+	        
+	        if(result > 0) {
+	            int userNo = user.getUserId(); 
+	            int defaultBadgeId = 1; // 미리 DB에 넣어둔 'A_newbie' 뱃지 번호
+	            
+	            dao.insertDefaultBadge(sqlSession, userNo, defaultBadgeId);
+	        }
+	        
+	        return result; 
+	    }
 	
 	@Transactional
 	@Override // 로그인 메서드, 동시에 마지막 로그인 날짜 SYSDATE를 넣어보기  (트랜잭션 처리를 이용해보자.) 
