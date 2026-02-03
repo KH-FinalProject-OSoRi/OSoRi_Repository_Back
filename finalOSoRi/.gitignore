@@ -26,3 +26,9 @@ replay_pid*
 
 /.metadata/
 /target/
+/.idea/
+.classpath
+*.iml
+/bin/
+/finalOSoRi/target/
+/finalOSoRi/.settings/
