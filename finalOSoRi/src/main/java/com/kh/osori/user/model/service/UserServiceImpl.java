@@ -156,6 +156,8 @@ public class UserServiceImpl implements UserService {
 	    
 	    if(rowUpdate > 0) { // lastLogin 날짜 갱신 됐는가 ? 
 	    	
+	    		user = dao.findLoginIdByEmail(sqlSession, email); // 업데이트 된 유저 객체 한번 더 호출
+	    	
 	    		// 4. 전용 JWT 발행
 		    String token = jwtUtil.generateToken(user.getLoginId());
 		    user.setPassword(null);
