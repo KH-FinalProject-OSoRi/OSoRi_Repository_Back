@@ -425,7 +425,8 @@ public class UserController {
 	//2월 2일 15시 4분부터 작업
 	@GetMapping("/kakao/callback")
     public ResponseEntity<?> kakaoLogin(@RequestParam String code) {
-        Map<String, Object> result = service.processKakaoLogin(code);
+        Map<String, Object> result = service.processKakaoLogin(code); // 인가 코드를 받기 
+        
         return ResponseEntity.ok(result);
     }
 	
