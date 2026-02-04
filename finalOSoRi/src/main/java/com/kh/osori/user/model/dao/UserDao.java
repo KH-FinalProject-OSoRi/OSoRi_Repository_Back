@@ -14,7 +14,16 @@ public class UserDao {
 	    //회원 가입 
 		public int insertUser(SqlSessionTemplate sqlSession, User user) {
 			return sqlSession.insert("userMapper.insertUser", user); 
+			
 		}
+		
+		// 기본 뱃지 지급
+	    public int insertDefaultBadge(SqlSessionTemplate sqlSession, int userId, int badgeId) {
+	        Map<String, Object> params = new HashMap<>();
+	        params.put("userId", userId);
+	        params.put("badgeId", badgeId);
+	        return sqlSession.insert("userMapper.insertDefaultBadge", params);
+	    }
 		
 		//회원 조회
 		public User selectUser(SqlSessionTemplate sqlSession, User user) {
@@ -82,5 +91,6 @@ public class UserDao {
 		public int insertAuthAccount(SqlSessionTemplate sqlSession, HashMap<String, Object> accountMap) {
 			return sqlSession.insert("userMapper.insertAuthAccount", accountMap); 
 		}
+
 
 }

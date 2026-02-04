@@ -11,7 +11,7 @@
 	 
 	 이러한 의미가 있어서 insertMember에는 LAST_LOGIN 컬럼을 넣지 않았습니다.
 	 -->
-    <insert id="insertUser" parameterType="User">
+    <insert id="insertUser" parameterType="User" useGeneratedKeys="true" keyProperty="userId" keyColumn="USER_ID">
 	  INSERT INTO USERS (
 	    USER_ID, LOGIN_ID, USER_NAME, NICKNAME, EMAIL, PASSWORD
 	  ) VALUES (
@@ -23,7 +23,6 @@
 	    #{password}
 	  )
 	</insert>
-
     
     <select id="selectUser" parameterType="User" resultType="User">
     	SELECT USER_ID,

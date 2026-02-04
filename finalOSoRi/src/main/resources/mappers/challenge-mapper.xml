@@ -348,13 +348,25 @@
 	    ORDER BY gc.END_DATE DESC
 	</select>
 	
+	<select id="getUsersToReward" resultType="map">
+	    SELECT DISTINCT
+	        M.USER_ID AS USER_ID, 
+	        B.BADGE_ID AS BADGE_ID
+	    FROM GROUPCHALL G
+	    JOIN BADGE B ON G.CHALLENGE_ID = B.CHALLENGE_ID
+	    JOIN BUDGETMEM M ON G.GROUPB_ID = M.GROUPB_ID 
+	    WHERE G.STATUS = 'PROCEEDING'
+	      AND TRUNC(G.END_DATE) &lt;= TRUNC(SYSDATE)
+	</select>
+	
 	<!-- 기간이 끝날때까지 proceeding 이면 성공 처리 -->
 	<update id="updateGroupChallengeSuccess">
 	    UPDATE GROUPCHALL
 	    SET STATUS = 'SUCCESS'
 	    WHERE STATUS = 'PROCEEDING'
-	      AND END_DATE &lt; SYSDATE
+	      AND TRUNC(END_DATE) &lt; TRUNC(SYSDATE)
 	</update>
+	
 	
 
 	

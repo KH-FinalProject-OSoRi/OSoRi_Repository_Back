@@ -16,6 +16,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import com.kh.osori.badge.dao.BadgeDao;
 import com.kh.osori.user.model.dao.UserDao;
 import com.kh.osori.user.model.dto.UserRegisterRequest;
 import com.kh.osori.user.model.vo.User;
@@ -26,6 +27,9 @@ public class UserServiceImpl implements UserService {
 	
 	@Autowired
 	private UserDao dao;
+	
+	@Autowired
+    private BadgeDao badgeDao; // 뱃지용 전용 DAO 주입
 	
 	@Autowired
 	private SqlSessionTemplate sqlSession;
@@ -56,6 +60,13 @@ public class UserServiceImpl implements UserService {
 		int result2 = dao.insertAuthAccount(sqlSession, accountMap); 
 		
 		int sum = result1 + result2; 
+		
+		if(sum >= 2) {
+            int userId = user.getUserId(); 
+            int defaultBadgeNo = 1; 
+            
+            badgeDao.insertDefaultBadge(userId, defaultBadgeNo);
+        }
 		
 		return sum; 
 		
@@ -100,7 +111,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	public Map<String, Object> processKakaoLogin(String code) {
 	    
-		// 카카오 토큰 받기 
+		// 카카오 토큰 받기
 	    RestTemplate rt = new RestTemplate();
 	    HttpHeaders headers = new HttpHeaders();
 	    headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
@@ -131,8 +142,8 @@ public class UserServiceImpl implements UserService {
 	    String email = (String) kakaoAccount.get("email"); //에서 권한을 얻어야 null이 안 나옵니다.
 	    String nickName = (String) profile.get("nickname"); //
 	    
-	    String providerUserId = String.valueOf(body.get("id")); // 고유 토큰 아이디 
-	    String loginType = "KAKAO"; // 로그인 타입 
+	    String providerUserId = String.valueOf(body.get("id")); // 고유 토큰 아이디
+	    String loginType = "KAKAO"; // 로그인 타입
 
 	    // 3. DB 가입 확인 및 처리 (이메일 기준)
 	    User user = dao.findLoginIdByEmail(sqlSession, email); // 회원 조회
@@ -140,28 +151,30 @@ public class UserServiceImpl implements UserService {
 	    Map<String, Object> result = new HashMap<>();
 	    
 	    if (user == null) {
-	        
+
 	    		result.put("isNewMember", true); // 추가
 	    		result.put("email",email);
-	    		result.put("nickName", nickName); 
-	    		result.put("providerUserId", providerUserId); // 토큰 고유 아이디 
-	    		result.put("loginType","KAKAO"); 
+	    		result.put("nickName", nickName);
+	    		result.put("providerUserId", providerUserId); // 토큰 고유 아이디
+	    		result.put("loginType","KAKAO");
 	    		
-	    		return result; 
+	    		return result;
 	    	
 	    	
 	    }
 	    
 	    int rowUpdate = dao.updateDate(sqlSession,user); // 업데이트 된 행이 있는지 판별
+	    user = dao.findLoginIdByEmail(sqlSession, email); // 업데이트 된 유저 객체 한번 더 호출
 	    
+
 	    if(rowUpdate > 0) { // lastLogin 날짜 갱신 됐는가 ? 
+
 	    	
 	    		user = dao.findLoginIdByEmail(sqlSession, email); // 업데이트 된 유저 객체 한번 더 호출
 	    	
 	    		// 4. 전용 JWT 발행
 		    String token = jwtUtil.generateToken(user.getLoginId());
 		    user.setPassword(null);
-		    
 		    result.put("token", token);
 		    result.put("user", user);
 		    
@@ -172,10 +185,9 @@ public class UserServiceImpl implements UserService {
 	        }
 		   
 		    return result; // 날짜가 갱신이 되면 로그인 성공 처리 
-	    	
+
 	    	
 	    }
-	    
 	    return null; // 날짜가 갱신이 안되면 바로 로그인 실패 처리 
 	    
 	    

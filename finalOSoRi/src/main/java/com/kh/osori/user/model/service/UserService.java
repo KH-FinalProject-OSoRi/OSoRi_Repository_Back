@@ -22,4 +22,5 @@ public interface UserService {
 	// 카카오 로그인 처리 메소드 
 	Map<String, Object> processKakaoLogin(String code);
 	
+	
 }
