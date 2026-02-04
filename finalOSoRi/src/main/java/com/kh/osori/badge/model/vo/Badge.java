@@ -9,5 +9,9 @@ public class Badge {
 	    private String badgeName;
 	    private String badgeIconUrl;
 	    private String challengeId;
+	    
+	    private String challengeDesc; 
+	    private String groupBudgetTitle;
+
 	
 }

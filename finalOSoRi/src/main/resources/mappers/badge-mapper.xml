@@ -4,14 +4,32 @@
 <mapper namespace="badgeMapper">
 
     <select id="selectUserBadges" resultType="Badge">
-        SELECT 
-            B.BADGE_ID as badgeId,
-            B.BADGE_NAME as badgeName,
-            B.BADGE_ICON_URL as badgeIconUrl
-        FROM USERBADGE UB
-        JOIN BADGE B ON UB.BADGE_ID = B.BADGE_ID
-        WHERE UB.USER_ID = #{userId}
-    </select>
+	    SELECT
+	        UB.USER_ID           AS userId,
+	        UB.BADGE_ID          AS badgeId,
+	        UB.EARNED_AT         AS earnedAt,
+	
+	        B.BADGE_NAME         AS badgeName,
+	        B.BADGE_ICON_URL     AS badgeIconUrl,
+	        B.CHALLENGE_ID       AS challengeId,
+	
+	        C.DESCRIPTION        AS challengeDesc,
+	
+	        (
+	            SELECT GB.TITLE
+	            FROM GROUPCHALL GC
+	            JOIN GROUPBUDGET GB ON GB.GROUPB_ID = GC.GROUPB_ID
+	            WHERE GC.CHALLENGE_ID = B.CHALLENGE_ID
+	            FETCH FIRST 1 ROWS ONLY
+	        ) AS groupBudgetTitle
+	
+	    FROM USERBADGE UB
+	    JOIN BADGE B ON UB.BADGE_ID = B.BADGE_ID
+	    LEFT JOIN CHALLENGES C ON C.CHALLENGE_ID = B.CHALLENGE_ID
+	    WHERE UB.USER_ID = #{userId}
+	    ORDER BY UB.EARNED_AT DESC
+	</select>
+
 
     <insert id="insertDefaultBadge">
         INSERT INTO USERBADGE (USER_ID, BADGE_ID, EARNED_AT)

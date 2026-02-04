@@ -164,6 +164,7 @@ public class UserServiceImpl implements UserService {
 	    }
 	    
 	    int rowUpdate = dao.updateDate(sqlSession,user); // 업데이트 된 행이 있는지 판별
+	    user = dao.findLoginIdByEmail(sqlSession, email); // 업데이트 된 유저 객체 한번 더 호출
 	    
 
 	    if(rowUpdate > 0) { // lastLogin 날짜 갱신 됐는가 ? 
