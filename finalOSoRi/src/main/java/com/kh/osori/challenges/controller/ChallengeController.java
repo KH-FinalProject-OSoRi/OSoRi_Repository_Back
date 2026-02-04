@@ -171,6 +171,9 @@ public class ChallengeController {
 	        @RequestParam("challengeId") String challengeId) {
 	    
 	    List<Map<String, Object>> rankingList = service.getGroupRanking(groupbId, challengeId);
+	    System.out.println("[RANK] groupbId=" + groupbId + ", challengeId=" + challengeId);
+	    System.out.println("[RANK] result size=" + (rankingList==null? "null" : rankingList.size()));
+
 	    
 	    if (rankingList != null) {
 	        return ResponseEntity.ok(rankingList);

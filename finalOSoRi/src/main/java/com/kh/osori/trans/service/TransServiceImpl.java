@@ -43,7 +43,11 @@ public class TransServiceImpl implements TransService{
             // 3. Challenge 서비스의 실패 처리 메서드 호출
             // gt.getGroupbId()를 통해 현재 가계부의 챌린지만 골라 실패 처리함
         	System.out.println("지출 감지! 챌린지 실패 로직 실행. 가계부ID: " + gt.getGroupBId());
-            challengeService.failActiveZeroChallenge(gt.getGroupBId());
+        	challengeService.handleZeroChallengeExpense(
+                    gt.getGroupBId(),
+                    gt.getUserId(),        // Grouptrans에 userId 있어야 함
+                    gt.getTransDate()      // Grouptrans에 transDate(Date) 있어야 함
+                );
         }
 
         return result;

@@ -86,39 +86,111 @@ public class ChallengeDao {
 	    return (ArrayList) sqlSession.selectList("challengeMapper.selectActiveProceedingChallenges");
 	}
 
-//	그룹챌린지
+	
+	
+	
+	
+	//	그룹챌린지
+	// ✅ 그룹 챌린지 참여 시: 그룹원 전원 결과행(PROCEEDING) 생성
+	public int insertGroupChallResults(SqlSessionTemplate sqlSession, Map<String, Object> param) {
+		return sqlSession.insert("challengeMapper.insertGroupChallResults", param);
+	}
+
+	// ✅ 무지출 챌린지: 지출 발생 즉시 해당 유저 FAILED 처리
+	public int failUserOnZeroChallengeExpense(SqlSessionTemplate sqlSession, Map<String, Object> param) {
+		return sqlSession.update("challengeMapper.failUserOnZeroChallengeExpense", param);
+	}
+
+	// ✅ 무지출 챌린지: 종료 후 남아있는 PROCEEDING 유저들 SUCCESS 처리
+	public int successRemainingZeroChallengeUsers(SqlSessionTemplate sqlSession) {
+		return sqlSession.update("challengeMapper.successRemainingZeroChallengeUsers");
+	}
+
+	// ✅ 경쟁(지출 적게 쓰기): 종료된 competition 회차 목록 조회
+	public List<Map<String, Object>> selectEndedCompetitionChallenges(SqlSessionTemplate sqlSession) {
+		return sqlSession.selectList("challengeMapper.selectEndedCompetitionChallenges");
+	}
+
+	// ✅ 경쟁: 유저별 TOTAL_AMOUNT 계산 업데이트
+	public int updateCompetitionTotals(SqlSessionTemplate sqlSession, Map<String, Object> param) {
+		return sqlSession.update("challengeMapper.updateCompetitionTotals", param);
+	}
+
+	// ✅ 경쟁: RNK 계산 업데이트(ROW_NUMBER 또는 DENSE_RANK 기반)
+	public int updateCompetitionRanks(SqlSessionTemplate sqlSession, Map<String, Object> param) {
+		return sqlSession.update("challengeMapper.updateCompetitionRanks", param);
+	}
+
+	// ✅ 경쟁: 1등만 SUCCESS, 나머지 FAILED 확정
+	public int finalizeCompetitionStatus(SqlSessionTemplate sqlSession, Map<String, Object> param) {
+		return sqlSession.update("challengeMapper.finalizeCompetitionStatus", param);
+	}
+
+	// ✅ 뱃지 발급 대상: 결과 테이블에서 SUCCESS인 사람만 조회 (중복방지 조건은 매퍼에서)
+	public List<Map<String, Object>> selectUsersToRewardFromResult(SqlSessionTemplate sqlSession) {
+		return sqlSession.selectList("challengeMapper.selectUsersToRewardFromResult");
+	}
+
+	// ✅ USERBADGE 중복방지 MERGE(권장) 또는 INSERT
+	public int mergeUserBadge(SqlSessionTemplate sqlSession, Map<String, Object> param) {
+		return sqlSession.insert("challengeMapper.mergeUserBadge", param);
+	}
+
+	// ✅ 그룹 챌린지 종료 처리(그룹챌린지 자체를 CLOSED/SUCCESS로 닫고 싶다면)
+	public int closeGroupChallenge(SqlSessionTemplate sqlSession, Map<String, Object> param) {
+		return sqlSession.update("challengeMapper.closeGroupChallenge", param);
+	}
+    
+    
 	
 	public int joinGroupChallenge(SqlSessionTemplate sqlSession, GroupChall groupChall) {
 		return sqlSession.insert("challengeMapper.joinGroupChallenge", groupChall);
 	}
+//
+//	public List<GroupChall> getGroupJoinList(SqlSessionTemplate sqlSession, int groupbId) {
+//		return sqlSession.selectList("challengeMapper.getGroupJoinList", groupbId);
+//	}
+//
+//	public int failActiveZeroChallenge(SqlSessionTemplate sqlSession, int groupbId) {
+//		return sqlSession.update("challengeMapper.failActiveZeroChallenge", groupbId);
+//	}
+//	
+//	public List<Map<String, Object>> selectCompetitionRanking(SqlSessionTemplate sqlSession, Map<String, Object> params) {
+//	    return sqlSession.selectList("challengeMapper.selectCompetitionRanking", params);
+//	}
+//
+//	public List<GroupChall> getGroupPastChallengeList(SqlSessionTemplate sqlSession, int groupbId) {
+//		return sqlSession.selectList("challengeMapper.getGroupPastChallengeList", groupbId);
+//	}
+//	
+//	public List<Map<String, Object>> getGroupRanking(SqlSessionTemplate sqlSession, Map<String, Object> params) {
+//	    return sqlSession.selectList("challengeMapper.getGroupRanking", params);
+//	}
+//	
+//	public int updateGroupChallengeSuccess(SqlSessionTemplate sqlSession) {
+//	    return sqlSession.update("challengeMapper.updateGroupChallengeSuccess");
+//	}
+//
+//	public List<Map<String, Object>> getUsersToReward(SqlSessionTemplate sqlSession) {
+//	    return sqlSession.selectList("challengeMapper.getUsersToReward");
+//	}
 
 	public List<GroupChall> getGroupJoinList(SqlSessionTemplate sqlSession, int groupbId) {
 		return sqlSession.selectList("challengeMapper.getGroupJoinList", groupbId);
 	}
 
-	public int failActiveZeroChallenge(SqlSessionTemplate sqlSession, int groupbId) {
-		return sqlSession.update("challengeMapper.failActiveZeroChallenge", groupbId);
-	}
-	
-	public List<Map<String, Object>> selectCompetitionRanking(SqlSessionTemplate sqlSession, Map<String, Object> params) {
-	    return sqlSession.selectList("challengeMapper.selectCompetitionRanking", params);
+	public List<Map<String, Object>> getGroupRanking(SqlSessionTemplate sqlSession, Map<String, Object> params) {
+		 return sqlSession.selectList("challengeMapper.getGroupRanking", params);
 	}
 
 	public List<GroupChall> getGroupPastChallengeList(SqlSessionTemplate sqlSession, int groupbId) {
 		return sqlSession.selectList("challengeMapper.getGroupPastChallengeList", groupbId);
 	}
 	
-	public List<Map<String, Object>> getGroupRanking(SqlSessionTemplate sqlSession, Map<String, Object> params) {
-	    return sqlSession.selectList("challengeMapper.getGroupRanking", params);
-	}
-	
-	public int updateGroupChallengeSuccess(SqlSessionTemplate sqlSession) {
-	    return sqlSession.update("challengeMapper.updateGroupChallengeSuccess");
+	public int closeExpiredGroupChallenges(SqlSessionTemplate sqlSession) {
+	    return sqlSession.update("challengeMapper.closeExpiredGroupChallenges");
 	}
 
-	public List<Map<String, Object>> getUsersToReward(SqlSessionTemplate sqlSession) {
-	    return sqlSession.selectList("challengeMapper.getUsersToReward");
-	}
 
 }
 

@@ -463,61 +463,133 @@ public class ChallengeServiceImpl implements ChallengeService {
 	
 	//그룹 챌린지
 
-	@Override
-	public int joinGroupChallenge(GroupChall groupChall) {
-		return dao.joinGroupChallenge(sqlSession, groupChall);
-	}
+	 // =========================
+    // 1) 그룹 챌린지 참여
+    // =========================
+	
+    @Override
+    @Transactional
+    public int joinGroupChallenge(GroupChall groupChall) {
+
+        // 1) 기존 로직: GROUPCHALL insert
+        int result = dao.joinGroupChallenge(sqlSession, groupChall); 
+        // ↑ 이 메서드는 네 기존 dao에 이미 있을 가능성이 큼 (없으면 추가)
+
+        // 2) ✅ 추가: 결과 테이블에 그룹원 전원 PROCEEDING 생성
+        // groupChall 안에 startDate/endDate가 들어있어야 함
+        Map<String, Object> p = new HashMap<>();
+        p.put("groupbId", groupChall.getGroupbId());
+        p.put("challengeId", groupChall.getChallengeId());
+        p.put("startDate", groupChall.getStartDate());
+        p.put("endDate", groupChall.getEndDate());
+
+        dao.insertGroupChallResults(sqlSession, p);
+
+        return result;
+    }
+
+    // =========================
+    // 2) 무지출 즉시 탈락 처리 (지출 저장 시 호출)
+    // =========================
+    @Override
+    @Transactional
+    public int handleZeroChallengeExpense(int groupbId, int userId, Date transDate) {
+
+        Map<String, Object> p = new HashMap<>();
+        p.put("groupbId", groupbId);
+        p.put("userId", userId);
+        p.put("transDate", transDate);
+
+        // 결과 테이블에서 해당 유저를 즉시 FAILED로
+        return dao.failUserOnZeroChallengeExpense(sqlSession, p);
+    }
+
+    // =========================
+    // 3) 스케줄러: 종료 처리 + 결과 확정 + 뱃지 발급
+    // =========================
+    @Override
+    @Transactional
+    public void runGroupChallengeScheduler() {
+
+    	dao.closeExpiredGroupChallenges(sqlSession);
+        // (A) 무지출: 기간 종료된 PROCEEDING 유저 SUCCESS 처리
+        dao.successRemainingZeroChallengeUsers(sqlSession);
+
+        // (B) 경쟁형: 종료된 competition 회차들 처리
+        List<Map<String, Object>> endedCompetitions = dao.selectEndedCompetitionChallenges(sqlSession);
+
+        for (Map<String, Object> row : endedCompetitions) {
+            // row에 groupbId, challengeId, startDate, endDate가 들어있어야 함
+            // (mapper selectEndedCompetitionChallenges 결과 컬럼에 맞추기)
+
+            dao.updateCompetitionTotals(sqlSession, row);
+            dao.updateCompetitionRanks(sqlSession, row);
+            dao.finalizeCompetitionStatus(sqlSession, row);
+
+             //(선택) GROUPCHALL 자체 상태도 CLOSED/SUCCESS로 닫고 싶다면
+            row.put("status", "SUCCESS");
+            dao.closeGroupChallenge(sqlSession, row);
+        }
+
+        // (C) SUCCESS인 사람만 뱃지 지급(중복방지는 mapper에서 NOT EXISTS나 MERGE로 처리)
+        List<Map<String, Object>> rewardList = dao.selectUsersToRewardFromResult(sqlSession);
+
+        for (Map<String, Object> r : rewardList) {
+            // r: USER_ID, BADGE_ID 형태
+            dao.mergeUserBadge(sqlSession, r);
+        }
+    }
+	
 
 	@Override
 	public List<GroupChall> getGroupJoinList(int groupbId) {
 		return dao.getGroupJoinList(sqlSession, groupbId);
 	}
-	
-
-	@Override
-	public int failActiveZeroChallenge(int groupbId) {
-	    return dao.failActiveZeroChallenge(sqlSession, groupbId);
-	}
-	
+//	
+//
+//	@Override
+//	public int failActiveZeroChallenge(int groupbId) {
+//	    return dao.failActiveZeroChallenge(sqlSession, groupbId);
+//	}
+//	
 	public List<Map<String, Object>> getGroupRanking(int groupbId, String challengeId) {
 	    Map<String, Object> params = new HashMap<>();
 	    params.put("groupbId", groupbId);
 	    params.put("challengeId", challengeId);
 	    return dao.getGroupRanking(sqlSession, params);
 	}
-
+//
 	@Override
 	public List<GroupChall> getGroupPastChallengeList(int groupbId) {
 		return dao.getGroupPastChallengeList(sqlSession, groupbId);
 	}
-	
-	@Transactional
-	@Override
-	public void closeExpiredChallenges() {
-	    List<Map<String, Object>> rewardList = dao.getUsersToReward(sqlSession); 
-
-	    System.out.println("rewardList = " + rewardList);
-	    if(rewardList != null && !rewardList.isEmpty()){
-	        System.out.println("rewardList[0].keys = " + rewardList.get(0).keySet());
-	    
-	        
-	        for (Map<String, Object> reward : rewardList) {
-	            Object uIdObj = reward.get("userId") != null ? reward.get("userId") : reward.get("USER_ID");
-	            Object bIdObj = reward.get("badgeId") != null ? reward.get("badgeId") : reward.get("BADGE_ID");
-
-	            if (uIdObj != null && bIdObj != null) {
-	                int userId = Integer.parseInt(String.valueOf(uIdObj));
-	                int badgeId = Integer.parseInt(String.valueOf(bIdObj));
-	                
-	                int ins = badgeService.insertDefaultBadge(userId, badgeId);
-	                System.out.println("USERBADGE insert result = " + ins + " (userId=" + userId + ", badgeId=" + badgeId + ")");
-
-	            }
-	        }
-	    }
-	    int result = dao.updateGroupChallengeSuccess(sqlSession);
-	    System.out.println("챌린지 종료 처리 완료: " + result + "건");
-	}
+//	
+//	@Transactional
+//	@Override
+//	public void closeExpiredChallenges() {
+//	    List<Map<String, Object>> rewardList = dao.getUsersToReward(sqlSession); 
+//
+//	    System.out.println("rewardList = " + rewardList);
+//	    if(rewardList != null && !rewardList.isEmpty()){
+//	        System.out.println("rewardList[0].keys = " + rewardList.get(0).keySet());
+//	    
+//	        
+//	        for (Map<String, Object> reward : rewardList) {
+//	            Object uIdObj = reward.get("userId") != null ? reward.get("userId") : reward.get("USER_ID");
+//	            Object bIdObj = reward.get("badgeId") != null ? reward.get("badgeId") : reward.get("BADGE_ID");
+//
+//	            if (uIdObj != null && bIdObj != null) {
+//	                int userId = Integer.parseInt(String.valueOf(uIdObj));
+//	                int badgeId = Integer.parseInt(String.valueOf(bIdObj));
+//	                
+//	                int ins = badgeService.insertDefaultBadge(userId, badgeId);
+//	                System.out.println("USERBADGE insert result = " + ins + " (userId=" + userId + ", badgeId=" + badgeId + ")");
+//	            }
+//	        }
+//	    }
+//	    int result = dao.updateGroupChallengeSuccess(sqlSession);
+//	    System.out.println("챌린지 종료 처리 완료: " + result + "건");
+//	}
 	
 //	@Transactional
 //	public void checkAndRewardChallenges() {
