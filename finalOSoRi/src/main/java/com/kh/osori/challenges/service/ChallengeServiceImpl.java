@@ -470,39 +470,37 @@ public class ChallengeServiceImpl implements ChallengeService {
     @Override
     @Transactional
     public int joinGroupChallenge(GroupChall groupChall) {
-
-        // 1) 기존 로직: GROUPCHALL insert
-        int result = dao.joinGroupChallenge(sqlSession, groupChall); 
-        // ↑ 이 메서드는 네 기존 dao에 이미 있을 가능성이 큼 (없으면 추가)
-
-        // 2) ✅ 추가: 결과 테이블에 그룹원 전원 PROCEEDING 생성
-        // groupChall 안에 startDate/endDate가 들어있어야 함
-        Map<String, Object> p = new HashMap<>();
-        p.put("groupbId", groupChall.getGroupbId());
-        p.put("challengeId", groupChall.getChallengeId());
-        p.put("startDate", groupChall.getStartDate());
-        p.put("endDate", groupChall.getEndDate());
-
-        dao.insertGroupChallResults(sqlSession, p);
-
-        return result;
+        // 1. GROUPCHALL 테이블에 챌린지 생성
+        int res1 = dao.joinGroupChallenge(sqlSession, groupChall);
+        
+        // 2. 해당 그룹의 모든 멤버를 결과 테이블(GROUPCHALL_RESULT)에 PROCEEDING 상태로 추가
+        // 작성하신 insertGroupChallResults 매퍼를 호출합니다.
+        Map<String, Object> param = new HashMap<>();
+        param.put("groupbId", groupChall.getGroupbId());
+        param.put("challengeId", groupChall.getChallengeId());
+        param.put("startDate", groupChall.getStartDate());
+        param.put("endDate", groupChall.getEndDate());
+        
+        int res2 = dao.insertGroupChallResults(sqlSession, param);
+        
+        return (res1 > 0 && res2 > 0) ? 1 : 0;
     }
 
     // =========================
     // 2) 무지출 즉시 탈락 처리 (지출 저장 시 호출)
     // =========================
-    @Override
-    @Transactional
-    public int handleZeroChallengeExpense(int groupbId, int userId, Date transDate) {
-
-        Map<String, Object> p = new HashMap<>();
-        p.put("groupbId", groupbId);
-        p.put("userId", userId);
-        p.put("transDate", transDate);
-
-        // 결과 테이블에서 해당 유저를 즉시 FAILED로
-        return dao.failUserOnZeroChallengeExpense(sqlSession, p);
-    }
+//    @Override
+//    @Transactional
+//    public int handleZeroChallengeExpense(int groupbId, int userId, Date transDate) {
+//
+//        Map<String, Object> p = new HashMap<>();
+//        p.put("groupbId", groupbId);
+//        p.put("userId", userId);
+//        p.put("transDate", transDate);
+//
+//        // 결과 테이블에서 해당 유저를 즉시 FAILED로
+//        return dao.failUserOnZeroChallengeExpense(sqlSession, p);
+//    }
 
     // =========================
     // 3) 스케줄러: 종료 처리 + 결과 확정 + 뱃지 발급
@@ -510,34 +508,45 @@ public class ChallengeServiceImpl implements ChallengeService {
     @Override
     @Transactional
     public void runGroupChallengeScheduler() {
+        // 1. 기간이 지난 그룹 챌린지 본체 상태를 먼저 마감 (PROCEEDING -> CLOSED)
+        dao.closeExpiredGroupChallenges(sqlSession);
 
-    	dao.closeExpiredGroupChallenges(sqlSession);
-        // (A) 무지출: 기간 종료된 PROCEEDING 유저 SUCCESS 처리
+        // 2. [무지출 챌린지] 정산
+        // 지출 내역이 없어 끝까지 PROCEEDING으로 남아있는 유저를 SUCCESS로 변경
+        // (이미 지출 시점에 failUserOnZeroChallengeExpense에 의해 FAILED된 사람은 제외됨)
         dao.successRemainingZeroChallengeUsers(sqlSession);
 
-        // (B) 경쟁형: 종료된 competition 회차들 처리
+        // 3. [경쟁형(절약왕) 챌린지] 정산
         List<Map<String, Object>> endedCompetitions = dao.selectEndedCompetitionChallenges(sqlSession);
 
-        for (Map<String, Object> row : endedCompetitions) {
-            // row에 groupbId, challengeId, startDate, endDate가 들어있어야 함
-            // (mapper selectEndedCompetitionChallenges 결과 컬럼에 맞추기)
+        if (endedCompetitions != null) {
+        	System.out.println("[STEP 2] 정산 대상 경쟁 챌린지 발견: " + endedCompetitions.size() + "건");
+            for (Map<String, Object> row : endedCompetitions) {
+            	// A. 지출 합계 업데이트
+                int totalRes = dao.updateCompetitionTotals(sqlSession, row);
+                System.out.println("      - 합계 업데이트 결과: " + totalRes + "건");
 
-            dao.updateCompetitionTotals(sqlSession, row);
-            dao.updateCompetitionRanks(sqlSession, row);
-            dao.finalizeCompetitionStatus(sqlSession, row);
+                // B. 랭킹 업데이트
+                int rankRes = dao.updateCompetitionRanks(sqlSession, row);
+                System.out.println("      - 랭킹(RNK) 업데이트 결과: " + rankRes + "건");
 
-             //(선택) GROUPCHALL 자체 상태도 CLOSED/SUCCESS로 닫고 싶다면
-            row.put("status", "SUCCESS");
-            dao.closeGroupChallenge(sqlSession, row);
+                // C. 최종 상태 확정 (SUCCESS/FAILED)
+                int finalRes = dao.finalizeCompetitionStatus(sqlSession, row);
+                System.out.println("      - 최종 상태(SUCCESS/FAILED) 확정 결과: " + finalRes + "건");
+            }
         }
 
-        // (C) SUCCESS인 사람만 뱃지 지급(중복방지는 mapper에서 NOT EXISTS나 MERGE로 처리)
+        // 4. [뱃지 지급] SUCCESS 판정된 유저들에게 뱃지 자동 수여
         List<Map<String, Object>> rewardList = dao.selectUsersToRewardFromResult(sqlSession);
-
-        for (Map<String, Object> r : rewardList) {
-            // r: USER_ID, BADGE_ID 형태
-            dao.mergeUserBadge(sqlSession, r);
+        System.out.println("[STEP 3] 뱃지 지급 대상 유저 수: " + (rewardList == null ? 0 : rewardList.size()));
+        if (rewardList != null) {
+            for (Map<String, Object> r : rewardList) {
+                dao.mergeUserBadge(sqlSession, r);
+            }
         }
+        
+        int closeChallRes = dao.closeExpiredGroupChallenges(sqlSession);
+        System.out.println("[STEP 4] 챌린지 본체(GROUPCHALL) 마감 완료: " + closeChallRes + "건");
     }
 	
 
@@ -607,6 +616,58 @@ public class ChallengeServiceImpl implements ChallengeService {
 //	        }
 //	    }
 //	}
+	
+	
+	
+	// 1. 지출 발생 시 무지출 챌린지 체크 (Controller에서 지출 insert 후 호출)
+    @Override
+    @Transactional
+    public void checkNoSpendFailure(int groupbId, int userId, String transDate) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("groupbId", groupbId);
+        params.put("userId", userId);
+        params.put("transDate", transDate);
+        
+        // 지출 등록 즉시 STATUS를 'FAILED'로 업데이트
+        dao.failUserOnZeroChallengeExpense(sqlSession, params);
+    }
+
+	@Override
+	public int handleZeroChallengeExpense(int groupbId, int userId, Date transDate) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+
+    // 2. 스케줄러가 매일 새벽 호출할 정산 로직
+//    @Override
+//    @Transactional
+//    public void processEndedChallenges() {
+//        // A. 종료된 경쟁 챌린지 회차 찾기
+//        List<Map<String, Object>> endedCompList = dao.selectEndedCompetitionChallenges(sqlSession);
+//        
+//        for (Map<String, Object> comp : endedCompList) {
+//            // B. 유저별 합계 금액 업데이트
+//            dao.updateCompetitionTotals(sqlSession, comp);
+//            // C. 랭킹(RNK) 계산 및 업데이트
+//            dao.updateCompetitionRanks(sqlSession, comp);
+//            // D. 1등 SUCCESS, 나머지 FAILED 처리
+//            dao.finalizeCompetitionStatus(sqlSession, comp);
+//        }
+//
+//        // E. 무지출 챌린지: 끝까지 PROCEEDING인 유저 SUCCESS 처리
+//        dao.successRemainingZeroChallengeUsers(sqlSession);
+//
+//        // F. 뱃지 지급: SUCCESS 유저 대상 중복 없이 지급
+//        List<Map<String, Object>> rewardUsers = dao.selectUsersToRewardFromResult(sqlSession);
+//        for (Map<String, Object> reward : rewardUsers) {
+//            dao.mergeUserBadge(sqlSession, reward);
+//        }
+//
+//        // G. 마지막으로 GROUPCHALL 테이블 자체를 CLOSED로 마감
+//        Map<String, Object> closeParam = new HashMap<>();
+//        dao.closeGroupChallenge(sqlSession, closeParam);
+//    }
 
 }
 

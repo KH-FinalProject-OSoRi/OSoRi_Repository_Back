@@ -52,6 +52,9 @@ public interface ChallengeService {
 	List<GroupChall> getGroupPastChallengeList(int groupbId);
 //
 //	void closeExpiredChallenges();
+
+
+	void checkNoSpendFailure(int groupbId, int userId, String transDate);
 	
 	
 

@@ -130,71 +130,63 @@ public class ChallengeController {
 		}
 	}
 	
+	//그룹챌린지
+	
 	@PostMapping("/group")
-	public ResponseEntity<?> joinGroupChallenge(
-	        @RequestBody JoinGroupChallengeRequest req
-	) {
-	    GroupChall groupChall = GroupChall.builder()
-	            .challengeId(req.getChallengeId())
-	            .groupbId(req.getGroupbId())
-	            .startDate(req.getStartDate())   
-	            .endDate(req.getEndDate())      
-	            .status("PROCEEDING")
-	            .build();
+    public ResponseEntity<?> joinGroupChallenge(@RequestBody JoinGroupChallengeRequest req) {
+        // 1. 요청 데이터를 바탕으로 GroupChall 객체 생성
+        GroupChall groupChall = GroupChall.builder()
+                .challengeId(req.getChallengeId())
+                .groupbId(req.getGroupbId())
+                .startDate(req.getStartDate())   
+                .endDate(req.getEndDate())      
+                .status("PROCEEDING")
+                .build();
 
-	    int result = service.joinGroupChallenge(groupChall);
+        // 2. 서비스에서 GROUPCHALL INSERT + GROUPCHALL_RESULT 생성 (대공사 로직 포함)
+        // 서비스 내부에서 @Transactional 처리가 되어 있어야 두 인서트가 안전하게 묶입니다.
+        int result = service.joinGroupChallenge(groupChall);
 
-	    if (result > 0) {
-	        return ResponseEntity.ok(groupChall);
-	    } else {
-	        return ResponseEntity
-	                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body("그룹챌린지 참여 불가");
-	    }
-	}
+        if (result > 0) {
+            return ResponseEntity.ok(groupChall);
+        } else {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("그룹 챌린지 참여 처리 중 오류가 발생했습니다.");
+        }
+    }
 
-	
+    // 순위 조회 - ServiceImpl에서 작성한 RNK 컬럼 기반 데이터를 반환합니다.
+    @GetMapping("/group/ranking")
+    public ResponseEntity<?> getGroupRanking(
+            @RequestParam("groupbId") int groupbId,
+            @RequestParam("challengeId") String challengeId) {
+        
+        // 매퍼의 updateCompetitionRanks 등을 통해 갱신된 최신 순위를 가져옵니다.
+        List<Map<String, Object>> rankingList = service.getGroupRanking(groupbId, challengeId);
+        
+        if (rankingList != null) {
+            return ResponseEntity.ok(rankingList);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("순위 정보를 찾을 수 없습니다.");
+        }
+    }
 
+    @GetMapping("/myJoinedList")
+    public ResponseEntity<?> getMyJoinedList(@RequestParam("groupbId") int groupbId) {
+        return ResponseEntity.ok(service.getGroupJoinList(groupbId));
+    }
 
-	
-	@GetMapping("/myJoinedList")
-	public ResponseEntity<?> getMyJoinedList(@RequestParam("groupbId") int groupbId) {
-	    List<GroupChall> list = service.getGroupJoinList(groupbId);
-	    
-	    return ResponseEntity.ok(list);
-	}
-
-	// 순위 조회
-	@GetMapping("/group/ranking")
-	public ResponseEntity<?> getGroupRanking(
-	        @RequestParam("groupbId") int groupbId,
-	        @RequestParam("challengeId") String challengeId) {
-	    
-	    List<Map<String, Object>> rankingList = service.getGroupRanking(groupbId, challengeId);
-	    System.out.println("[RANK] groupbId=" + groupbId + ", challengeId=" + challengeId);
-	    System.out.println("[RANK] result size=" + (rankingList==null? "null" : rankingList.size()));
-
-	    
-	    if (rankingList != null) {
-	        return ResponseEntity.ok(rankingList);
-	    } else {
-	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("순위 정보를 불러올 수 없습니다.");
-	    }
-	}
-	
-	
-	@GetMapping("/group/past")
-	public ResponseEntity<?> getGroupPastChallengeList(@RequestParam("groupbId") int groupbId) {
-	    List<GroupChall> list = service.getGroupPastChallengeList(groupbId);
-
-	    if (list != null) {
-	        return ResponseEntity.ok(list);
-	    } else {
-	        HashMap<String, Object> res = new HashMap<>();
-	        res.put("message", "지난 그룹 챌린지 목록을 조회할 수 없습니다.");
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
-	    }
-	}
+    @GetMapping("/group/past")
+    public ResponseEntity<?> getGroupPastChallengeList(@RequestParam("groupbId") int groupbId) {
+        List<GroupChall> list = service.getGroupPastChallengeList(groupbId);
+        if (list != null) {
+            return ResponseEntity.ok(list);
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body(Map.of("message", "지난 목록 조회 실패"));
+        }
+    }
 	
 
 }

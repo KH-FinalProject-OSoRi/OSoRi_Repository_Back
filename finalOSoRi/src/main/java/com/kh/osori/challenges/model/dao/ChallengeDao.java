@@ -191,6 +191,8 @@ public class ChallengeDao {
 	    return sqlSession.update("challengeMapper.closeExpiredGroupChallenges");
 	}
 
+	
+
 
 }
 

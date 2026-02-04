@@ -321,14 +321,14 @@
 	    AND CHALLENGE_ID = 'group_zero_challenge'
 	    AND STATUS = 'PROCEEDING'
 	    AND USER_ID = #{userId}
-	    AND #{transDate} BETWEEN TRUNC(START_DATE) AND (TRUNC(END_DATE) + 0.99999)
+	    AND TRUNC(#{transDate}) BETWEEN TRUNC(START_DATE) AND TRUNC(END_DATE)
 	</update>
+
 	
 	<!-- 종료 시점에 남은 proceeding들 모두 success로 처리 -->
 	<update id="successRemainingZeroChallengeUsers">
 	  UPDATE GROUPCHALL_RESULT
-	  SET STATUS = 'CLOSED',
-	      UPDATED_AT = SYSDATE
+	  SET STATUS = 'SUCCESS',  UPDATED_AT = SYSDATE
 	  WHERE CHALLENGE_ID = 'group_zero_challenge'
 	    AND STATUS = 'PROCEEDING'
 	    AND TRUNC(END_DATE) &lt; TRUNC(SYSDATE)
@@ -361,9 +361,9 @@
 		      AND GT.TRANS_DATE &lt; TRUNC(R.END_DATE) + 1
 		  ),
 		  UPDATED_AT = SYSDATE
-		WHERE R.GROUPB_ID = :1 
+		WHERE R.GROUPB_ID = #{groupbId}
 		  AND R.CHALLENGE_ID = 'group_reduceZero_competition'
-		  AND TRUNC(R.START_DATE) = TRUNC(:2)
+		  AND TRUNC(R.START_DATE) = TRUNC(#{startDate})
 	</update>
 	
 	<!-- 랭킹(ROW_NUMBER) 계산해서 RNK 채우기 -->
@@ -431,20 +431,10 @@
 	      AND BADGE_ID = #{BADGE_ID}
 	  )
 	</insert>
-	
-	<update id="closeGroupChallenge" parameterType="map">
-	  UPDATE GROUPCHALL
-	  SET STATUS = #{status},
-	      UPDATED_AT = SYSDATE
-	  WHERE GROUPB_ID = #{groupbId}
-	    AND CHALLENGE_ID = #{challengeId}
-	    AND TRUNC(START_DATE) = TRUNC(#{startDate})
-	</update>
-		
 		
 	<update id="closeExpiredGroupChallenges">
 	  UPDATE GROUPCHALL
-	  SET STATUS = 'SUCCESS'
+	  SET STATUS = 'CLOSED'
 	  WHERE STATUS = 'PROCEEDING'
 	    AND TRUNC(END_DATE) &lt; TRUNC(SYSDATE)
 	</update>
@@ -545,14 +535,6 @@
 	    AND TRUNC(END_DATE) &lt; TRUNC(SYSDATE)
 	</update>
 	
-	<update id="successRemainingZeroChallengeUsers">
-	  UPDATE GROUPCHALL_RESULT
-	  SET STATUS = 'SUCCESS', UPDATED_AT = SYSDATE
-	  WHERE CHALLENGE_ID = 'group_zero_challenge'
-	    AND STATUS = 'PROCEEDING'
-	    AND TRUNC(END_DATE) &lt; TRUNC(SYSDATE)
-	</update>
-		
 		
 	
 	
