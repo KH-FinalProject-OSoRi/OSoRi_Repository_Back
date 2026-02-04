@@ -15,7 +15,14 @@
 
     <insert id="insertDefaultBadge">
         INSERT INTO USERBADGE (USER_ID, BADGE_ID, EARNED_AT)
-        VALUES (#{userId}, #{badgeId}, SYSDATE)
+		SELECT #{userId}, #{badgeId}, SYSDATE
+		FROM dual
+		WHERE NOT EXISTS (
+		  SELECT 1
+		  FROM USERBADGE
+		  WHERE USER_ID = #{userId}
+		  AND BADGE_ID = #{badgeId}
+		)
     </insert>
 
 </mapper>

@@ -38,9 +38,7 @@ public interface ChallengeService {
 	
 	List<Map<String, Object>> getGroupRanking(int groupbId, String challengeId);
 
-
 	List<GroupChall> getGroupPastChallengeList(int groupbId);
-
 
 	void closeExpiredChallenges();
 

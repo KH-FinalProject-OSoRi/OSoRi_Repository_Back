@@ -494,28 +494,47 @@ public class ChallengeServiceImpl implements ChallengeService {
 	@Transactional
 	@Override
 	public void closeExpiredChallenges() {
-	    int groupResult = dao.updateGroupChallengeSuccess(sqlSession);
+	    List<Map<String, Object>> rewardList = dao.getUsersToReward(sqlSession); 
+
+	    System.out.println("rewardList = " + rewardList);
+	    if(rewardList != null && !rewardList.isEmpty()){
+	        System.out.println("rewardList[0].keys = " + rewardList.get(0).keySet());
 	    
-	    if(groupResult > 0) {
-	    }
-	}
-	
-	@Transactional
-	public void checkAndRewardChallenges() {
-	    // 1. 성공 상태로 업데이트하기 전, 조건에 맞는 유저 ID 리스트 확보 (쿼리 추가 필요)
-	    List<Integer> successUserIds = dao.getUsersToReward(sqlSession); 
+	        
+	        for (Map<String, Object> reward : rewardList) {
+	            Object uIdObj = reward.get("userId") != null ? reward.get("userId") : reward.get("USER_ID");
+	            Object bIdObj = reward.get("badgeId") != null ? reward.get("badgeId") : reward.get("BADGE_ID");
 
-	    // 2. 챌린지 상태를 SUCCESS로 업데이트
-	    int updatedCount = dao.updateGroupChallengeSuccess(sqlSession);
+	            if (uIdObj != null && bIdObj != null) {
+	                int userId = Integer.parseInt(String.valueOf(uIdObj));
+	                int badgeId = Integer.parseInt(String.valueOf(bIdObj));
+	                
+	                int ins = badgeService.insertDefaultBadge(userId, badgeId);
+	                System.out.println("USERBADGE insert result = " + ins + " (userId=" + userId + ", badgeId=" + badgeId + ")");
 
-	    // 3. 업데이트된 유저들에게 뱃지 지급
-	    if (updatedCount > 0 && successUserIds != null) {
-	        for (int userId : successUserIds) {
-	            // 해당 성공 챌린지에 맞는 특정 badgeId를 부여 (예: 2번 뱃지)
-	            badgeService.insertDefaultBadge(userId, 2); 
+	            }
 	        }
 	    }
+	    int result = dao.updateGroupChallengeSuccess(sqlSession);
+	    System.out.println("챌린지 종료 처리 완료: " + result + "건");
 	}
+	
+//	@Transactional
+//	public void checkAndRewardChallenges() {
+//	    // 1. 성공 상태로 업데이트하기 전, 조건에 맞는 유저 ID 리스트 확보 (쿼리 추가 필요)
+//	    List<Integer> successUserIds = dao.getUsersToReward(sqlSession); 
+//
+//	    // 2. 챌린지 상태를 SUCCESS로 업데이트
+//	    int updatedCount = dao.updateGroupChallengeSuccess(sqlSession);
+//
+//	    // 3. 업데이트된 유저들에게 뱃지 지급
+//	    if (updatedCount > 0 && successUserIds != null) {
+//	        for (int userId : successUserIds) {
+//	            // 해당 성공 챌린지에 맞는 특정 badgeId를 부여 (예: 2번 뱃지)
+//	            badgeService.insertDefaultBadge(userId, badgeId); 
+//	        }
+//	    }
+//	}
 
 }
 

@@ -116,7 +116,7 @@ public class ChallengeDao {
 	    return sqlSession.update("challengeMapper.updateGroupChallengeSuccess");
 	}
 
-	public List<Integer> getUsersToReward(SqlSessionTemplate sqlSession) {
+	public List<Map<String, Object>> getUsersToReward(SqlSessionTemplate sqlSession) {
 	    return sqlSession.selectList("challengeMapper.getUsersToReward");
 	}
 
