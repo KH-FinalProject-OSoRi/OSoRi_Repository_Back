@@ -8,11 +8,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/upload/badges/**")
-                .addResourceLocations("file:///C:/Users/user1/git/OSoRi_Repository_Back/finalOSoRi/upload/badges/");
-    }
+	@Override
+	public void addResourceHandlers(ResourceHandlerRegistry registry) {
+	    registry.addResourceHandler("/upload/badges/**")
+	            .addResourceLocations("classpath:/static/upload/badges/");
+	}
+
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
