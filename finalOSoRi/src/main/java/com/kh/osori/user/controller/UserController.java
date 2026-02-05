@@ -183,14 +183,28 @@ public class UserController {
 	// 정보 수정 메소드
 	@PatchMapping("/update")
 	public ResponseEntity<?> updateUser(@ModelAttribute User loginUser,
-			@RequestParam(value = "profileImage", required = false) MultipartFile profileImage) {
+			@RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
+			@RequestParam(value = "isImageRemoved", required = false, defaultValue = "false") String isImageRemoved) {
 
 		HashMap<String, Object> res = new HashMap<>();
 		
 		String projectPath = System.getProperty("user.dir"); 
 		String savePath = projectPath + File.separator + "upload" + File.separator + "profiles" + File.separator;
 		
-		if (profileImage != null && !profileImage.isEmpty()) {
+		if ("true".equals(isImageRemoved)) {
+	        User currentUser = service.selectUser(loginUser);
+	        if (currentUser != null && currentUser.getChangeName() != null) {
+	            File oldFile = new File(savePath + currentUser.getChangeName());
+	            if (oldFile.exists()) {
+	                oldFile.delete(); // 실제 파일 삭제
+	            }
+	        }
+	        // DB에 저장될 객체의 파일명을 null로 세팅 (기본 이미지 상태로 복구)
+	        loginUser.setOriginName(null);
+	        loginUser.setChangeName(null);
+	    }
+		
+		else if (profileImage != null && !profileImage.isEmpty()) {
 	        
 	        File folder = new File(savePath);
 	        if (!folder.exists()) {
