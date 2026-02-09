@@ -59,6 +59,60 @@ public class ChallengeServiceImpl implements ChallengeService {
 	public ArrayList<MyChallHistory> getMyPastChallengeList(HashMap<String, Object> req) {
 		return dao.getMyPastChallengeList(sqlSession, req);
 	}
+	
+	// [ADDED] 특정 유저가 진행 중인 챌린지의 실시간 수치를 계산하여 반환
+    @Override
+    public Map<String, Object> getChallengeProgress(int userId, String challengeId) {
+        HashMap<String, Object> req = new HashMap<>();
+        req.put("userId", userId);
+        req.put("challengeMode", "PERSONAL");
+        
+        // 1. 현재 진행 중인(PROCEEDING) 유저의 챌린지 정보 조회
+        ArrayList<MyChall> joinedList = dao.getMyChallengeList(sqlSession, req);
+        MyChall active = joinedList.stream()
+                .filter(m -> m.getChallengeId().equals(challengeId) && "PROCEEDING".equals(m.getStatus()))
+                .findFirst()
+                .orElse(null);
+
+        if (active == null) return null;
+
+        // 2. 챌린지 마스터 정보(목표치 등) 조회
+        Challenge base = dao.selectChallengeById(sqlSession, challengeId);
+        if (base == null) return null;
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("challengeId", challengeId);
+        result.put("startDate", active.getStartDate());
+        result.put("endDate", active.getEndDate());
+        result.put("target", base.getTarget());
+        result.put("targetCount", base.getTargetCount());
+
+        // 3. 현재까지의 지출 합계/횟수 집계 파라미터 설정
+        HashMap<String, Object> param = new HashMap<>();
+        param.put("userId", userId);
+        param.put("fromDate", active.getStartDate().toString());
+        param.put("toDate", active.getEndDate().toString());
+        param.put("category", base.getCategory());
+
+        // 4. 타입(횟수형 vs 금액형)에 따라 수치 데이터 계산
+        if (base.getTargetCount() > 0) {
+            Map<String, Object> res = dao.getExpenseCountByRange(sqlSession, param);
+            result.put("currentValue", toInt(res != null ? (res.get("CNT") != null ? res.get("CNT") : res.get("cnt")) : 0));
+        } else {
+            Map<String, Object> res = dao.getExpenseSumByRange(sqlSession, param);
+            result.put("currentValue", toInt(res != null ? (res.get("SUM") != null ? res.get("SUM") : res.get("sum")) : 0));
+        }
+
+        // [ADDED] 3일 챌린지 등 일자별 관리가 필요한 경우 상세 내역 추가
+        if (base.getDescription().contains("하루") || challengeId.contains("3days")) {
+            ArrayList<HashMap<String, Object>> daily = dao.getDailyExpenseSumsByRange(sqlSession, param);
+            result.put("dailyDetails", daily);
+        }
+
+        return result;
+    }
+
+    // ... 기존 promoteReservedToProceeding, closeExpiredProceedingToResult 등 유지 ...
 
 	
 	// MYTRANS(내역) 기준으로 서버에서 직접 계산함
@@ -216,6 +270,69 @@ public class ChallengeServiceImpl implements ChallengeService {
 
 	// 2) PROCEEDING 중인데 종료일이 지난 것들을 SUCCESS/FAILED로 판정해서 마감
 	// - 성공 판정은 "챌린지 종류별 조건"으로 계산함
+	
+	// ChallengeServiceImpl.java 내부에 추가 또는 수정 (기존 구조 유지)
+
+	@Transactional
+	public void closeExpiredProceedingToResult() {
+	    // 1. 종료된 개인 챌린지 조회 (MYCHALL 기준)
+	    List<MyChallHistory> endedList = sqlSession.selectList("challengeMapper.selectEndedProceedingChallenges");
+
+	    if (endedList == null || endedList.isEmpty()) return;
+
+	    for (MyChallHistory ch : endedList) {
+	        boolean isSuccess = false;
+
+	        Map<String, Object> param = new HashMap<>();
+	        param.put("userId", ch.getUserId());
+	        param.put("fromDate", String.valueOf(ch.getStartDate()).substring(0, 10));
+	        param.put("toDate", String.valueOf(ch.getEndDate()).substring(0, 10));
+	        param.put("category", ch.getCategory());
+
+	        // 2. 챌린지 성공 여부 판단 로직 (기존 로직 유지)
+	        if (ch.getTargetCount() > 0) {
+	            Map<String, Object> res = sqlSession.selectOne("challengeMapper.getExpenseCountByRange", param);
+	            int currentCount = 0;
+	            if (res != null && res.get("CNT") != null) {
+	                currentCount = Integer.parseInt(String.valueOf(res.get("CNT")));
+	            }
+	            if (currentCount <= ch.getTargetCount()) isSuccess = true;
+
+	        } else if (ch.getTarget() > 0) {
+	            Map<String, Object> res = sqlSession.selectOne("challengeMapper.getExpenseSumByRange", param);
+	            int currentSum = 0;
+	            if (res != null && res.get("SUM") != null) {
+	                currentSum = Integer.parseInt(String.valueOf(res.get("SUM")));
+	            }
+	            if (currentSum <= ch.getTarget()) isSuccess = true;
+	        }
+
+	        // 3. 상태 업데이트 (MYCHALL 테이블)
+	        String finalStatus = isSuccess ? "SUCCESS" : "FAILED";
+	        Map<String, Object> statusParam = new HashMap<>();
+	        statusParam.put("userId", ch.getUserId());
+	        statusParam.put("challengeId", ch.getChallengeId());
+	        statusParam.put("startDate", ch.getStartDate());
+	        statusParam.put("endDate", ch.getEndDate());
+	        statusParam.put("status", finalStatus);
+	        
+	        sqlSession.update("challengeMapper.updateMyChallStatus", statusParam);
+
+	        // 4. 성공 시 뱃지 지급 (추가된 부분)
+	        // 상태가 'SUCCESS'로 업데이트된 직후에 실행됩니다.
+	        if (isSuccess) {
+	            Map<String, Object> badgeParam = new HashMap<>();
+	            badgeParam.put("userId", ch.getUserId());
+	            badgeParam.put("challengeId", ch.getChallengeId());
+	            
+	            // challenge-mapper.xml에 정의된 insertBadgeForSuccess를 호출합니다.
+	            sqlSession.insert("challengeMapper.insertBadgeForSuccess", badgeParam);
+	            System.out.println("[DEBUG] 개인 챌린지 성공 뱃지 지급: 유저 " + ch.getUserId() + ", 챌린지 " + ch.getChallengeId());
+	        }
+	    }
+	}
+	
+	/*
 	public int closeExpiredProceedingToResult() {
 		ArrayList<MyChallHistory> endedList = dao.selectEndedProceedingChallenges(sqlSession);
 		if (endedList == null || endedList.isEmpty()) return 0;
@@ -234,6 +351,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 		}
 		return updated;
 	}
+	*/
 
 	// -------------------------
 	// 성공 판정 로직 (MYTRANS 기반)
@@ -519,6 +637,9 @@ public class ChallengeServiceImpl implements ChallengeService {
 	    System.out.println("챌린지 종료 처리 완료: " + result + "건");
 	}
 	
+	// ChallengeServiceImpl.java 내부에 추가 또는 수정 (기존 구조 유지)
+
+
 //	@Transactional
 //	public void checkAndRewardChallenges() {
 //	    // 1. 성공 상태로 업데이트하기 전, 조건에 맞는 유저 ID 리스트 확보 (쿼리 추가 필요)

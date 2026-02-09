@@ -356,7 +356,7 @@
 	    JOIN BADGE B ON G.CHALLENGE_ID = B.CHALLENGE_ID
 	    JOIN BUDGETMEM M ON G.GROUPB_ID = M.GROUPB_ID 
 	    WHERE G.STATUS = 'PROCEEDING'
-	      AND TRUNC(G.END_DATE) &lt;= TRUNC(SYSDATE)
+	      AND TRUNC(G.END_DATE) &lt;= TRUNC(SYSDATE) 
 	</select>
 	
 	<!-- 기간이 끝날때까지 proceeding 이면 성공 처리 -->
@@ -366,6 +366,34 @@
 	    WHERE STATUS = 'PROCEEDING'
 	      AND TRUNC(END_DATE) &lt; TRUNC(SYSDATE)
 	</update>
+	
+	<select id="getPersonalUsersToReward" resultType="map">
+	    SELECT 
+	        MC.USER_ID AS "userId", 
+	        MC.CHALLENGE_ID AS "challengeId"
+	    FROM MYCHALL MC
+	    WHERE MC.STATUS = 'SUCCESS'
+	      AND NOT EXISTS (
+	          SELECT 1 
+	          FROM USERBADGE UB 
+	          JOIN BADGE B ON UB.BADGE_ID = B.BADGE_ID
+	          WHERE UB.USER_ID = MC.USER_ID 
+	            AND B.CHALLENGE_ID = MC.CHALLENGE_ID
+	      )
+	</select>
+
+	<insert id="insertBadgeForSuccess" parameterType="map">
+	    INSERT INTO USERBADGE (USER_ID, BADGE_ID, EARNED_AT)
+	    SELECT #{userId}, B.BADGE_ID, SYSDATE
+	    FROM BADGE B
+	    WHERE B.CHALLENGE_ID = #{challengeId}
+	      AND NOT EXISTS (
+	          SELECT 1 
+	          FROM USERBADGE UB 
+	          WHERE UB.USER_ID = #{userId} 
+	            AND UB.BADGE_ID = B.BADGE_ID
+	      )
+	</insert>
 	
 	
 

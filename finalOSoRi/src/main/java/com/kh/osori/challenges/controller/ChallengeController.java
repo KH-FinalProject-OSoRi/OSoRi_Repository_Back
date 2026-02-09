@@ -193,5 +193,17 @@ public class ChallengeController {
 	    }
 	}
 	
+	// [ADDED] 개인 챌린지 실시간 진행도 조회 API
+    @GetMapping("/mychallenges/progress")
+    public ResponseEntity<?> getChallengeProgress(@RequestParam int userId, @RequestParam String challengeId) {
+        Map<String, Object> progress = service.getChallengeProgress(userId, challengeId);
+        if (progress != null) {
+            return ResponseEntity.ok(progress);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("진행 중인 챌린지 데이터를 찾을 수 없습니다.");
+    }
+	
+	
+	
 
 }

@@ -15,6 +15,9 @@ public class Badge {
 
 	    private String challengeDesc; 
 	    private String groupBudgetTitle;
+	    
+	    //이거 추가함 
+	    private String challengeMode;
 
 	
 }

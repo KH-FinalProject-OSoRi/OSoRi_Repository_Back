@@ -2,6 +2,8 @@ package com.kh.osori.user.model.service;
 
 import java.util.HashMap;
 
+
+
 import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
@@ -9,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,9 +62,9 @@ public class UserServiceImpl implements UserService {
 		
 		int result2 = dao.insertAuthAccount(sqlSession, accountMap); 
 		
-		int sum = result1 + result2; 
+		int sum = result1 + result2;  
 		
-		if(sum >= 2) {
+		if(sum >= 2) { // 회원가입, 로그인 타입 및 토큰번호 주입이 다 됐을때
             int userId = user.getUserId(); 
             int defaultBadgeNo = 1; 
             
@@ -110,7 +113,7 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public Map<String, Object> processKakaoLogin(String code) {
-	    
+		
 		// 카카오 토큰 받기
 	    RestTemplate rt = new RestTemplate();
 	    HttpHeaders headers = new HttpHeaders();
@@ -150,7 +153,7 @@ public class UserServiceImpl implements UserService {
 	    
 	    Map<String, Object> result = new HashMap<>();
 	    
-	    if (user == null) {
+	    if (user == null) { // 신규 회원이면 
 
 	    		result.put("isNewMember", true); // 추가
 	    		result.put("email",email);
@@ -159,27 +162,44 @@ public class UserServiceImpl implements UserService {
 	    		result.put("loginType","KAKAO");
 	    		
 	    		return result;
+	    } else {
 	    	
-	    	
+	    		if(user.getEmail().equals(email)) { // 연동 해제 후, 다시 재 연동을 하려고 할 때 (연동을 한번이상 했던 사람들에 한해서만)
+	    			//즉, 카카오에서 받아온 이메일이랑 로컬 정보의 이메일이 같을때
+	    			
+	    			result.put("providerUserId",providerUserId);
+		    		result.put("loginType", loginType);
+		    		result.put("userId", user.getUserId());
+		    		
+		    		int count = dao.updateAuthAccount2(sqlSession,result);
+		    		
+		    		if(count == 0) {
+		    			return null; // 재 연동 시 카카오로 안 바뀌면 null 반환 
+		    			
+		    			//조건식을 만족하지 않으면 그냥 다음으로 넘어가서 정상 처리
+		    		}
+	    			
+	    		} 
+		    		
 	    }
 	    
 	    int rowUpdate = dao.updateDate(sqlSession,user); // 업데이트 된 행이 있는지 판별
-	    user = dao.findLoginIdByEmail(sqlSession, email); // 업데이트 된 유저 객체 한번 더 호출
+	    //user = dao.findLoginIdByEmail(sqlSession, email); // 업데이트 된 유저 객체 한번 더 호출
 	    
 
 	    if(rowUpdate > 0) { // lastLogin 날짜 갱신 됐는가 ? 
 
 	    	
-	    		user = dao.findLoginIdByEmail(sqlSession, email); // 업데이트 된 유저 객체 한번 더 호출
+	    	user = dao.findLoginIdByEmail(sqlSession, email); // 업데이트 된 유저 객체 한번 더 호출
 	    	
-	    		// 4. 전용 JWT 발행
+	    	// 4. 전용 JWT 발행
 		    String token = jwtUtil.generateToken(user.getLoginId());
 		    user.setPassword(null);
 		    result.put("token", token);
 		    result.put("user", user);
 		    
 	        if("H".equals(((User)result.get("user")).getStatus())) {
-        			result.put("message", "휴면 회원 입니다. 휴면 해제를 해주세요.");
+        			result.put("message", "휴면 회원 입니다. 프로필 설정 페이지에서 휴면 해제 후, 서비스 이용 가능합니다.");
 	        } else if ("N".equals(((User)result.get("user")).getStatus())) {
 	        		result.put("message", "탈퇴한 회원입니다."); 
 	        }
@@ -192,6 +212,59 @@ public class UserServiceImpl implements UserService {
 	    
 	    
 	}
+	
+	//카카오 연동 해제
+	@Override
+	@Transactional
+	public boolean unlinkKakao(int userId) {
+		
+		// 먼저 userId로 AUTH_ACCOUNT 테이블과 USERS 테이블을 조인해서 토큰 아이디 값을 갖고온다.
+		String providerUserId = dao.getProviderUserId(sqlSession, userId); 
+		
+		String adminKey = "9c059eda8707b81dcc14bf2ba89ed45f"; 
+		String url = "https://kapi.kakao.com/v1/user/unlink"; // 연결 해제를 하기 위한 링크
+		
+		RestTemplate rt = new RestTemplate();
+		
+		//헤더 설정
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Authorization", "KakaoAK " + adminKey);
+		headers.add("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
+		
+		//본문 설정
+		MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+		params.add("target_id_type", "user_id");
+		params.add("target_id", providerUserId);
+		
+		HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params,headers);
+		
+		try {
+	        ResponseEntity<Map> response = rt.exchange(url, HttpMethod.POST, request, Map.class);
+	        
+	        if (response.getStatusCode() == HttpStatus.OK) { // 연동 해제 ok 승인이 떨어지면 
+	        	
+	        	HashMap<String, Object> authAccountMap = new HashMap<>();
+	        	
+	        	authAccountMap.put("userId", userId);
+	        	authAccountMap.put("loginType", "LOCAL"); 
+	            
+	        	int result = dao.updateAuthAccount(sqlSession, authAccountMap);
+	        	
+	        	if(result > 0) {
+	        		return true; // 로그인 타입이랑 토큰 번호를 수정하면 정상적으로 바껴서 true. 
+	        	} else {
+	        		return false; // 위 케이스가 아니면 false. 
+	        	}
+	        	
+	            
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return false;
+		
+	}
+	
 	
 	
 	@Override // 아이디 중복체크 

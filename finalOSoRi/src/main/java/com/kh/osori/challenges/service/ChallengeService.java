@@ -42,7 +42,8 @@ public interface ChallengeService {
 
 	void closeExpiredChallenges();
 
-
+	// [ADDED] 실시간 진행 현황 조회를 위한 추상 메서드 추가
+    Map<String, Object> getChallengeProgress(int userId, String challengeId);
 	
 	
 	
