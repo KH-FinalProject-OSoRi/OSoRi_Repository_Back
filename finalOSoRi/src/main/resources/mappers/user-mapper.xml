@@ -101,29 +101,30 @@
   	</update>
   	
   	<!-- 휴면 -> 강제로 이동 시킨다음에 수정을 해야 Y로 // 수정을 안한다? H그대로 -->
-  	<update id="updateUser" parameterType="User">
-  		UPDATE USERS
-  		SET USER_NAME = #{userName},
-  			NICKNAME = #{nickName},			
-  			EMAIL = #{email},
-  			<if test="originName != null">
-            ORIGIN_NAME = #{originName},
-        		</if>
-	        <if test="changeName != null">
-	            CHANGE_NAME = #{changeName},
-	        </if>
-  			STATUS = 'Y',
-  			LAST_LOGIN = CASE 
-  							WHEN SYSDATE - LAST_LOGIN &gt;=30 THEN SYSDATE
-  							ELSE LAST_LOGIN
-  						 END
- 		WHERE LOGIN_ID = #{loginId} 		
- 		
- 		<!-- 마지막 로그인 시점 현재 로그인 시점이 30일 이상 차이난다? 
- 			 LAST_LOGIN -> 현재 시점으로 이 구문을 거치지 않으면 계속 휴면 처리
- 			 	
- 		 -->				 	
-  	</update>
+		<update id="updateUser" parameterType="User">
+		    UPDATE USERS
+		    SET USER_NAME = #{userName},
+		        NICKNAME = #{nickName},         
+		        EMAIL = #{email},
+		        
+		        <choose>
+		            <when test="changeName != null">
+		                ORIGIN_NAME = #{originName},
+		                CHANGE_NAME = #{changeName},
+		            </when>
+		            <otherwise>
+		                ORIGIN_NAME = NULL,
+		                CHANGE_NAME = NULL,
+		            </otherwise>
+		        </choose>
+		
+		        STATUS = 'Y',
+		        LAST_LOGIN = CASE 
+		                        WHEN SYSDATE - LAST_LOGIN &gt;= 30 THEN SYSDATE
+		                        ELSE LAST_LOGIN
+		                     END
+		    WHERE LOGIN_ID = #{loginId}
+		</update>		 	
   	
   	<update id="deleteUser" parameterType="User">
   		UPDATE USERS
