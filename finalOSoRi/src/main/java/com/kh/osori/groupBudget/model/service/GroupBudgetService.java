@@ -26,4 +26,6 @@ public interface GroupBudgetService {
 	public List<Notification> notiList(String loginId); //안읽은 알림 목록 조회
 	public List<Grouptrans> groupTransactionList(int groupbId);
 	public int groupCheckAdmin(int groupbId); //관리자 아이디 조회
+	public String getGroupName(int groupbId); //그룹가계부 이름 조회
+	public List<Grouptrans> groupBudgetAll(); //그룹가계부 전체 조회
 }

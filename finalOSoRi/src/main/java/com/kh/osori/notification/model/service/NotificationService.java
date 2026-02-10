@@ -1,11 +1,14 @@
 package com.kh.osori.notification.model.service;
-import com.kh.osori.user.controller.UserController;
+import java.util.List;
+
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+
 import com.kh.osori.notification.model.Dao.NotificationDao;
 import com.kh.osori.notification.model.vo.Notification;
+import com.kh.osori.user.controller.UserController;
 
 @Service
 public class NotificationService {
@@ -22,6 +25,22 @@ public class NotificationService {
 
     NotificationService(UserController userController) {
         this.userController = userController;
+    }
+    
+    public void deleteGroupAndNotify(int groupbId, String groupName) {
+        List<String> loginIds = dao.getGroupMemberIds(sqlSession, groupbId);
+
+        for (String loginId : loginIds) {
+            Notification noti = Notification.builder()
+						                    .nType("GROUP_DELETED")
+						                    .sender("SYSTEM")
+						                    .receiver(loginId)
+						                    .message(groupName)
+						                    .inviteNum(groupbId)
+						                    .build();
+            
+            messageTemp.convertAndSend("/single/notifications/" + loginId.trim(), noti);
+        }
     }
 	
 	public void sendMessageToMembers(String receiver, String sender, String message, String type, int inviteNum) {

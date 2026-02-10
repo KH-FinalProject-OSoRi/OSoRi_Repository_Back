@@ -7,5 +7,9 @@
 		SELECT FAQ_ID, QUESTION, ANSWER
 		FROM FAQ
 	</select>
+	
+	<insert id="addNewQuestion" parameterType="String">
+		INSERT INTO FAQ VALUES (FAQ_NO.NEXTVAL, #{question}, '답변 필요')
+	</insert>
 
 </mapper>

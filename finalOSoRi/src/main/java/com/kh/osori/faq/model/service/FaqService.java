@@ -4,4 +4,5 @@ import com.kh.osori.faq.model.vo.Faq;
 
 public interface FaqService {
 	public List<Faq> questionList();
+	public int addNewQuestion(String question);
 }
