@@ -326,7 +326,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 	            badgeParam.put("challengeId", ch.getChallengeId());
 	            
 	            // challenge-mapper.xml에 정의된 insertBadgeForSuccess를 호출합니다.
-	            sqlSession.insert("challengeMapper.insertBadgeForSuccess", badgeParam);
+	            sqlSession.insert("challengeMapper.mergeUserBadge", badgeParam);
 	            System.out.println("[DEBUG] 개인 챌린지 성공 뱃지 지급: 유저 " + ch.getUserId() + ", 챌린지 " + ch.getChallengeId());
 	        }
 	    }
@@ -637,7 +637,13 @@ public class ChallengeServiceImpl implements ChallengeService {
         if (rewardList != null && !rewardList.isEmpty()) {
             System.out.println("[SCHED] 뱃지 지급 대상 발견: " + rewardList.size() + "명");
             for (Map<String, Object> r : rewardList) {
-            	dao.mergeUserBadge(sqlSession, r);
+            	Map<String, Object> badgeParam = new HashMap<>();
+
+                badgeParam.put("userId", r.get("USER_ID"));
+                
+                badgeParam.put("challengeId", r.get("CHALLENGE_ID"));
+
+                dao.mergeUserBadge(sqlSession, badgeParam);
             }
         } 
     }
@@ -654,13 +660,34 @@ public class ChallengeServiceImpl implements ChallengeService {
 	    params.put("challengeId", challengeId);
 	    return dao.getGroupRanking(sqlSession, params);
 	}
-
+	
 	@Override
 	public List<Map<String, Object>> getGroupPastChallengeList(int groupbId, int userId) {
 	    Map<String, Object> params = new HashMap<>();
 	    params.put("groupbId", groupbId);
 	    params.put("userId", userId);
-	    return dao.getGroupPastChallengeList(sqlSession, params);
+	    
+	    List<Map<String, Object>> list = dao.getGroupPastChallengeList(sqlSession, params);
+
+	    if (list != null) {
+	        for (Map<String, Object> map : list) {
+	            if (map.get("startDate") != null) {
+	                map.put("startDate", toIsoDate(map.get("startDate")));
+	            }
+	            if (map.get("endDate") != null) {
+	                map.put("endDate", toIsoDate(map.get("endDate")));
+	            }
+
+	            if (map.get("START_DATE") != null) {
+	                map.put("START_DATE", toIsoDate(map.get("START_DATE")));
+	            }
+	            if (map.get("END_DATE") != null) {
+	                map.put("END_DATE", toIsoDate(map.get("END_DATE")));
+	            }
+	        }
+	    }
+	    
+	    return list;
 	}
 
 

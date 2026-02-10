@@ -294,27 +294,33 @@
 	  MERGE INTO GROUPCHALL_RESULT R
 	  USING (
 	    SELECT 
-	      USER_ID, 
-	      GROUPB_ID
-	    FROM BUDGETMEM 
-	    WHERE GROUPB_ID = #{groupbId}
-	  ) M
+	      M.USER_ID, 
+	      G.GROUPB_ID,
+	      G.CHALLENGE_ID,
+	      G.START_DATE,
+	      G.END_DATE
+	    FROM BUDGETMEM M
+	    JOIN GROUPCHALL G ON M.GROUPB_ID = G.GROUPB_ID
+	    WHERE G.GROUPB_ID = #{groupbId} 
+	      AND G.CHALLENGE_ID = #{challengeId}
+	      AND G.STATUS = 'PROCEEDING'
+	  ) SRC
 	  ON (
-	    R.GROUPB_ID = M.GROUPB_ID AND 
-	    R.CHALLENGE_ID = #{challengeId} AND 
-	    R.USER_ID = M.USER_ID
+	    R.GROUPB_ID = SRC.GROUPB_ID AND 
+	    R.CHALLENGE_ID = SRC.CHALLENGE_ID AND 
+	    R.USER_ID = SRC.USER_ID
 	  )
 	  WHEN MATCHED THEN
 	    UPDATE SET 
 	      STATUS = 'PROCEEDING',
-	      START_DATE = #{startDate},
-	      END_DATE = #{endDate},
+	      START_DATE = SRC.START_DATE,
+	      END_DATE = SRC.END_DATE,
 	      UPDATED_AT = SYSDATE,
 	      TOTAL_AMOUNT = 0,
 	      RNK = NULL
 	  WHEN NOT MATCHED THEN
 	    INSERT (GROUPB_ID, CHALLENGE_ID, START_DATE, END_DATE, USER_ID, STATUS)
-	    VALUES (M.GROUPB_ID, #{challengeId}, #{startDate}, #{endDate}, M.USER_ID, 'PROCEEDING')
+	    VALUES (SRC.GROUPB_ID, SRC.CHALLENGE_ID, SRC.START_DATE, SRC.END_DATE, SRC.USER_ID, 'PROCEEDING')
 	</insert>
 	
 	<!-- 지출이 등록되는 순간 실패 처리 -->
@@ -414,7 +420,8 @@
 	<select id="selectUsersToRewardFromResult" resultType="map">
 	  SELECT
 	    R.USER_ID  AS "USER_ID",
-	    B.BADGE_ID AS "BADGE_ID"
+	    B.BADGE_ID AS "BADGE_ID",
+	    R.CHALLENGE_ID AS "CHALLENGE_ID"
 	  FROM GROUPCHALL_RESULT R
 	  JOIN BADGE B ON B.CHALLENGE_ID = R.CHALLENGE_ID
 	  WHERE R.STATUS = 'SUCCESS'
@@ -428,17 +435,17 @@
 	</select>
 	
 	<!-- (D) USERBADGE 중복방지 INSERT -->
-	<insert id="mergeUserBadge" parameterType="map">
-	  INSERT INTO USERBADGE (USER_ID, BADGE_ID, EARNED_AT)
-	  SELECT #{USER_ID}, #{BADGE_ID}, SYSDATE
-	  FROM DUAL
-	  WHERE NOT EXISTS (
-	    SELECT 1
-	    FROM USERBADGE
-	    WHERE USER_ID = #{USER_ID}
-	      AND BADGE_ID = #{BADGE_ID}
-	  )
-	</insert>
+<insert id="mergeUserBadge" parameterType="map">
+INSERT INTO USERBADGE (USER_ID, BADGE_ID, EARNED_AT)
+SELECT #{userId}, B.BADGE_ID, SYSDATE
+FROM BADGE B
+WHERE B.CHALLENGE_ID = #{challengeId}
+AND NOT EXISTS (
+SELECT 1
+FROM USERBADGE UB
+WHERE UB.USER_ID = #{userId}
+AND UB.BADGE_ID = B.BADGE_ID)
+</insert>
 		
 	<update id="closeExpiredGroupChallenges">
 	  UPDATE GROUPCHALL
@@ -496,6 +503,7 @@
 	    JOIN CHALLENGES C ON R.CHALLENGE_ID = C.CHALLENGE_ID
 	    WHERE R.USER_ID = #{userId}
 	      AND R.GROUPB_ID = #{groupbId}
+	      AND R.END_DATE &lt; TRUNC(SYSDATE)
 	    ORDER BY R.END_DATE DESC
 	</select>	
 

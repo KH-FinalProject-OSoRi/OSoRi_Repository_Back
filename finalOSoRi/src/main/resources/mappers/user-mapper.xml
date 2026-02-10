@@ -47,7 +47,7 @@
     		U.*,
     		A.LOGIN_TYPE AS loginType
     	FROM USERS U
-    	JOIN AUTH_ACCOUNT A ON (U.USER_ID = A.USER_ID)
+    	LEFT JOIN AUTH_ACCOUNT A ON (U.USER_ID = A.USER_ID)
     	WHERE U.LOGIN_ID = #{loginId}	
     </select>
     
