@@ -102,4 +102,14 @@ public class GroupBudgetServiceImple implements GroupBudgetService {
 		return dao.groupCheckAdmin(sqlSession,groupbId);
 	}
 
+	@Override
+	public String getGroupName(int groupbId) {
+		return dao.getGroupName(sqlSession,groupbId);
+	}
+
+	@Override
+	public List<Grouptrans> groupBudgetAll() {
+		return dao.groupBudgetAll(sqlSession);
+	}
+
 }

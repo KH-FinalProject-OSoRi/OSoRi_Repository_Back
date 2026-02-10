@@ -79,8 +79,6 @@ public class GroupBudgetController {
 		
 		if(reuslt1 > 0) {
 			int generatedId = gb.getGroupbId(); 
-
-			System.out.println("generatedId : "+generatedId);
 			
 			//그룹 관리자 추가
 			BudgetMem newMem = new BudgetMem();
@@ -88,7 +86,6 @@ public class GroupBudgetController {
 			newMem.setRole("ADMIN");
 			newMem.setUserId(gb.getUserId());
 			result2 = service.addGroupAdmin(newMem);
-			
 			
 		}
 			
@@ -117,8 +114,9 @@ public class GroupBudgetController {
 		if(result > 0) {
 			String adminLoginId = service.getAdminId(mem.getGroupbId());
 			String getLoginId = service.getLoginid(mem.getUserId());
+			String groupName = service.getGroupName(mem.getGroupbId());
 			
-			notiService.sendMessageToMembers(getLoginId, adminLoginId, adminLoginId+"님이 "+getLoginId+"님을 그룹 가계부에 초대하셨습니다.", "INVITE", mem.getGroupbId());
+			notiService.sendMessageToMembers(getLoginId, adminLoginId, adminLoginId+"님이 "+getLoginId+"님을 "+groupName+" 가계부에 초대하셨습니다.", "INVITE", mem.getGroupbId());
 			
 			return ResponseEntity.status(HttpStatus.CREATED).body("멤버 추가 성공");
 		}else {
@@ -186,7 +184,7 @@ public class GroupBudgetController {
 		int result = service.updateGroupB(gb);
 		
 		if(result > 0) {
-			return ResponseEntity.ok("그룹 가계부 수정 성공");
+			return ResponseEntity.ok(gb);
 		}else {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("그룹 가계부 수정에 실패했습니다");
 		}
@@ -198,6 +196,8 @@ public class GroupBudgetController {
 		int result = service.deleteGroupBudget(groupbId);
 		
 		if(result > 0) {
+			String groupName = service.getGroupName(groupbId);
+			notiService.deleteGroupAndNotify(groupbId, groupName);
 			return ResponseEntity.ok("그룹 가계부 삭제 성공");
 		}else {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("그룹 가계부 삭제에 실패했습니다");
@@ -212,6 +212,17 @@ public class GroupBudgetController {
 	        return ResponseEntity.ok(list);
 	    } else {
 	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("거래 내역이 없습니다.");
+	    }
+	}
+	
+	@GetMapping("/gbAll")
+	public ResponseEntity<?> groupBudgetAll(){
+		List<Grouptrans> list = service.groupBudgetAll(); 
+	    
+	    if(list != null) {
+	        return ResponseEntity.ok(list);
+	    } else {
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("그룹 가계부가 없습니다.");
 	    }
 	}
 
