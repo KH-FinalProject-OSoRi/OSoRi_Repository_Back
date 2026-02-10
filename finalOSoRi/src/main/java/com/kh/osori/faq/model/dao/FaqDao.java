@@ -13,4 +13,8 @@ public class FaqDao {
 		return sqlSession.selectList("faqMapper.questionList");
 	}
 
+	public int addNewQuestion(SqlSessionTemplate sqlSession, String question) {
+		return sqlSession.insert("faqMapper.addNewQuestion", question);
+	}
+
 }

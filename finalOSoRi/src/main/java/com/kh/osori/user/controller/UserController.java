@@ -82,7 +82,7 @@ public class UserController {
 
 				map.put("token", token);
 				map.put("user", loginUser);
-				map.put("message", "휴면 회원 입니다. 휴면 상태를 해제해주세요.");
+				map.put("message", "휴면 회원 입니다. 프로필 설정 페이지에서 휴면 해제 후, 서비스 이용 가능합니다.");
 
 				return ResponseEntity.ok(map);
 
@@ -183,14 +183,28 @@ public class UserController {
 	// 정보 수정 메소드
 	@PatchMapping("/update")
 	public ResponseEntity<?> updateUser(@ModelAttribute User loginUser,
-			@RequestParam(value = "profileImage", required = false) MultipartFile profileImage) {
+			@RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
+			@RequestParam(value = "isImageRemoved", required = false, defaultValue = "false") String isImageRemoved) {
 
 		HashMap<String, Object> res = new HashMap<>();
 		
 		String projectPath = System.getProperty("user.dir"); 
 		String savePath = projectPath + File.separator + "upload" + File.separator + "profiles" + File.separator;
 		
-		if (profileImage != null && !profileImage.isEmpty()) {
+		if ("true".equals(isImageRemoved)) {
+	        User currentUser = service.selectUser(loginUser);
+	        if (currentUser != null && currentUser.getChangeName() != null) {
+	            File oldFile = new File(savePath + currentUser.getChangeName());
+	            if (oldFile.exists()) {
+	                oldFile.delete(); // 실제 파일 삭제
+	            }
+	        }
+	        // DB에 저장될 객체의 파일명을 null로 세팅 (기본 이미지 상태로 복구)
+	        loginUser.setOriginName(null);
+	        loginUser.setChangeName(null);
+	    }
+		
+		else if (profileImage != null && !profileImage.isEmpty()) {
 	        
 	        File folder = new File(savePath);
 	        if (!folder.exists()) {
@@ -422,13 +436,36 @@ public class UserController {
 	}
 
 	
-	//2월 2일 15시 4분부터 작업
+	//2월 2일 15시 4분부터 작업 (카카오 연동)
 	@GetMapping("/kakao/callback")
     public ResponseEntity<?> kakaoLogin(@RequestParam String code) {
         Map<String, Object> result = service.processKakaoLogin(code); // 인가 코드를 받기 
         
         return ResponseEntity.ok(result);
     }
+	
+	//카카오 연동 해제
+	@PostMapping("/kakao/unlink")
+	public ResponseEntity<?> unlinkKaKao(@RequestHeader String authorization) {
+		
+		//1. 토큰 추출
+		String token = authorization.substring(7);
+		
+		String loginId = jwtUtil.getloginIdFromToken(token);
+		
+		User user = service.selectByLoginId(loginId);
+		
+		boolean isSuccess = service.unlinkKakao(user.getUserId());
+		
+		if(isSuccess) {
+			return ResponseEntity.ok("연동 해제 됐습니다.");
+		} else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버에 문제가 생겨서 연동 해제를 못했습니다.");
+		}
+	
+	}
+	
+	
 	
 
 }

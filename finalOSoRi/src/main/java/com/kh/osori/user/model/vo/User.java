@@ -27,5 +27,8 @@ public class User {
 	private Date createdAt; // 가입일
 	private int bAmount;	//	B_AMOUNT	NUMBER	Yes		12	예산
 	private int resetDate;	//	RESET_DATE	NUMBER	Yes		13	예산리셋날짜
+	
+	//어떤 로그인 타입인지 알려고 하기 위함 
+	private String loginType; 
 
 }

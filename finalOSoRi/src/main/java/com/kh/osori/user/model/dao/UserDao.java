@@ -91,6 +91,21 @@ public class UserDao {
 		public int insertAuthAccount(SqlSessionTemplate sqlSession, HashMap<String, Object> accountMap) {
 			return sqlSession.insert("userMapper.insertAuthAccount", accountMap); 
 		}
+		
+		//토큰 아이디 갖고오기
+		public String getProviderUserId(SqlSessionTemplate sqlSession, int userId) {
+			return sqlSession.selectOne("userMapper.getProviderUserId", userId); 
+		}
+
+		//연동 해제시 로컬로 전환
+		public int updateAuthAccount(SqlSessionTemplate sqlSession, HashMap<String, Object> authAccountMap) {
+			return sqlSession.update("userMapper.updateAuthAccount", authAccountMap); 
+		}
+		
+		//기존에 연동했던 사람이 다시 연동하려는 경우
+		public int updateAuthAccount2(SqlSessionTemplate sqlSession, Map<String, Object> result) {
+			return sqlSession.update("userMapper.updateAuthAccount2", result); 
+		}
 
 
 }

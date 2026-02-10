@@ -84,5 +84,13 @@ public class GroupBudgetDao {
 		return sqlSession.insert("groupBudgetMapper.addGroupChall",chall);
 	}
 
+	public String getGroupName(SqlSessionTemplate sqlSession, int groupbId) {
+		return sqlSession.selectOne("groupBudgetMapper.getGroupName",groupbId);
+	}
+
+	public List<Grouptrans> groupBudgetAll(SqlSessionTemplate sqlSession) {
+		return sqlSession.selectList("groupBudgetMapper.groupBudgetAll");
+	}
+
 	
 }

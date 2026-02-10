@@ -498,6 +498,7 @@
 	      AND R.GROUPB_ID = #{groupbId}
 	    ORDER BY R.END_DATE DESC
 	</select>	
+
 	
 
 </mapper>
