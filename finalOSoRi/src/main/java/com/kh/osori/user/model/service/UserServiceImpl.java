@@ -96,7 +96,6 @@ public class UserServiceImpl implements UserService {
 		 
 	}
 	
-	/* UserServiceImpl.java */
 
 	@Override
 	public Map<String, Object> processKakaoLogin(String code) {
@@ -136,13 +135,12 @@ public class UserServiceImpl implements UserService {
 	    String loginType = "KAKAO"; // 로그인 타입 
 
 	    // 3. DB 가입 확인 및 처리 (이메일 기준)
-	    User user = dao.findLoginIdByEmail(sqlSession, email); //
+	    User user = dao.findLoginIdByEmail(sqlSession, email); // 회원 조회
 	    
 	    Map<String, Object> result = new HashMap<>();
 	    
 	    if (user == null) {
 	        
-	    	
 	    		result.put("isNewMember", true); // 추가
 	    		result.put("email",email);
 	    		result.put("nickName", nickName); 
@@ -154,14 +152,31 @@ public class UserServiceImpl implements UserService {
 	    	
 	    }
 	    
-	    // 4. 전용 JWT 발행
-	    String token = jwtUtil.generateToken(user.getLoginId());
-	    user.setPassword(null);
+	    int rowUpdate = dao.updateDate(sqlSession,user); // 업데이트 된 행이 있는지 판별
+	    
+	    if(rowUpdate > 0) { // lastLogin 날짜 갱신 됐는가 ? 
+	    	
+	    		// 4. 전용 JWT 발행
+		    String token = jwtUtil.generateToken(user.getLoginId());
+		    user.setPassword(null);
+		    
+		    result.put("token", token);
+		    result.put("user", user);
+		    
+	        if("H".equals(((User)result.get("user")).getStatus())) {
+        			result.put("message", "휴면 회원 입니다. 휴면 해제를 해주세요.");
+	        } else if ("N".equals(((User)result.get("user")).getStatus())) {
+	        		result.put("message", "탈퇴한 회원입니다."); 
+	        }
+		   
+		    return result; // 날짜가 갱신이 되면 로그인 성공 처리 
+	    	
+	    	
+	    }
+	    
+	    return null; // 날짜가 갱신이 안되면 바로 로그인 실패 처리 
 	    
 	    
-	    result.put("token", token);
-	    result.put("user", user);
-	    return result;
 	}
 	
 	
