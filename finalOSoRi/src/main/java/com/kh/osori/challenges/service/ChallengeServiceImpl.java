@@ -608,7 +608,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 	public List<GroupChall> getGroupPastChallengeList(int groupbId) {
 		return dao.getGroupPastChallengeList(sqlSession, groupbId);
 	}
-	
+	 
 	@Transactional
 	@Override
 	public void closeExpiredChallenges() {
