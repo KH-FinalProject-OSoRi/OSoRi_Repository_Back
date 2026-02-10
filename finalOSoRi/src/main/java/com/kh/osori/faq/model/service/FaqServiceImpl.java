@@ -20,4 +20,9 @@ public class FaqServiceImpl implements FaqService{
 		return dao.questionList(sqlSession);
 	}
 
+	@Override
+	public int addNewQuestion(String question) {
+		return dao.addNewQuestion(sqlSession,question);
+	}
+
 }
