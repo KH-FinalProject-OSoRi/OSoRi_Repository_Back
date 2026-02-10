@@ -1,5 +1,6 @@
 package com.kh.osori.challenges.service;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,17 +31,30 @@ public interface ChallengeService {
 	//int closeExpiredProceedingToFailed();
 
 //	그룹챌린지용
-	int joinGroupChallenge(GroupChall groupChall); 
 	
-	List<GroupChall> getGroupJoinList(int groupbId);
+	// ✅ 그룹 챌린지 참여(기존) - 내부에서 결과 테이블도 초기화하도록 확장
+    int joinGroupChallenge(GroupChall groupChall);
 
-	int failActiveZeroChallenge(int groupBId);
+    // ✅ 스케줄러: 그룹 챌린지 종료/결과 확정/뱃지 지급까지 한 번에
+    void runGroupChallengeScheduler();
+
+
+	int handleZeroChallengeExpense(int groupbId, int userId, Date transDate);
 	
+//	int joinGroupChallenge(GroupChall groupChall); 
+//	
+	List<GroupChall> getGroupJoinedList(int groupbId, int userId);
+//
+//	int failActiveZeroChallenge(int groupBId);
+//	
 	List<Map<String, Object>> getGroupRanking(int groupbId, String challengeId);
+//
+	List<Map<String, Object>> getGroupPastChallengeList(int groupbId, int userId);
+//
+//	void closeExpiredChallenges();
 
-	List<GroupChall> getGroupPastChallengeList(int groupbId);
-
-	void closeExpiredChallenges();
+	
+	
 
 	// [ADDED] 실시간 진행 현황 조회를 위한 추상 메서드 추가
     Map<String, Object> getChallengeProgress(int userId, String challengeId);
