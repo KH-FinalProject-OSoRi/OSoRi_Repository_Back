@@ -82,7 +82,7 @@ public class UserController {
 
 				map.put("token", token);
 				map.put("user", loginUser);
-				map.put("message", "휴면 회원 입니다. 휴면 상태를 해제해주세요.");
+				map.put("message", "휴면 회원 입니다. 프로필 설정 페이지에서 휴면 해제 후, 서비스 이용 가능합니다.");
 
 				return ResponseEntity.ok(map);
 
@@ -436,13 +436,36 @@ public class UserController {
 	}
 
 	
-	//2월 2일 15시 4분부터 작업
+	//2월 2일 15시 4분부터 작업 (카카오 연동)
 	@GetMapping("/kakao/callback")
     public ResponseEntity<?> kakaoLogin(@RequestParam String code) {
         Map<String, Object> result = service.processKakaoLogin(code); // 인가 코드를 받기 
         
         return ResponseEntity.ok(result);
     }
+	
+	//카카오 연동 해제
+	@PostMapping("/kakao/unlink")
+	public ResponseEntity<?> unlinkKaKao(@RequestHeader String authorization) {
+		
+		//1. 토큰 추출
+		String token = authorization.substring(7);
+		
+		String loginId = jwtUtil.getloginIdFromToken(token);
+		
+		User user = service.selectByLoginId(loginId);
+		
+		boolean isSuccess = service.unlinkKakao(user.getUserId());
+		
+		if(isSuccess) {
+			return ResponseEntity.ok("연동 해제 됐습니다.");
+		} else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버에 문제가 생겨서 연동 해제를 못했습니다.");
+		}
+	
+	}
+	
+	
 	
 
 }

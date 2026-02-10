@@ -11,7 +11,7 @@
 	 
 	 이러한 의미가 있어서 insertMember에는 LAST_LOGIN 컬럼을 넣지 않았습니다.
 	 -->
-    <insert id="insertUser" parameterType="User">
+    <insert id="insertUser" parameterType="User" useGeneratedKeys="true" keyProperty="userId" keyColumn="USER_ID">
 	  INSERT INTO USERS (
 	    USER_ID, LOGIN_ID, USER_NAME, NICKNAME, EMAIL, PASSWORD
 	  ) VALUES (
@@ -23,8 +23,8 @@
 	    #{password}
 	  )
 	</insert>
-
     
+    <!--  
     <select id="selectUser" parameterType="User" resultType="User">
     	SELECT USER_ID,
     		   LOGIN_ID,
@@ -39,6 +39,16 @@
     		   CREATED_AT  		    	
     	FROM USERS
     	WHERE LOGIN_ID= #{loginId}
+    </select>
+    -->
+    
+    <select id="selectUser" parameterType="User" resultType="User">
+    	SELECT 
+    		U.*,
+    		A.LOGIN_TYPE AS loginType
+    	FROM USERS U
+    	LEFT JOIN AUTH_ACCOUNT A ON (U.USER_ID = A.USER_ID)
+    	WHERE U.LOGIN_ID = #{loginId}	
     </select>
     
     <select id="selectByLoginId" parameterType="string" resultType="User">
@@ -143,10 +153,21 @@
   				#{inviteNum})
   	</insert>
 
+	<!--  
   	<select id="findLoginIdByEmail" parameterType="string" resultType="User">
   		SELECT *
   		FROM USERS
   		WHERE EMAIL = #{email} 
+  	</select>
+  	-->
+  	
+  	<select id="findLoginIdByEmail" parameterType="string" resultType="User">
+  		SELECT
+  			U.*,
+  			A.LOGIN_TYPE AS loginType
+  		FROM USERS U
+  		JOIN AUTH_ACCOUNT A ON (U.USER_ID = A.USER_ID)
+  		WHERE U.EMAIL = #{email}	
   	</select>
   	
   	<update id="resetPassword" parameterType="Map">
@@ -171,4 +192,28 @@
   			#{providerUserId} 
   		)
   	</insert>
+  	
+  	<select id="getProviderUserId" parameterType="int" resultType="string">
+  		SELECT PROVIDER_USER_ID
+  		FROM AUTH_ACCOUNT
+  		WHERE USER_ID = #{userId}
+  	</select>
+  	
+  	<!-- 연동 해제 후, 로컬로 전환 -->
+  	<update id="updateAuthAccount" parameterType="Map">
+  		UPDATE AUTH_ACCOUNT
+  		SET PROVIDER_USER_ID = NULL,
+  			LOGIN_TYPE = #{loginType}
+  	    WHERE USER_ID = #{userId} 	
+  	</update>
+  	
+  	<!-- 재 연동 -> 카카오로 전환 -->
+  	<update id="updateAuthAccount2" parameterType="Map">
+  		UPDATE AUTH_ACCOUNT
+  		SET PROVIDER_USER_ID = #{providerUserId},
+  			LOGIN_TYPE = #{loginType}
+  		WHERE USER_ID = #{userId}	
+  	</update>
+  	
+  	
 </mapper>

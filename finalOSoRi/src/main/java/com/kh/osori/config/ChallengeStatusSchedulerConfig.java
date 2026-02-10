@@ -30,9 +30,11 @@ public class ChallengeStatusSchedulerConfig {
   
   //(그룹) 챌린지 종료일이 지난 데이터를 SUCCESS로 변경
   //실제엔 0 0으로(every hour) 변경할것
-  @Scheduled(cron = " 0 * * * * *")
+  @Scheduled(cron = "0 * * * * *")
   public void checkChallengeExpiry() {
-	  challengeService.closeExpiredChallenges();
+      System.out.println("[SCHED] checkChallengeExpiry tick");
+      challengeService.runGroupChallengeScheduler();
   }
+
 }
 

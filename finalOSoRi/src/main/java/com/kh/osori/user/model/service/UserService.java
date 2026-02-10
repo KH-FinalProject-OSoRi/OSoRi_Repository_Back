@@ -19,7 +19,13 @@ public interface UserService {
 	User findLoginIdByEmail(String email);
 	int resetPassword(Map<String, String> userMap); 
 	
-	// 카카오 로그인 처리 메소드 
+	// 카카오 로그인 처리 메소드 , 기존에 연동 했던 사람이 연동 해제 후 다시 연동 하려고 할때 연동 가능한 메소드
 	Map<String, Object> processKakaoLogin(String code);
+	
+	//카카오 연동 해제 메소드 
+	boolean unlinkKakao(int userId);
+	
+	
+	
 	
 }

@@ -86,172 +86,89 @@ public class ChallengeDao {
 	    return (ArrayList) sqlSession.selectList("challengeMapper.selectActiveProceedingChallenges");
 	}
 
-//	그룹챌린지
 	
+	//------------------------------------------------
+	//	그룹챌린지
+	
+	//그룹챌린지 차원의 테이블 status ="proceeding"추가
 	public int joinGroupChallenge(SqlSessionTemplate sqlSession, GroupChall groupChall) {
 		return sqlSession.insert("challengeMapper.joinGroupChallenge", groupChall);
 	}
-
-	public List<GroupChall> getGroupJoinList(SqlSessionTemplate sqlSession, int groupbId) {
-		return sqlSession.selectList("challengeMapper.getGroupJoinList", groupbId);
-	}
-
-	public int failActiveZeroChallenge(SqlSessionTemplate sqlSession, int groupbId) {
-		return sqlSession.update("challengeMapper.failActiveZeroChallenge", groupbId);
-	}
 	
-	public List<Map<String, Object>> selectCompetitionRanking(SqlSessionTemplate sqlSession, Map<String, Object> params) {
-	    return sqlSession.selectList("challengeMapper.selectCompetitionRanking", params);
+	// 참여 시 우저별 result 테이블에도 status = "proceeding"
+	public int joinGroupChallResult(SqlSessionTemplate sqlSession, Map<String, Object> param) {
+		return sqlSession.insert("challengeMapper.joinGroupChallResult", param);
 	}
 
-	public List<GroupChall> getGroupPastChallengeList(SqlSessionTemplate sqlSession, int groupbId) {
-		return sqlSession.selectList("challengeMapper.getGroupPastChallengeList", groupbId);
+	// 무지출 챌린지 중 지출 발생 "즉시" 전체 result 테이블 status failed 처리
+	public int failUserOnZeroChallengeExpense(SqlSessionTemplate sqlSession, Map<String, Object> param) {
+		return sqlSession.update("challengeMapper.failUserOnZeroChallengeExpense", param);
+	}
+
+	// 무지출 챌린지 종료 까지 proceeding인 경우 (failed가 안 된 경우)  result 테이블 success 처리
+	public int successRemainingZeroChallengeUsers(SqlSessionTemplate sqlSession) {
+		return sqlSession.update("challengeMapper.successRemainingZeroChallengeUsers");
+	}
+
+	// 스케쥴러용. 기간 지났는데 proceeding인 경우 정산
+	public List<Map<String, Object>> selectEndedCompetitionChallenges(SqlSessionTemplate sqlSession) {
+		return sqlSession.selectList("challengeMapper.selectEndedCompetitionChallenges");
 	}
 	
-	public List<Map<String, Object>> getGroupRanking(SqlSessionTemplate sqlSession, Map<String, Object> params) {
-	    return sqlSession.selectList("challengeMapper.getGroupRanking", params);
+	//실시간 지출 순위 계산
+		public List<Map<String, Object>> getGroupRanking(SqlSessionTemplate sqlSession, Map<String, Object> params) {
+			 return sqlSession.selectList("challengeMapper.getGroupRanking", params);
+		}
+
+	// 유저별 TOTAL_AMOUNT 계산 업데이트
+	public int updateCompetitionTotals(SqlSessionTemplate sqlSession, Map<String, Object> param) {
+		return sqlSession.update("challengeMapper.updateCompetitionTotals", param);
+	}
+
+	// 순위 계산 업데이트
+	public int updateCompetitionRanks(SqlSessionTemplate sqlSession, Map<String, Object> param) {
+		return sqlSession.update("challengeMapper.updateCompetitionRanks", param);
+	}
+
+	// 1등만 SUCCESS, 나머지 FAILED 확정
+	public int finalizeCompetitionStatus(SqlSessionTemplate sqlSession, Map<String, Object> param) {
+		return sqlSession.update("challengeMapper.finalizeCompetitionStatus", param);
+	}
+
+	// success인 유저 중 뱃지 발급 대상인지 확인(중복 방지)
+	public List<Map<String, Object>> selectUsersToRewardFromResult(SqlSessionTemplate sqlSession) {
+		return sqlSession.selectList("challengeMapper.selectUsersToRewardFromResult");
+	}
+
+	// 발급 대상한테 뱃지 발급
+	public int mergeUserBadge(SqlSessionTemplate sqlSession, Map<String, Object> param) {
+		return sqlSession.insert("challengeMapper.mergeUserBadge", param);
+	}
+
+    
+    
+	
+	
+
+	public List<GroupChall> getGroupJoinedList(SqlSessionTemplate sqlSession, int groupbId, int userId) {
+	    Map<String, Object> params = new HashMap<>();
+	    params.put("groupbId", groupbId);
+	    params.put("userId", userId);
+	    
+	    // params 맵을 하나의 인자로 전달
+	    return sqlSession.selectList("challengeMapper.getGroupJoinedList", params);
+	}
+
+	
+
+	public List<Map<String, Object>> getGroupPastChallengeList(SqlSessionTemplate sqlSession, Map<String, Object> params) {
+	    return sqlSession.selectList("challengeMapper.getGroupPastChallengeList", params);
 	}
 	
-	public int updateGroupChallengeSuccess(SqlSessionTemplate sqlSession) {
-	    return sqlSession.update("challengeMapper.updateGroupChallengeSuccess");
+	public int closeExpiredGroupChallenges(SqlSessionTemplate sqlSession) {
+	    return sqlSession.update("challengeMapper.closeExpiredGroupChallenges");
 	}
 
 }
 
-
-//package com.kh.osori.challenges.model.dao;
-//
-//import java.util.ArrayList;
-//import java.util.HashMap;
-//import java.util.Map;
-//
-//import org.mybatis.spring.SqlSessionTemplate;
-//import org.springframework.stereotype.Repository;
-//
-//import com.kh.osori.challenges.model.vo.Challenge;
-//import com.kh.osori.challenges.model.vo.MyChall;
-//import com.kh.osori.challenges.model.vo.MyChallHistory;
-//
-//@Repository
-//public class ChallengeDao {
-//	
-//	public ArrayList<Challenge> getChallengeList(SqlSessionTemplate sqlSession, String challengeMode) {
-//		return (ArrayList) sqlSession.selectList("challengeMapper.getChallengeList", challengeMode);
-//	}
-//
-//	public int joinMyChallenge(SqlSessionTemplate sqlSession, MyChall myChall) {
-//		return sqlSession.insert("challengeMapper.joinMyChallenge", myChall);
-//	}
-//
-//	public ArrayList<MyChall> getMyChallengeList(SqlSessionTemplate sqlSession, HashMap<String, Object> req) {
-//		return (ArrayList) sqlSession.selectList("challengeMapper.getMyChallengeList", req);
-//	}
-//
-//	public ArrayList<MyChallHistory> getMyPastChallengeList(SqlSessionTemplate sqlSession, HashMap<String, Object> req) {
-//		return (ArrayList) sqlSession.selectList("challengeMapper.getMyPastChallengeList", req);
-//	}
-//
-//	// ✅ 단건 챌린지 조회
-//	public Challenge selectChallengeById(SqlSessionTemplate sqlSession, String challengeId) {
-//		return sqlSession.selectOne("challengeMapper.selectChallengeById", challengeId);
-//	}
-//
-//	// ✅ MYTRANS 수입 요약 (기간)
-//	public HashMap<String, Object> getIncomeSummaryByRange(SqlSessionTemplate sqlSession, HashMap<String, Object> req) {
-//		return sqlSession.selectOne("challengeMapper.getIncomeSummaryByRange", req);
-//	}
-//
-//	// ✅ MYTRANS 지출 요약 (기간)
-//	public HashMap<String, Object> getExpenseSummaryByRange(SqlSessionTemplate sqlSession, HashMap<String, Object> req) {
-//		return sqlSession.selectOne("challengeMapper.getExpenseSummaryByRange", req);
-//	}
-//	
-//	
-////	public ArrayList<Challenge> getChallengeList(SqlSessionTemplate sqlSession, String challengeMode) {
-////		return (ArrayList) sqlSession.selectList("challengeMapper.getChallengeList", challengeMode);
-////	}
-////
-////	public int joinMyChallenge(SqlSessionTemplate sqlSession, MyChall myChall) {
-////		return sqlSession.insert("challengeMapper.joinMyChallenge", myChall); 
-////	}
-////
-////	public ArrayList<MyChall> getMyChallengeList(SqlSessionTemplate sqlSession, HashMap<String, Object> req) {
-////		return (ArrayList) sqlSession.selectList("challengeMapper.getMyChallengeList", req);
-////	}
-////	
-////	// ✅ 챌린지 1건 조회 (필요금액 계산용)
-////	public Challenge getChallengeById(SqlSessionTemplate sqlSession, String challengeId) {
-////		return sqlSession.selectOne("challengeMapper.getChallengeById", challengeId);
-////	}
-////		
-////	// ✅ 수입 요약 (DB 기준)
-////	public Map<String, Object> getIncomeSummary(SqlSessionTemplate sqlSession, int userId) {
-////		return sqlSession.selectOne("challengeMapper.getIncomeSummary", userId);
-////	}
-////
-////	// [ADDED] 기간(from~to) 기준 수입 요약 (DB 기준)
-////	public Map<String, Object> getIncomeSummaryByRange(SqlSessionTemplate sqlSession, Map<String, Object> param) {
-////		return sqlSession.selectOne("challengeMapper.getIncomeSummaryByRange", param);
-////	}
-////
-////	// [ADDED] 기간(from~to) 기준 지출 요약 (DB 기준)
-////	public Map<String, Object> getExpenseSummaryByRange(SqlSessionTemplate sqlSession, Map<String, Object> param) {
-////		return sqlSession.selectOne("challengeMapper.getExpenseSummaryByRange", param);
-////	}
-////		
-////	// ✅ 지난 챌린지 목록
-////	public ArrayList<MyChallHistory> getMyPastChallengeList(SqlSessionTemplate sqlSession, HashMap<String, Object> req) {
-////		return (ArrayList) sqlSession.selectList("challengeMapper.getMyPastChallengeList", req);
-////	}
-////
-////	// ✅ 스케줄러: 예약 -> 진행중
-////	public int promoteReservedToProceeding(SqlSessionTemplate sqlSession) {
-////		return sqlSession.update("challengeMapper.promoteReservedToProceeding");
-////	}
-////
-////	// ✅ 스케줄러: 진행중 -> 실패 (기간 종료)
-////	public int closeExpiredProceedingToFailed(SqlSessionTemplate sqlSession) {
-////		return sqlSession.update("challengeMapper.closeExpiredProceedingToFailed");
-////	}
-//
-//	/*
-//	public ArrayList<Challenge> getChallengeList(SqlSessionTemplate sqlSession, String challengeMode) {
-//		return (ArrayList) sqlSession.selectList("challengeMapper.getChallengeList", challengeMode);
-//	}
-//
-//	public int joinMyChallenge(SqlSessionTemplate sqlSession, MyChall myChall) {
-//		return sqlSession.insert("challengeMapper.joinMyChallenge", myChall); 
-//	}
-//
-//	public ArrayList<MyChall> getMyChallengeList(SqlSessionTemplate sqlSession, HashMap<String, Object> req) {
-//		return (ArrayList) sqlSession.selectList("challengeMapper.getMyChallengeList", req);
-//	}
-//	
-//	// ✅ 챌린지 1건 조회 (필요금액 계산용)
-//	public Challenge getChallengeById(SqlSessionTemplate sqlSession, String challengeId) {
-//		return sqlSession.selectOne("challengeMapper.getChallengeById", challengeId);
-//	}
-//		
-//	// ✅ 수입 요약 (DB 기준)
-//	public Map<String, Object> getIncomeSummary(SqlSessionTemplate sqlSession, int userId) {
-//		return sqlSession.selectOne("challengeMapper.getIncomeSummary", userId);
-//	}
-//		
-//	// ✅ 지난 챌린지 목록
-//	public ArrayList<MyChallHistory> getMyPastChallengeList(SqlSessionTemplate sqlSession, HashMap<String, Object> req) {
-//		return (ArrayList) sqlSession.selectList("challengeMapper.getMyPastChallengeList", req);
-//	}
-//
-//	// ✅ 스케줄러: 예약 -> 진행중
-//	public int promoteReservedToProceeding(SqlSessionTemplate sqlSession) {
-//		return sqlSession.update("challengeMapper.promoteReservedToProceeding");
-//	}
-//
-//	// ✅ 스케줄러: 진행중 -> 실패 (기간 종료)
-//	public int closeExpiredProceedingToFailed(SqlSessionTemplate sqlSession) {
-//		return sqlSession.update("challengeMapper.closeExpiredProceedingToFailed");
-//	}
-//	*/
-//
-//}
 

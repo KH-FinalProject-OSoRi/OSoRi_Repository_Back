@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="badgeMapper">
+
+	<select id="selectUserBadges" resultType="Badge">
+	    SELECT
+	        UB.USER_ID           AS userId,
+	        UB.BADGE_ID          AS badgeId,
+	        UB.EARNED_AT         AS earnedAt,
+	        B.BADGE_NAME         AS badgeName,
+	        B.BADGE_ICON_URL     AS badgeIconUrl,
+	        B.CHALLENGE_ID       AS challengeId,
+	        C.DESCRIPTION        AS challengeDesc,
+	        C.CHALLENGE_MODE     AS challengeMode,  (
+	            SELECT GB.TITLE
+	            FROM GROUPCHALL GC
+	            JOIN GROUPBUDGET GB ON GB.GROUPB_ID = GC.GROUPB_ID
+	            WHERE GC.CHALLENGE_ID = B.CHALLENGE_ID
+	            FETCH FIRST 1 ROWS ONLY
+	        ) AS groupBudgetTitle
+	    FROM USERBADGE UB
+	    JOIN BADGE B ON UB.BADGE_ID = B.BADGE_ID
+	    LEFT JOIN CHALLENGES C ON C.CHALLENGE_ID = B.CHALLENGE_ID
+	    WHERE UB.USER_ID = #{userId}
+	    ORDER BY UB.EARNED_AT DESC
+	</select>
+
+	<!--  
+    <select id="selectUserBadges" resultType="Badge">
+	    SELECT
+	        UB.USER_ID           AS userId,
+	        UB.BADGE_ID          AS badgeId,
+	        UB.EARNED_AT         AS earnedAt,
+	
+	        B.BADGE_NAME         AS badgeName,
+	        B.BADGE_ICON_URL     AS badgeIconUrl,
+	        B.CHALLENGE_ID       AS challengeId,
+	
+	        C.DESCRIPTION        AS challengeDesc,
+	
+	        (
+	            SELECT GB.TITLE
+	            FROM GROUPCHALL GC
+	            JOIN GROUPBUDGET GB ON GB.GROUPB_ID = GC.GROUPB_ID
+	            WHERE GC.CHALLENGE_ID = B.CHALLENGE_ID
+	            FETCH FIRST 1 ROWS ONLY
+	        ) AS groupBudgetTitle
+	
+	    FROM USERBADGE UB
+	    JOIN BADGE B ON UB.BADGE_ID = B.BADGE_ID
+	    LEFT JOIN CHALLENGES C ON C.CHALLENGE_ID = B.CHALLENGE_ID
+	    WHERE UB.USER_ID = #{userId}
+	    ORDER BY UB.EARNED_AT DESC
+	</select>
+	-->
+
+
+    <insert id="insertDefaultBadge">
+        INSERT INTO USERBADGE (USER_ID, BADGE_ID, EARNED_AT)
+		SELECT #{userId}, #{badgeId}, SYSDATE
+		FROM dual
+		WHERE NOT EXISTS (
+		  SELECT 1
+		  FROM USERBADGE
+		  WHERE USER_ID = #{userId}
+		  AND BADGE_ID = #{badgeId}
+		)
+    </insert>
+
+</mapper>

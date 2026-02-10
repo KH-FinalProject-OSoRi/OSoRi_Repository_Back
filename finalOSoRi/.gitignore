@@ -32,3 +32,4 @@ replay_pid*
 /bin/
 /finalOSoRi/target/
 /finalOSoRi/.settings/
+target/classes/
