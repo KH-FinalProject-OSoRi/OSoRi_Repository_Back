@@ -289,27 +289,32 @@
 	    </choose>
 	</insert>
 	
-	<!-- 대공사 시작 -->
-	<!-- 그룹 챌린지 참가 시 결과 테이블에 PROCEEDING 생성 -->
-	<insert id="insertGroupChallResults" parameterType="map">
-	  INSERT INTO GROUPCHALL_RESULT (GROUPB_ID, CHALLENGE_ID, START_DATE, END_DATE, USER_ID, STATUS)
-	  SELECT
-	    #{groupbId},
-	    #{challengeId},
-	    #{startDate},
-	    #{endDate},
-	    M.USER_ID,
-	    'PROCEEDING'
-	  FROM BUDGETMEM M
-	  WHERE M.GROUPB_ID = #{groupbId}
-	    AND NOT EXISTS (
-	      SELECT 1
-	      FROM GROUPCHALL_RESULT R
-	      WHERE R.GROUPB_ID = #{groupbId}
-	        AND R.CHALLENGE_ID = #{challengeId}
-	        AND TRUNC(R.START_DATE) = TRUNC(#{startDate})
-	        AND R.USER_ID = M.USER_ID
-	    )
+	<!-- 그룹 챌린지 참가 시 결과 테이블에도 PROCEEDING 생성 -->
+	<insert id="joinGroupChallResult" parameterType="map">
+	  MERGE INTO GROUPCHALL_RESULT R
+	  USING (
+	    SELECT 
+	      USER_ID, 
+	      GROUPB_ID
+	    FROM BUDGETMEM 
+	    WHERE GROUPB_ID = #{groupbId}
+	  ) M
+	  ON (
+	    R.GROUPB_ID = M.GROUPB_ID AND 
+	    R.CHALLENGE_ID = #{challengeId} AND 
+	    R.USER_ID = M.USER_ID
+	  )
+	  WHEN MATCHED THEN
+	    UPDATE SET 
+	      STATUS = 'PROCEEDING',
+	      START_DATE = #{startDate},
+	      END_DATE = #{endDate},
+	      UPDATED_AT = SYSDATE,
+	      TOTAL_AMOUNT = 0,
+	      RNK = NULL
+	  WHEN NOT MATCHED THEN
+	    INSERT (GROUPB_ID, CHALLENGE_ID, START_DATE, END_DATE, USER_ID, STATUS)
+	    VALUES (M.GROUPB_ID, #{challengeId}, #{startDate}, #{endDate}, M.USER_ID, 'PROCEEDING')
 	</insert>
 	
 	<!-- 지출이 등록되는 순간 실패 처리 -->
@@ -320,7 +325,6 @@
 	  WHERE GROUPB_ID = #{groupbId}
 	    AND CHALLENGE_ID = 'group_zero_challenge'
 	    AND STATUS = 'PROCEEDING'
-	    AND USER_ID = #{userId}
 	    AND TRUNC(#{transDate}) BETWEEN TRUNC(START_DATE) AND TRUNC(END_DATE)
 	</update>
 
@@ -334,16 +338,20 @@
 	    AND TRUNC(END_DATE) &lt; TRUNC(SYSDATE)
 	</update>
 	
-	<!-- 종료된 competition 회차를 찾기(scheduler) -->
+	<!-- 종료된 competition 찾기(scheduler) -->
 	<select id="selectEndedCompetitionChallenges" resultType="map">
-	  SELECT 
-	    GROUPB_ID     AS groupbId,
-	    CHALLENGE_ID  AS challengeId,
-	    TRUNC(START_DATE) AS startDate,
-	    TRUNC(END_DATE)   AS endDate
-	  FROM GROUPCHALL
-	  WHERE STATUS = 'PROCEEDING'
-	    AND TRUNC(END_DATE) &lt; TRUNC(SYSDATE)
+	  SELECT DISTINCT
+	    G.GROUPB_ID     AS "groupbId",
+	    G.CHALLENGE_ID  AS "challengeId",
+	    TRUNC(G.START_DATE) AS "startDate",
+	    TRUNC(G.END_DATE)   AS "endDate"
+	  FROM GROUPCHALL G
+	  JOIN GROUPCHALL_RESULT R 
+	    ON G.GROUPB_ID = R.GROUPB_ID 
+	   AND G.CHALLENGE_ID = R.CHALLENGE_ID
+	   AND TRUNC(G.START_DATE) = TRUNC(R.START_DATE)
+	  WHERE R.STATUS = 'PROCEEDING'  
+	    AND TRUNC(G.END_DATE) &lt; TRUNC(SYSDATE)
 	</select>
 
 
@@ -351,22 +359,22 @@
 	<!-- 유저별 TOTAL_AMOUNT 계산해서 결과 테이블에 업데이트 -->
 	<update id="updateCompetitionTotals" parameterType="map">
 	   UPDATE GROUPCHALL_RESULT R
-		SET TOTAL_AMOUNT = (
-		    SELECT NVL(SUM(GT.ORIGINAL_AMOUNT), 0)
-		    FROM GROUPTRANS GT
-		    WHERE GT.GROUPB_ID = R.GROUPB_ID
-		      AND GT.USER_ID = R.USER_ID
-		      AND GT.TYPE = 'OUT'
-		      AND GT.TRANS_DATE &gt;= TRUNC(R.START_DATE)
-		      AND GT.TRANS_DATE &lt; TRUNC(R.END_DATE) + 1
-		  ),
-		  UPDATED_AT = SYSDATE
-		WHERE R.GROUPB_ID = #{groupbId}
-		  AND R.CHALLENGE_ID = 'group_reduceZero_competition'
-		  AND TRUNC(R.START_DATE) = TRUNC(#{startDate})
+	    SET TOTAL_AMOUNT = (
+	        SELECT NVL(SUM(GT.ORIGINAL_AMOUNT), 0)
+	        FROM GROUPTRANS GT
+	        WHERE GT.GROUPB_ID = R.GROUPB_ID
+	          AND GT.USER_ID = R.USER_ID
+	          AND GT.TYPE = 'OUT'
+	          AND GT.TRANS_DATE &gt;= TRUNC(R.START_DATE)
+	          AND GT.TRANS_DATE &lt; TRUNC(R.END_DATE) + 1
+	      ),
+	      UPDATED_AT = SYSDATE
+	    WHERE R.GROUPB_ID = #{groupbId}
+	      AND R.CHALLENGE_ID = 'group_reduceZero_competition'
+	      AND R.STATUS = 'PROCEEDING'
 	</update>
 	
-	<!-- 랭킹(ROW_NUMBER) 계산해서 RNK 채우기 -->
+	<!-- RankOver() 사용해 공동순위 포함 순위 매기기 -->
 	<update id="updateCompetitionRanks" parameterType="map">
 	  MERGE INTO GROUPCHALL_RESULT R
 	  USING (
@@ -375,20 +383,21 @@
 	      R2.CHALLENGE_ID,
 	      R2.START_DATE,
 	      R2.USER_ID,
-	      ROW_NUMBER() OVER (ORDER BY R2.TOTAL_AMOUNT ASC, R2.USER_ID ASC) AS RNK
+	      RANK() OVER (ORDER BY R2.TOTAL_AMOUNT ASC) AS RNK
 	    FROM GROUPCHALL_RESULT R2
 	    WHERE R2.GROUPB_ID = #{groupbId}
 	      AND R2.CHALLENGE_ID = 'group_reduceZero_competition'
-	      AND TRUNC(R2.START_DATE) = TRUNC(#{startDate})
+	      AND R2.STATUS = 'PROCEEDING'
 	  ) S
 	  ON (
 	    R.GROUPB_ID = S.GROUPB_ID
 	    AND R.CHALLENGE_ID = S.CHALLENGE_ID
-	    AND TRUNC(R.START_DATE) = TRUNC(S.START_DATE)
 	    AND R.USER_ID = S.USER_ID
 	  )
 	  WHEN MATCHED THEN
-	    UPDATE SET R.RNK = S.RNK, R.UPDATED_AT = SYSDATE
+	    UPDATE SET 
+	      R.RNK = S.RNK, 
+	      R.UPDATED_AT = SYSDATE
 	</update>
 	
 	<!-- 1등만 성공, 나머진 실패 -->
@@ -398,19 +407,18 @@
 	      UPDATED_AT = SYSDATE
 	  WHERE GROUPB_ID = #{groupbId}
 	    AND CHALLENGE_ID = 'group_reduceZero_competition'
-	    AND TRUNC(START_DATE) = TRUNC(#{startDate})
 	    AND STATUS = 'PROCEEDING'
 	</update>
 	
 	<!-- (C) SUCCESS인 사람만 뱃지 지급 대상 뽑기 (GROUPCHALL_RESULT 기준) -->
 	<select id="selectUsersToRewardFromResult" resultType="map">
 	  SELECT
-	    R.USER_ID  AS USER_ID,
-	    B.BADGE_ID AS BADGE_ID
+	    R.USER_ID  AS "USER_ID",
+	    B.BADGE_ID AS "BADGE_ID"
 	  FROM GROUPCHALL_RESULT R
 	  JOIN BADGE B ON B.CHALLENGE_ID = R.CHALLENGE_ID
 	  WHERE R.STATUS = 'SUCCESS'
-	    AND TRUNC(R.END_DATE) &lt;= TRUNC(SYSDATE)
+	    AND R.UPDATED_AT IS NOT NULL
 	    AND NOT EXISTS (
 	      SELECT 1
 	      FROM USERBADGE UB
@@ -423,7 +431,7 @@
 	<insert id="mergeUserBadge" parameterType="map">
 	  INSERT INTO USERBADGE (USER_ID, BADGE_ID, EARNED_AT)
 	  SELECT #{USER_ID}, #{BADGE_ID}, SYSDATE
-	  FROM dual
+	  FROM DUAL
 	  WHERE NOT EXISTS (
 	    SELECT 1
 	    FROM USERBADGE
@@ -439,41 +447,16 @@
 	    AND TRUNC(END_DATE) &lt; TRUNC(SYSDATE)
 	</update>
 		
-		
-	
-	
-		
-		
-		
-		
-	
-	
-		
-		
-		
-		
-	
-	
-	
-	
-	
-	<select id="getGroupJoinList" resultType="GroupChall">
-	   SELECT 
-	       CHALLENGE_ID as challengeId,
-	       GROUPB_ID as groupbId,
-	       STATUS as status,
-	       START_DATE as startDate,  END_DATE as endDate      FROM GROUPCHALL
-	   WHERE GROUPB_ID = #{groupbId}
+	<select id="getGroupJoinedList" resultType="GroupChall">
+	    SELECT 
+	        CHALLENGE_ID as challengeId,
+	        GROUPB_ID as groupbId,
+	        STATUS as status,
+	        START_DATE as startDate,
+	        END_DATE as endDate
+	    FROM GROUPCHALL_RESULT  WHERE GROUPB_ID = #{groupbId}
+	      AND USER_ID = #{userId}
 	</select>
-	
-	<!-- 24시간 무지출 챌린지 실시간 검사(지출 등록되면 탈락!) -->
-	<update id="failActiveZeroChallenge" parameterType="int">
-	    UPDATE GROUPCHALL
-	    SET STATUS = 'FAILED'
-	    WHERE GROUPB_ID = #{groupbId}
-	      AND CHALLENGE_ID = 'group_zero_challenge'
-	      AND STATUS = 'PROCEEDING'
-	</update>
 	
 	<!--지출 적게 쓰기 챌린지 순위 매기기 함수-->
 	<select id="getGroupRanking" resultType="map">
@@ -497,48 +480,24 @@
 
 	
 	<!--그룹 과거 내역-->
-	<select id="getGroupPastChallengeList" resultType="GroupChall">
+	<select id="getGroupPastChallengeList" resultType="map">
 	    SELECT 
-	        gc.CHALLENGE_ID as challengeId,
-	        gc.GROUPB_ID    as groupbId,
-	        gc.STATUS       as status,
-	        gc.START_DATE   as startDate,
-	        gc.END_DATE     as endDate,
-	        c.DESCRIPTION   as description,  
-	        c.CATEGORY      as category,     
-	        c.TYPE          as type,         
-	        c.DURATION      as duration,     
-	        c.TARGET        as target,       
-	        c.TARGET_COUNT  as targetCount   
-	    FROM GROUPCHALL gc
-	    JOIN CHALLENGES c ON gc.CHALLENGE_ID = c.CHALLENGE_ID
-	    WHERE gc.GROUPB_ID = #{groupbId}
-	      AND gc.STATUS IN ('SUCCESS', 'FAILED')
-	    ORDER BY gc.END_DATE DESC
-	</select>
-
-	
-	<!-- 기간이 끝날때까지 proceeding 이면 성공 처리 -->
-	<!--  
-	<update id="updateGroupChallengeSuccess">
-	    UPDATE GROUPCHALL
-	    SET STATUS = 'CLOSED'
-	    WHERE STATUS = 'PROCEEDING'
-	    AND TRUNC(END_DATE) &lt; TRUNC(SYSDATE)
-	</update>
-	-->
-	
-	<update id="closeEndedGroupChallenges">
-	  UPDATE GROUPCHALL
-	  SET STATUS = 'CLOSED'
-	  WHERE STATUS = 'PROCEEDING'
-	    AND TRUNC(END_DATE) &lt; TRUNC(SYSDATE)
-	</update>
-	
-		
-	
-	
-
+	        R.CHALLENGE_ID  AS "challengeId",
+	        R.GROUPB_ID     AS "groupbId",
+	        R.STATUS        AS "status",
+	        R.START_DATE    AS "startDate",
+	        R.END_DATE      AS "endDate",
+	        R.TOTAL_AMOUNT  AS "totalAmount",
+	        R.RNK           AS "rank", 
+	        C.DESCRIPTION   AS "description",
+	        C.CATEGORY      AS "category",
+	        C.TYPE          AS "type"
+	    FROM GROUPCHALL_RESULT R
+	    JOIN CHALLENGES C ON R.CHALLENGE_ID = C.CHALLENGE_ID
+	    WHERE R.USER_ID = #{userId}
+	      AND R.GROUPB_ID = #{groupbId}
+	    ORDER BY R.END_DATE DESC
+	</select>	
 	
 
 </mapper>

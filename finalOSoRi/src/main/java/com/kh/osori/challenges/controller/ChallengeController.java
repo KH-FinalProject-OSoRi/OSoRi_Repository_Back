@@ -172,14 +172,14 @@ public class ChallengeController {
         }
     }
 
-    @GetMapping("/myJoinedList")
-    public ResponseEntity<?> getMyJoinedList(@RequestParam("groupbId") int groupbId) {
-        return ResponseEntity.ok(service.getGroupJoinList(groupbId));
+    @GetMapping("/groupJoinedList")
+    public ResponseEntity<?> getGroupJoinedList(@RequestParam("groupbId") int groupbId , @RequestParam("userId") int userId) {
+        return ResponseEntity.ok(service.getGroupJoinedList(groupbId, userId));
     }
 
     @GetMapping("/group/past")
-    public ResponseEntity<?> getGroupPastChallengeList(@RequestParam("groupbId") int groupbId) {
-        List<GroupChall> list = service.getGroupPastChallengeList(groupbId);
+    public ResponseEntity<?> getGroupPastChallengeList(@RequestParam("groupbId") int groupbId, @RequestParam("userId") int userId) {
+        List<Map<String, Object>> list = service.getGroupPastChallengeList(groupbId, userId);
         if (list != null) {
             return ResponseEntity.ok(list);
         } else {

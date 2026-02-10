@@ -43,18 +43,16 @@ public interface ChallengeService {
 	
 //	int joinGroupChallenge(GroupChall groupChall); 
 //	
-	List<GroupChall> getGroupJoinList(int groupbId);
+	List<GroupChall> getGroupJoinedList(int groupbId, int userId);
 //
 //	int failActiveZeroChallenge(int groupBId);
 //	
 	List<Map<String, Object>> getGroupRanking(int groupbId, String challengeId);
 //
-	List<GroupChall> getGroupPastChallengeList(int groupbId);
+	List<Map<String, Object>> getGroupPastChallengeList(int groupbId, int userId);
 //
 //	void closeExpiredChallenges();
 
-
-	void checkNoSpendFailure(int groupbId, int userId, String transDate);
 	
 	
 
