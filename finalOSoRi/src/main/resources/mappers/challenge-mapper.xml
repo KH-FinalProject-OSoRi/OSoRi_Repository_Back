@@ -331,7 +331,7 @@
 	  WHERE GROUPB_ID = #{groupbId}
 	    AND CHALLENGE_ID = 'group_zero_challenge'
 	    AND STATUS = 'PROCEEDING'
-	    AND TRUNC(#{transDate}) BETWEEN TRUNC(START_DATE) AND TRUNC(END_DATE)
+	    AND #{transDate} BETWEEN START_DATE AND END_DATE
 	</update>
 
 	
@@ -341,7 +341,7 @@
 	  SET STATUS = 'SUCCESS',  UPDATED_AT = SYSDATE
 	  WHERE CHALLENGE_ID = 'group_zero_challenge'
 	    AND STATUS = 'PROCEEDING'
-	    AND TRUNC(END_DATE) &lt; TRUNC(SYSDATE)
+	    AND END_DATE &lt; SYSDATE
 	</update>
 	
 	<!-- 종료된 competition 찾기(scheduler) -->
@@ -349,15 +349,15 @@
 	  SELECT DISTINCT
 	    G.GROUPB_ID     AS "groupbId",
 	    G.CHALLENGE_ID  AS "challengeId",
-	    TRUNC(G.START_DATE) AS "startDate",
-	    TRUNC(G.END_DATE)   AS "endDate"
+	    G.START_DATE AS "startDate",
+	    G.END_DATE   AS "endDate"
 	  FROM GROUPCHALL G
 	  JOIN GROUPCHALL_RESULT R 
 	    ON G.GROUPB_ID = R.GROUPB_ID 
 	   AND G.CHALLENGE_ID = R.CHALLENGE_ID
-	   AND TRUNC(G.START_DATE) = TRUNC(R.START_DATE)
+	   AND G.START_DATE = R.START_DATE
 	  WHERE R.STATUS = 'PROCEEDING'  
-	    AND TRUNC(G.END_DATE) &lt; TRUNC(SYSDATE)
+	    AND G.END_DATE &lt; SYSDATE
 	</select>
 
 
@@ -371,8 +371,8 @@
 	        WHERE GT.GROUPB_ID = R.GROUPB_ID
 	          AND GT.USER_ID = R.USER_ID
 	          AND GT.TYPE = 'OUT'
-	          AND GT.TRANS_DATE &gt;= TRUNC(R.START_DATE)
-	          AND GT.TRANS_DATE &lt; TRUNC(R.END_DATE) + 1
+	          AND GT.TRANS_DATE &gt;= R.START_DATE
+	          AND GT.TRANS_DATE &lt; R.END_DATE + 1
 	      ),
 	      UPDATED_AT = SYSDATE
 	    WHERE R.GROUPB_ID = #{groupbId}
@@ -435,23 +435,24 @@
 	</select>
 	
 	<!-- (D) USERBADGE 중복방지 INSERT -->
-<insert id="mergeUserBadge" parameterType="map">
-INSERT INTO USERBADGE (USER_ID, BADGE_ID, EARNED_AT)
-SELECT #{userId}, B.BADGE_ID, SYSDATE
-FROM BADGE B
-WHERE B.CHALLENGE_ID = #{challengeId}
-AND NOT EXISTS (
-SELECT 1
-FROM USERBADGE UB
-WHERE UB.USER_ID = #{userId}
-AND UB.BADGE_ID = B.BADGE_ID)
-</insert>
+	<insert id="mergeUserBadge" parameterType="map">
+		INSERT INTO USERBADGE (USER_ID, BADGE_ID, EARNED_AT)
+		SELECT #{userId}, B.BADGE_ID, SYSDATE
+		FROM BADGE B
+		WHERE B.CHALLENGE_ID = #{challengeId}
+		AND NOT EXISTS (
+			SELECT 1
+			FROM USERBADGE UB
+			WHERE UB.USER_ID = #{userId}
+			AND UB.BADGE_ID = B.BADGE_ID
+		)
+	</insert>
 		
 	<update id="closeExpiredGroupChallenges">
 	  UPDATE GROUPCHALL
 	  SET STATUS = 'CLOSED'
 	  WHERE STATUS = 'PROCEEDING'
-	    AND TRUNC(END_DATE) &lt; TRUNC(SYSDATE)
+	    AND END_DATE &lt; SYSDATE
 	</update>
 		
 	<select id="getGroupJoinedList" resultType="GroupChall">
@@ -459,9 +460,10 @@ AND UB.BADGE_ID = B.BADGE_ID)
 	        CHALLENGE_ID as challengeId,
 	        GROUPB_ID as groupbId,
 	        STATUS as status,
-	        START_DATE as startDate,
-	        END_DATE as endDate
-	    FROM GROUPCHALL_RESULT  WHERE GROUPB_ID = #{groupbId}
+	        TO_CHAR(START_DATE, 'YYYY-MM-DD HH24:MI:SS') as startDate,
+	        TO_CHAR(END_DATE, 'YYYY-MM-DD HH24:MI:SS') as endDate
+	    FROM GROUPCHALL_RESULT  
+	    WHERE GROUPB_ID = #{groupbId}
 	      AND USER_ID = #{userId}
 	</select>
 	
@@ -479,8 +481,8 @@ AND UB.BADGE_ID = B.BADGE_ID)
 	   AND GC.STATUS = 'PROCEEDING'
 	  WHERE GT.GROUPB_ID = #{groupbId}
 	    AND GT.TYPE = 'OUT'
-	    AND GT.TRANS_DATE BETWEEN TRUNC(GC.START_DATE)
-	                          AND (TRUNC(GC.END_DATE) + 0.99999)
+	    AND GT.TRANS_DATE BETWEEN GC.START_DATE
+	                          AND (GC.END_DATE + 0.99999)
 	  GROUP BY GT.USER_ID, GT.NICKNAME
 	  ORDER BY "rank" ASC
 	</select>
@@ -492,8 +494,8 @@ AND UB.BADGE_ID = B.BADGE_ID)
 	        R.CHALLENGE_ID  AS "challengeId",
 	        R.GROUPB_ID     AS "groupbId",
 	        R.STATUS        AS "status",
-	        R.START_DATE    AS "startDate",
-	        R.END_DATE      AS "endDate",
+	        TO_CHAR(R.START_DATE, 'YYYY-MM-DD HH24:MI:SS') AS "startDate",
+	        TO_CHAR(R.END_DATE, 'YYYY-MM-DD HH24:MI:SS')   AS "endDate",
 	        R.TOTAL_AMOUNT  AS "totalAmount",
 	        R.RNK           AS "rank", 
 	        C.DESCRIPTION   AS "description",
@@ -503,7 +505,7 @@ AND UB.BADGE_ID = B.BADGE_ID)
 	    JOIN CHALLENGES C ON R.CHALLENGE_ID = C.CHALLENGE_ID
 	    WHERE R.USER_ID = #{userId}
 	      AND R.GROUPB_ID = #{groupbId}
-	      AND R.END_DATE &lt; TRUNC(SYSDATE)
+	      AND R.END_DATE &lt; SYSDATE
 	    ORDER BY R.END_DATE DESC
 	</select>	
 

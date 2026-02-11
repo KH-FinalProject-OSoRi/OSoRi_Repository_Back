@@ -1,5 +1,6 @@
 package com.kh.osori.challenges.controller;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 import java.util.HashMap;
@@ -134,12 +135,14 @@ public class ChallengeController {
 	
 	@PostMapping("/group")
     public ResponseEntity<?> joinGroupChallenge(@RequestBody JoinGroupChallengeRequest req) {
-        // 1. 요청 데이터를 바탕으로 GroupChall 객체 생성
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime calculatedEndDate = now.plusDays(req.getDuration());
+
         GroupChall groupChall = GroupChall.builder()
                 .challengeId(req.getChallengeId())
                 .groupbId(req.getGroupbId())
-                .startDate(req.getStartDate())   
-                .endDate(req.getEndDate())      
+                .startDate(now)   
+                .endDate(calculatedEndDate)      
                 .status("PROCEEDING")
                 .build();
 
