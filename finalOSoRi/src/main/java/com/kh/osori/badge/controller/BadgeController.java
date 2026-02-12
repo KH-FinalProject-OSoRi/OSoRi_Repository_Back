@@ -23,7 +23,7 @@ public class BadgeController {
 
     @GetMapping("/{userId}")
     public ResponseEntity<List<Badge>> getUserBadges(@PathVariable int userId) {
-        List<Badge> badges = badgeService.selectUserBadges(userId);
+        List<Badge> badges = badgeService.mergeUserBadge(userId);
         return ResponseEntity.ok(badges);
     }
 }

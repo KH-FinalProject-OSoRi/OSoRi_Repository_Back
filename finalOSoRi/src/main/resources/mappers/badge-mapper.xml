@@ -3,25 +3,30 @@
   
 <mapper namespace="badgeMapper">
 
-	<select id="selectUserBadges" resultType="Badge">
-	    SELECT
-	        UB.USER_ID           AS userId,
-	        UB.BADGE_ID          AS badgeId,
-	        UB.EARNED_AT         AS earnedAt,
-	        UB.GROUPB_ID         AS groupId,    
-	        B.BADGE_NAME         AS badgeName,
-	        B.BADGE_ICON_URL     AS badgeIconUrl,
-	        B.CHALLENGE_ID       AS challengeId,
-	        C.DESCRIPTION        AS challengeDesc,
-	        C.CHALLENGE_MODE     AS challengeMode,
-	        GB.TITLE             AS groupBudgetTitle
-	    FROM USERBADGE UB
-	    JOIN BADGE B ON UB.BADGE_ID = B.BADGE_ID
-	    LEFT JOIN CHALLENGES C ON C.CHALLENGE_ID = B.CHALLENGE_ID
-	    LEFT JOIN GROUPBUDGET GB ON UB.GROUPB_ID = GB.GROUPB_ID
-	    WHERE UB.USER_ID = #{userId}
-	    ORDER BY UB.EARNED_AT DESC
-	</select>
+	<insert id="mergeUserBadge" parameterType="map">
+	    MERGE INTO USERBADGE UB
+	    USING (
+	        SELECT 
+	            #{userId} as U_ID, 
+	            BADGE_ID as B_ID, 
+	            NVL(#{groupId}, 0) as G_ID
+	        FROM BADGE
+	        WHERE CHALLENGE_ID = #{challengeId}
+	    ) SRC
+	    ON (
+	        UB.USER_ID = SRC.U_ID 
+	        AND UB.BADGE_ID = SRC.B_ID 
+	        AND NVL(UB.GROUPB_ID, 0) = SRC.G_ID
+	    )
+	    WHEN NOT MATCHED THEN
+	        INSERT (USER_ID, BADGE_ID, EARNED_AT, GROUPB_ID)
+	        VALUES (SRC.U_ID, SRC.B_ID, SYSDATE, 
+	               <choose>
+	                   <when test="groupId != null and groupId != 0">#{groupId}</when>
+	                   <otherwise>NULL</otherwise>
+	               </choose>
+	        )
+	</insert>
 
 	<!--  
     <select id="selectUserBadges" resultType="Badge">

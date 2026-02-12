@@ -637,9 +637,9 @@ public class ChallengeServiceImpl implements ChallengeService {
             for (Map<String, Object> r : rewardList) {
             	Map<String, Object> badgeParam = new HashMap<>();
 
-                badgeParam.put("userId", r.get("USER_ID"));
+                badgeParam.put("userId", r.get("userId"));
                 
-                badgeParam.put("challengeId", r.get("CHALLENGE_ID"));
+                badgeParam.put("challengeId", r.get("challengeId"));
                 
                 badgeParam.put("groupId", r.get("groupId"));
                 

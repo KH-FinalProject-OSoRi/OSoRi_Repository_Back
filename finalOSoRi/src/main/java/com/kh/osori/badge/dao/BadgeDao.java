@@ -26,6 +26,6 @@ public class BadgeDao {
 
     // 뱃지 조회
     public List<Badge> selectUserBadges(int userId) {
-        return sqlSession.selectList("badgeMapper.selectUserBadges", userId);
+        return sqlSession.selectList("badgeMapper.mergeUserBadge", userId);
     }
 }

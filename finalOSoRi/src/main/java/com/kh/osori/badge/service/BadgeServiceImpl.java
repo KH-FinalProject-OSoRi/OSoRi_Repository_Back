@@ -15,7 +15,7 @@ public class BadgeServiceImpl implements BadgeService {
     private BadgeDao badgeDao;
 
     @Override
-    public List<Badge> selectUserBadges(int userId) {
+    public List<Badge> mergeUserBadge(int userId) {
         return badgeDao.selectUserBadges(userId);
     }
 
