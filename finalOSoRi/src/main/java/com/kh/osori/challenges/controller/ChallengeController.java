@@ -200,6 +200,25 @@ public class ChallengeController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("진행 중인 챌린지 데이터를 찾을 수 없습니다.");
     }
+    
+    @PostMapping
+    public ResponseEntity<?> createChallenge(@RequestBody Challenge challenge) {
+    	
+        try {
+            // 프론트에서 생성한 ID와 필드들이 VO에 자동 매핑됩니다.
+            int result = service.insertChallenge(challenge);
+            
+            if (result > 0) {
+                return ResponseEntity.ok("챌린지 저장 성공!");
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("저장 실패");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("서버 오류: " + e.getMessage());
+        }
+    }
+    
 	
 	
 	

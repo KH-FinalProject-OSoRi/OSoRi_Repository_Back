@@ -169,6 +169,10 @@ public class ChallengeDao {
 	    return sqlSession.update("challengeMapper.closeExpiredGroupChallenges");
 	}
 
+	public int insertChallenge(SqlSessionTemplate sqlSession, Challenge challenge) {
+		return sqlSession.insert("challengeMapper.insertChallenge", challenge);
+	}
+
 }
 
 

@@ -418,34 +418,37 @@
 	
 	<!-- (C) SUCCESS인 사람만 뱃지 지급 대상 뽑기 (GROUPCHALL_RESULT 기준) -->
 	<select id="selectUsersToRewardFromResult" resultType="map">
-	  SELECT
-	    R.USER_ID  AS "USER_ID",
-	    B.BADGE_ID AS "BADGE_ID",
-	    R.CHALLENGE_ID AS "CHALLENGE_ID"
-	  FROM GROUPCHALL_RESULT R
-	  JOIN BADGE B ON B.CHALLENGE_ID = R.CHALLENGE_ID
-	  WHERE R.STATUS = 'SUCCESS'
-	    AND R.UPDATED_AT IS NOT NULL
-	    AND NOT EXISTS (
-	      SELECT 1
-	      FROM USERBADGE UB
-	      WHERE UB.USER_ID = R.USER_ID
-	        AND UB.BADGE_ID = B.BADGE_ID
-	    )
-	</select>
+		  SELECT
+		    R.USER_ID      AS "userId",     
+		    B.BADGE_ID     AS "badgeId",
+		    R.CHALLENGE_ID AS "challengeId",
+		    R.GROUPB_ID    AS "groupId"  
+		  FROM GROUPCHALL_RESULT R
+		  JOIN BADGE B ON B.CHALLENGE_ID = R.CHALLENGE_ID
+		  WHERE R.STATUS = 'SUCCESS'
+		    AND R.UPDATED_AT IS NOT NULL
+		    AND NOT EXISTS (
+		      SELECT 1
+		      FROM USERBADGE UB
+		      WHERE UB.USER_ID = R.USER_ID
+		        AND UB.BADGE_ID = B.BADGE_ID
+		        AND NVL(UB.GROUPB_ID, 0) = NVL(R.GROUPB_ID, 0)
+		    )
+		</select>
 	
 	<!-- (D) USERBADGE 중복방지 INSERT -->
 	<insert id="mergeUserBadge" parameterType="map">
-		INSERT INTO USERBADGE (USER_ID, BADGE_ID, EARNED_AT)
-		SELECT #{userId}, B.BADGE_ID, SYSDATE
-		FROM BADGE B
-		WHERE B.CHALLENGE_ID = #{challengeId}
-		AND NOT EXISTS (
-			SELECT 1
-			FROM USERBADGE UB
-			WHERE UB.USER_ID = #{userId}
-			AND UB.BADGE_ID = B.BADGE_ID
-		)
+	    INSERT INTO USERBADGE (USER_ID, BADGE_ID, EARNED_AT, GROUPB_ID)
+	    SELECT #{userId}, B.BADGE_ID, SYSDATE, #{groupId}
+	    FROM BADGE B
+	    WHERE B.CHALLENGE_ID = #{challengeId}
+	    AND NOT EXISTS (
+	        SELECT 1
+	        FROM USERBADGE UB
+	        WHERE UB.USER_ID = #{userId}
+	        AND UB.BADGE_ID = B.BADGE_ID
+	        AND NVL(UB.GROUPB_ID, 0) = NVL(#{groupId}, 0)
+	    )
 	</insert>
 		
 	<update id="closeExpiredGroupChallenges">
@@ -508,6 +511,31 @@
 	      AND R.END_DATE &lt; SYSDATE
 	    ORDER BY R.END_DATE DESC
 	</select>	
+	
+	<insert id="insertChallenge" parameterType="Challenge">
+    INSERT INTO CHALLENGES (
+        CHALLENGE_ID
+        , DESCRIPTION
+        , TARGET
+        , DURATION
+        , CATEGORY
+        , TYPE
+        , STATUS
+        , TARGET_COUNT
+        , CHALLENGE_MODE  
+    ) 
+    VALUES (
+        #{challengeId}
+        , #{description}
+        , #{target}
+        , #{duration}
+        , #{category}
+        , #{type}
+        , #{status}
+        , #{targetCount}
+        , #{challengeMode}
+    )
+</insert>
 
 	
 

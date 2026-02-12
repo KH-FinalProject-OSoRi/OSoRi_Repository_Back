@@ -12,6 +12,7 @@ public class Badge {
 	    private String badgeIconUrl;
 	    private String challengeId;
 	    private Date earnedAt;
+	    private String groupId;
 
 	    private String challengeDesc; 
 	    private String groupBudgetTitle;

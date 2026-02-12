@@ -327,7 +327,6 @@ public class ChallengeServiceImpl implements ChallengeService {
 	            
 	            // challenge-mapper.xml에 정의된 insertBadgeForSuccess를 호출합니다.
 	            sqlSession.insert("challengeMapper.mergeUserBadge", badgeParam);
-	            System.out.println("[DEBUG] 개인 챌린지 성공 뱃지 지급: 유저 " + ch.getUserId() + ", 챌린지 " + ch.getChallengeId());
 	        }
 	    }
 	}
@@ -635,13 +634,16 @@ public class ChallengeServiceImpl implements ChallengeService {
 
         List<Map<String, Object>> rewardList = dao.selectUsersToRewardFromResult(sqlSession);
         if (rewardList != null && !rewardList.isEmpty()) {
-            System.out.println("[SCHED] 뱃지 지급 대상 발견: " + rewardList.size() + "명");
             for (Map<String, Object> r : rewardList) {
             	Map<String, Object> badgeParam = new HashMap<>();
 
                 badgeParam.put("userId", r.get("USER_ID"));
                 
                 badgeParam.put("challengeId", r.get("CHALLENGE_ID"));
+                
+                badgeParam.put("groupId", r.get("groupId"));
+                
+                
 
                 dao.mergeUserBadge(sqlSession, badgeParam);
             }
@@ -688,6 +690,11 @@ public class ChallengeServiceImpl implements ChallengeService {
 	    }
 	    
 	    return list;
+	}
+
+	@Override
+	public int insertChallenge(Challenge challenge) {
+		return dao.insertChallenge(sqlSession, challenge);
 	}
 
 
