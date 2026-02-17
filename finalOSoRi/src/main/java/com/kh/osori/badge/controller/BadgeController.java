@@ -21,9 +21,15 @@ public class BadgeController {
     @Autowired
     private BadgeService badgeService;
 
+//    @GetMapping("/{userId}")
+//    public ResponseEntity<List<Badge>> getUserBadges(@PathVariable int userId) {
+//        List<Badge> badges = badgeService.mergeUserBadge(userId);
+//        return ResponseEntity.ok(badges);
+//    }
+    
     @GetMapping("/{userId}")
     public ResponseEntity<List<Badge>> getUserBadges(@PathVariable int userId) {
-        List<Badge> badges = badgeService.mergeUserBadge(userId);
-        return ResponseEntity.ok(badges);
+        return ResponseEntity.ok(badgeService.getUserBadges(userId));
     }
+
 }

@@ -9,5 +9,8 @@ public interface BadgeService {
     List<Badge> mergeUserBadge(int userId);
     
     int insertDefaultBadge(int userId, int badgeId);
+
+	List<Badge> getUserBadges(int userId);
+	
     
 }

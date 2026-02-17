@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kh.osori.badge.dao.BadgeDao;
+import com.kh.osori.badge.model.dto.MergeUserBadgeParam;
 import com.kh.osori.badge.service.BadgeService;
 import com.kh.osori.challenges.model.dao.ChallengeDao;
 
@@ -321,13 +322,15 @@ public class ChallengeServiceImpl implements ChallengeService {
 	        // 4. 성공 시 뱃지 지급 (추가된 부분)
 	        // 상태가 'SUCCESS'로 업데이트된 직후에 실행됩니다.
 	        if (isSuccess) {
-	            Map<String, Object> badgeParam = new HashMap<>();
-	            badgeParam.put("userId", ch.getUserId());
-	            badgeParam.put("challengeId", ch.getChallengeId());
-	            
-	            // challenge-mapper.xml에 정의된 insertBadgeForSuccess를 호출합니다.
-	            sqlSession.insert("challengeMapper.mergeUserBadge", badgeParam);
+
+	            MergeUserBadgeParam param1 = new MergeUserBadgeParam();
+	            param1.setUserId(ch.getUserId());
+	            param1.setChallengeId(ch.getChallengeId());
+	            param1.setGroupId(null); // 개인 챌린지는 그룹 없음
+
+	            badgeDao.mergeUserBadge(sqlSession, param1);
 	        }
+
 	    }
 	}
 	
@@ -634,19 +637,20 @@ public class ChallengeServiceImpl implements ChallengeService {
 
         List<Map<String, Object>> rewardList = dao.selectUsersToRewardFromResult(sqlSession);
         if (rewardList != null && !rewardList.isEmpty()) {
-            for (Map<String, Object> r : rewardList) {
-            	Map<String, Object> badgeParam = new HashMap<>();
+        	for (Map<String, Object> r : rewardList) {
 
-                badgeParam.put("userId", r.get("userId"));
-                
-                badgeParam.put("challengeId", r.get("challengeId"));
-                
-                badgeParam.put("groupId", r.get("groupId"));
-                
-                
+        	    MergeUserBadgeParam param = new MergeUserBadgeParam();
 
-                dao.mergeUserBadge(sqlSession, badgeParam);
-            }
+        	    param.setUserId(((Number) r.get("userId")).intValue());
+        	    param.setChallengeId(String.valueOf(r.get("challengeId")));
+
+
+        	    Object g = r.get("groupId");
+        	    param.setGroupId(g == null ? null : ((Number) g).intValue());
+
+        	    dao.mergeUserBadge(sqlSession, param);
+        	}
+
         } 
     }
 	

@@ -10,7 +10,7 @@ public class WebConfig implements WebMvcConfigurer {
 
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
-	    registry.addResourceHandler("/osori/upload/badges/**")
+	    registry.addResourceHandler("/upload/badges/**")
 	            .addResourceLocations("classpath:/static/upload/badges/");
 	}
 

@@ -8,6 +8,7 @@ import java.util.Map;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.kh.osori.badge.model.dto.MergeUserBadgeParam;
 import com.kh.osori.challenges.model.vo.Challenge;
 import com.kh.osori.challenges.model.vo.GroupChall;
 import com.kh.osori.challenges.model.vo.MyChall;
@@ -141,7 +142,7 @@ public class ChallengeDao {
 	}
 
 	// 발급 대상한테 뱃지 발급
-	public int mergeUserBadge(SqlSessionTemplate sqlSession, Map<String, Object> param) {
+	public int mergeUserBadge(SqlSessionTemplate sqlSession, MergeUserBadgeParam param) {
 		return sqlSession.insert("challengeMapper.mergeUserBadge", param);
 	}
 

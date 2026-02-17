@@ -14,13 +14,28 @@ public class BadgeServiceImpl implements BadgeService {
     @Autowired
     private BadgeDao badgeDao;
 
+//    @Override
+//    public List<Badge> mergeUserBadge(int userId) {
+//        return badgeDao.selectUserBadges(userId);
+//    }
+    
     @Override
-    public List<Badge> mergeUserBadge(int userId) {
+    public List<Badge> getUserBadges(int userId) {
         return badgeDao.selectUserBadges(userId);
     }
+
 
     @Override
     public int insertDefaultBadge(int userId, int badgeId) {
         return badgeDao.insertDefaultBadge(userId, badgeId);
     }
+
+
+	@Override
+	public List<Badge> mergeUserBadge(int userId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
 }
