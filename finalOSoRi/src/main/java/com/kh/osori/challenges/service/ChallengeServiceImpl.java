@@ -600,8 +600,8 @@ public class ChallengeServiceImpl implements ChallengeService {
         int res2 = dao.joinGroupChallResult(sqlSession, param);
         
         return (res1 > 0 && res2 > 0) ? 1 : 0;
+      
     }
-
 
     //무지출 챌린지 중 지출 등록 시 바로 실패
     @Override
@@ -621,6 +621,10 @@ public class ChallengeServiceImpl implements ChallengeService {
     @Override
     @Transactional
     public void runGroupChallengeScheduler() {
+    	
+    	//무지출 챌린지 예약해놓고 시작
+        dao.startReservedZeroChallenges(sqlSession);
+    	
         //result 테이블이 proceeding인것을 closed 로 변경
         List<Map<String, Object>> endedCompetitions = dao.selectEndedCompetitionChallenges(sqlSession);
 

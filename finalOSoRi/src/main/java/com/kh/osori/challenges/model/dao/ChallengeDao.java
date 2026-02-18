@@ -174,6 +174,10 @@ public class ChallengeDao {
 		return sqlSession.insert("challengeMapper.insertChallenge", challenge);
 	}
 
+	public int startReservedZeroChallenges(SqlSessionTemplate sqlSession) {
+		return sqlSession.update("startReservedZeroChallenges");
+	}
+
 }
 
 

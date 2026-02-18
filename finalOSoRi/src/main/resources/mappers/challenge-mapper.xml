@@ -272,22 +272,33 @@
 			</when>
 	
 	        <otherwise>
-	            INSERT INTO GROUPCHALL (
-	                CHALLENGE_ID,
-	                GROUPB_ID,
-	                START_DATE,
-	                END_DATE,
-	                STATUS
-	            ) VALUES (
-	                #{challengeId},
-	                #{groupbId},
-	                #{startDate},
-	                #{endDate},       
-	                'PROCEEDING'
-	            )
-	        </otherwise>
+			  INSERT INTO GROUPCHALL (
+			      CHALLENGE_ID,
+			      GROUPB_ID,
+			      START_DATE,
+			      END_DATE,
+			      STATUS
+			  ) VALUES (
+			      #{challengeId},
+			      #{groupbId},
+			      TRUNC(SYSDATE) + 1,
+			      TRUNC(SYSDATE) + 2 - 1/86400,
+			      'RESERVED'
+			  )
+			</otherwise>
+
 	    </choose>
 	</insert>
+	
+	<!-- 내일 시작해야 하는 챌린지 PROCEEDING으로 변경 -->
+	<update id="startReservedZeroChallenges">
+	  UPDATE GROUPCHALL
+	  SET STATUS = 'PROCEEDING'
+	  WHERE CHALLENGE_ID = 'group_zero_challenge'
+	    AND STATUS = 'RESERVED'
+	    AND TRUNC(START_DATE) = TRUNC(SYSDATE)
+	</update>
+
 	
 	<!-- 그룹 챌린지 참가 시 결과 테이블에도 PROCEEDING 생성 -->
 	<insert id="joinGroupChallResult" parameterType="map">
@@ -303,7 +314,7 @@
 	    JOIN GROUPCHALL G ON M.GROUPB_ID = G.GROUPB_ID
 	    WHERE G.GROUPB_ID = #{groupbId} 
 	      AND G.CHALLENGE_ID = #{challengeId}
-	      AND G.STATUS = 'PROCEEDING'
+	      AND G.STATUS IN ('PROCEEDING', 'RESERVED')
 	  ) SRC
 	  ON (
 	    R.GROUPB_ID = SRC.GROUPB_ID AND 
