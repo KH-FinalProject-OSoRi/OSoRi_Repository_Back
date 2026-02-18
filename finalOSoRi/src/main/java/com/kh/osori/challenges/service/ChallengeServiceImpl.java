@@ -624,6 +624,8 @@ public class ChallengeServiceImpl implements ChallengeService {
     	
     	//무지출 챌린지 예약해놓고 시작
         dao.startReservedZeroChallenges(sqlSession);
+        //result 테이블도 동기화
+        dao.syncReservedResultToProceeding(sqlSession);
     	
         //result 테이블이 proceeding인것을 closed 로 변경
         List<Map<String, Object>> endedCompetitions = dao.selectEndedCompetitionChallenges(sqlSession);

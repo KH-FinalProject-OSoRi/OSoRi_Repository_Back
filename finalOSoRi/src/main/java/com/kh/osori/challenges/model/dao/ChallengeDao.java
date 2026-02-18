@@ -91,6 +91,15 @@ public class ChallengeDao {
 	//------------------------------------------------
 	//	그룹챌린지
 	
+	public int startReservedZeroChallenges(SqlSessionTemplate sqlSession) {
+		return sqlSession.update("startReservedZeroChallenges");
+	}
+	
+	public int syncReservedResultToProceeding(SqlSessionTemplate sqlSession) {
+	    return sqlSession.update("challengeMapper.syncReservedResultToProceeding");
+	}
+
+	
 	//그룹챌린지 차원의 테이블 status ="proceeding"추가
 	public int joinGroupChallenge(SqlSessionTemplate sqlSession, GroupChall groupChall) {
 		return sqlSession.insert("challengeMapper.joinGroupChallenge", groupChall);
@@ -174,9 +183,7 @@ public class ChallengeDao {
 		return sqlSession.insert("challengeMapper.insertChallenge", challenge);
 	}
 
-	public int startReservedZeroChallenges(SqlSessionTemplate sqlSession) {
-		return sqlSession.update("startReservedZeroChallenges");
-	}
+	
 
 }
 

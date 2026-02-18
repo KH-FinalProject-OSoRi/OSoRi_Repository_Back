@@ -298,6 +298,21 @@
 	    AND STATUS = 'RESERVED'
 	    AND TRUNC(START_DATE) = TRUNC(SYSDATE)
 	</update>
+	
+	<update id="syncReservedResultToProceeding">
+	  UPDATE GROUPCHALL_RESULT R
+	  SET STATUS = 'PROCEEDING',
+	      UPDATED_AT = SYSDATE
+	  WHERE STATUS = 'RESERVED'
+	    AND EXISTS (
+	      SELECT 1
+	      FROM GROUPCHALL G
+	      WHERE G.GROUPB_ID = R.GROUPB_ID
+	        AND G.CHALLENGE_ID = R.CHALLENGE_ID
+	        AND G.STATUS = 'PROCEEDING'
+	    )
+	</update>
+
 
 	
 	<!-- 그룹 챌린지 참가 시 결과 테이블에도 PROCEEDING 생성 -->
@@ -309,9 +324,11 @@
 	      G.GROUPB_ID,
 	      G.CHALLENGE_ID,
 	      G.START_DATE,
-	      G.END_DATE
+	      G.END_DATE,
+	      G.STATUS AS CHALL_STATUS
 	    FROM BUDGETMEM M
-	    JOIN GROUPCHALL G ON M.GROUPB_ID = G.GROUPB_ID
+	    JOIN GROUPCHALL G 
+	      ON M.GROUPB_ID = G.GROUPB_ID
 	    WHERE G.GROUPB_ID = #{groupbId} 
 	      AND G.CHALLENGE_ID = #{challengeId}
 	      AND G.STATUS IN ('PROCEEDING', 'RESERVED')
@@ -323,16 +340,31 @@
 	  )
 	  WHEN MATCHED THEN
 	    UPDATE SET 
-	      STATUS = 'PROCEEDING',
+	      STATUS = SRC.CHALL_STATUS,
 	      START_DATE = SRC.START_DATE,
 	      END_DATE = SRC.END_DATE,
 	      UPDATED_AT = SYSDATE,
 	      TOTAL_AMOUNT = 0,
 	      RNK = NULL
 	  WHEN NOT MATCHED THEN
-	    INSERT (GROUPB_ID, CHALLENGE_ID, START_DATE, END_DATE, USER_ID, STATUS)
-	    VALUES (SRC.GROUPB_ID, SRC.CHALLENGE_ID, SRC.START_DATE, SRC.END_DATE, SRC.USER_ID, 'PROCEEDING')
+	    INSERT (
+	      GROUPB_ID, 
+	      CHALLENGE_ID, 
+	      START_DATE, 
+	      END_DATE, 
+	      USER_ID, 
+	      STATUS
+	    )
+	    VALUES (
+	      SRC.GROUPB_ID, 
+	      SRC.CHALLENGE_ID, 
+	      SRC.START_DATE, 
+	      SRC.END_DATE, 
+	      SRC.USER_ID, 
+	      SRC.CHALL_STATUS
+	    )
 	</insert>
+
 	
 	<!-- 지출이 등록되는 순간 실패 처리 -->
 	<update id="failUserOnZeroChallengeExpense" parameterType="map">
