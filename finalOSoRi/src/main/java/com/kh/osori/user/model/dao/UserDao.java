@@ -1,5 +1,6 @@
 package com.kh.osori.user.model.dao;
 
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -105,6 +106,25 @@ public class UserDao {
 		//기존에 연동했던 사람이 다시 연동하려는 경우
 		public int updateAuthAccount2(SqlSessionTemplate sqlSession, Map<String, Object> result) {
 			return sqlSession.update("userMapper.updateAuthAccount2", result); 
+		}
+
+		//로그인 실패시 로그인 카운트 횟수 늘리기 
+		public int updateLoginCount(SqlSessionTemplate sqlSession, User loginUser) {
+			return sqlSession.update("userMapper.updateLoginCount", loginUser); 
+		}
+
+		// 계정 잠금 처리 
+		public int lockAccount(SqlSessionTemplate sqlSession,User loginUser) {
+			return sqlSession.update("userMapper.lockAccount", loginUser); 
+		}
+
+		// 현재 시간이 잠금 시간보다 이후면 잠금 해제 하는 메소드 
+		public int resetLoginLock(SqlSessionTemplate sqlSession, String loginId) {
+			return sqlSession.update("userMapper.resetLoginLock", loginId); 
+		}
+
+		public int resetLoginLock2(SqlSessionTemplate sqlSession, String loginId) {
+			return sqlSession.update("userMapper.resetLoginLock2", loginId);
 		}
 
 
