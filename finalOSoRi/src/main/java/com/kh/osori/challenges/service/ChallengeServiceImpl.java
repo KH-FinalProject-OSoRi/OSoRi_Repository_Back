@@ -496,7 +496,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 	    }
 	    return updated;
 	}
-
+	
 	private boolean evaluateViolationNow(MyChallHistory h) {
 	    if (h == null) return false;
 
@@ -506,80 +506,136 @@ public class ChallengeServiceImpl implements ChallengeService {
 	    final int target = h.getTarget();
 	    final int targetCount = h.getTargetCount();
 
-	    String fromDate = toIsoDate(h.getStartDate());
-	    String toDate = toIsoDate(LocalDate.now(ZoneId.systemDefault())); 
-	    if (fromDate == null || toDate == null) return false;
+	    // 날짜 설정
+	    String fromDate = String.valueOf(h.getStartDate()).substring(0, 10);
+	    String toDate = LocalDate.now().toString();
 
-	    // 1) 횟수 제한형 (쇼핑 등) - 기존 로직 유지
+	    HashMap<String, Object> p = new HashMap<>();
+	    p.put("userId", h.getUserId());
+	    p.put("fromDate", fromDate);
+	    p.put("toDate", toDate);
+	    p.put("category", category);
+
+	    // 1. 횟수 제한형 (쇼핑 2회 이하인데 3회 썼을 때)
 	    if (targetCount > 0) {
-	        HashMap<String, Object> p = new HashMap<>();
-	        p.put("userId", h.getUserId());
-	        p.put("fromDate", fromDate);
-	        p.put("toDate", toDate);
-	        p.put("category", category);
-
-	        Map<String, Object> resultMap = dao.getExpenseCountByRange(sqlSession, p);
-	        int cnt = 0;
-	        if (resultMap != null) {
-	            for (Object v : resultMap.values()) {
-	                if (v instanceof Number) {
-	                    cnt = ((Number) v).intValue();
-	                    break;
-	                }
-	            }
+	        Map<String, Object> res = dao.getExpenseCountByRange(sqlSession, p);
+	        if (res != null) {
+	            // 핵심 수정: CNT와 cnt 둘 다 확인
+	            Object v = (res.get("CNT") != null) ? res.get("CNT") : res.get("cnt");
+	            int cnt = (v instanceof Number) ? ((Number) v).intValue() : 0;
+	            if (cnt > targetCount) return true;
 	        }
-	        if (cnt > targetCount) return true;
 	    }
 
-	    // 2) 일일 제한형 (교통 10,000원 이하 등) - ✅ 이 부분을 확실하게 수정
-	    boolean looksDaily = desc.contains("하루") || challengeId.contains("3days") || challengeId.contains("daily");
+	    // 2. 일일 금액 제한형 (교통비 하루 1만원 초과 시)
+	    boolean looksDaily = desc.contains("하루") || challengeId.contains("3days");
 	    if (looksDaily && target > 0) {
-	        HashMap<String, Object> p = new HashMap<>();
-	        p.put("userId", h.getUserId());
-	        p.put("fromDate", fromDate);
-	        p.put("toDate", toDate);
-	        p.put("category", category);
-
-	        // DB에서 일자별 합계를 가져옴
 	        ArrayList<HashMap<String, Object>> rows = dao.getDailyExpenseSumsByRange(sqlSession, p);
 	        if (rows != null) {
 	            for (HashMap<String, Object> r : rows) {
-	                int daySum = 0;
-	                // DB가 SUM, sum, CNT, cnt 중 무엇으로 반환해도 대응 가능합니다.
-	                for (Object v : r.values()) {
-	                    if (v instanceof Number) {
-	                        daySum = ((Number) v).intValue();
-	                        
-	                        if (daySum > target) return true; 
-	                    }
-	                }
+	                // 핵심 수정: SUM과 sum 둘 다 확인
+	                Object s = (r.get("SUM") != null) ? r.get("SUM") : r.get("sum");
+	                int daySum = (s instanceof Number) ? ((Number) s).intValue() : 0;
+	                if (daySum > target) return true;
 	            }
 	        }
-	        return false;
 	    }
-
-	    // 3) 총액 제한형 - 기존 로직 유지
-	    if (target > 0) {
-	        HashMap<String, Object> p = new HashMap<>();
-	        p.put("userId", h.getUserId());
-	        p.put("fromDate", fromDate);
-	        p.put("toDate", toDate);
-	        p.put("category", category);
-
-	        Map<String, Object> resultMap = dao.getExpenseSumByRange(sqlSession, p);
-	        int totalSum = 0;
-	        if (resultMap != null) {
-	            for (Object v : resultMap.values()) {
-	                if (v instanceof Number) {
-	                    totalSum = ((Number) v).intValue();
-	                    break;
-	                }
-	            }
+	    
+	    // 3. 총액 제한형
+	    if (!looksDaily && target > 0 && targetCount <= 0) {
+	        Map<String, Object> res = dao.getExpenseSumByRange(sqlSession, p);
+	        if (res != null) {
+	            Object v = (res.get("SUM") != null) ? res.get("SUM") : res.get("sum");
+	            int totalSum = (v instanceof Number) ? ((Number) v).intValue() : 0;
+	            if (totalSum > target) return true;
 	        }
-	        if (totalSum > target) return true;
 	    }
 	    return false;
 	}
+
+//	private boolean evaluateViolationNow(MyChallHistory h) {
+//	    if (h == null) return false;
+//
+//	    final String challengeId = h.getChallengeId() == null ? "" : h.getChallengeId();
+//	    final String desc = h.getDescription() == null ? "" : h.getDescription();
+//	    final String category = h.getCategory();
+//	    final int target = h.getTarget();
+//	    final int targetCount = h.getTargetCount();
+//
+//	    String fromDate = toIsoDate(h.getStartDate());
+//	    String toDate = toIsoDate(LocalDate.now(ZoneId.systemDefault())); 
+//	    if (fromDate == null || toDate == null) return false;
+//
+//	    // 1) 횟수 제한형 (쇼핑 등) - 기존 로직 유지
+//	    if (targetCount > 0) {
+//	        HashMap<String, Object> p = new HashMap<>();
+//	        p.put("userId", h.getUserId());
+//	        p.put("fromDate", fromDate);
+//	        p.put("toDate", toDate);
+//	        p.put("category", category);
+//
+//	        Map<String, Object> resultMap = dao.getExpenseCountByRange(sqlSession, p);
+//	        int cnt = 0;
+//	        if (resultMap != null) {
+//	            for (Object v : resultMap.values()) {
+//	                if (v instanceof Number) {
+//	                    cnt = ((Number) v).intValue();
+//	                    break;
+//	                }
+//	            }
+//	        }
+//	        if (cnt > targetCount) return true;
+//	    }
+//
+//	    // 2) 일일 제한형 (교통 10,000원 이하 등) - ✅ 이 부분을 확실하게 수정
+//	    boolean looksDaily = desc.contains("하루") || challengeId.contains("3days") || challengeId.contains("daily");
+//	    if (looksDaily && target > 0) {
+//	        HashMap<String, Object> p = new HashMap<>();
+//	        p.put("userId", h.getUserId());
+//	        p.put("fromDate", fromDate);
+//	        p.put("toDate", toDate);
+//	        p.put("category", category);
+//
+//	        // DB에서 일자별 합계를 가져옴
+//	        ArrayList<HashMap<String, Object>> rows = dao.getDailyExpenseSumsByRange(sqlSession, p);
+//	        if (rows != null) {
+//	            for (HashMap<String, Object> r : rows) {
+//	                int daySum = 0;
+//	                // DB가 SUM, sum, CNT, cnt 중 무엇으로 반환해도 대응 가능합니다.
+//	                for (Object v : r.values()) {
+//	                    if (v instanceof Number) {
+//	                        daySum = ((Number) v).intValue();
+//	                        
+//	                        if (daySum > target) return true; 
+//	                    }
+//	                }
+//	            }
+//	        }
+//	        return false;
+//	    }
+//
+//	    // 3) 총액 제한형 - 기존 로직 유지
+//	    if (target > 0) {
+//	        HashMap<String, Object> p = new HashMap<>();
+//	        p.put("userId", h.getUserId());
+//	        p.put("fromDate", fromDate);
+//	        p.put("toDate", toDate);
+//	        p.put("category", category);
+//
+//	        Map<String, Object> resultMap = dao.getExpenseSumByRange(sqlSession, p);
+//	        int totalSum = 0;
+//	        if (resultMap != null) {
+//	            for (Object v : resultMap.values()) {
+//	                if (v instanceof Number) {
+//	                    totalSum = ((Number) v).intValue();
+//	                    break;
+//	                }
+//	            }
+//	        }
+//	        if (totalSum > target) return true;
+//	    }
+//	    return false;
+//	}
 	
 	//그룹 챌린지
 	

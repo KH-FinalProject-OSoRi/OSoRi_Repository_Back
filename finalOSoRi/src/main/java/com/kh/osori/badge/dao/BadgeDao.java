@@ -33,7 +33,7 @@ public class BadgeDao {
     //새로운 뱃지 조회
     public int mergeUserBadge(SqlSessionTemplate sqlSession,
             MergeUserBadgeParam param) {
-	return sqlSession.insert("badgeMapper.selectUserBadges", param);
+	return sqlSession.insert("badgeMapper.mergeUserBadge", param);
 	}
 
 }
