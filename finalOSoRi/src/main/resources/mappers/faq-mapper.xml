@@ -6,6 +6,7 @@
 	<select id="questionList" resultType="Faq">
 		SELECT FAQ_ID, QUESTION, ANSWER
 		FROM FAQ
+		WHERE ANSWER NOT LIKE '답변 필요'
 	</select>
 	
 	<insert id="addNewQuestion" parameterType="String">
