@@ -63,7 +63,9 @@ $ npm start
 |-----------------|-----------------|
 | CSS    |  <img src="https://img.shields.io/badge/CSS-239120?&style=for-the-badge&logo=css3&logoColor=white" alt="CSS" width="100"> |
 | JavaScript    |  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=JavaScript&logoColor=white" alt="JavaScript" width="100"> |
+| HTML    |  <img src="https://img.shields.io/badge/HTML-239120?style=for-the-badge&logo=html5&logoColor=white" alt="HTML" width="100"> |
 | React    |  <img src="https://github.com/user-attachments/assets/e3b49dbb-981b-4804-acf9-012c854a2fd2" alt="React" width="100"> |
+| React Router    |  <img src="https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge&logo=react-router&logoColor=white" alt="React Router" width="100"> |
 
 https://github.com/envoy1084/awesome-badges
 <br/>
@@ -71,20 +73,37 @@ https://github.com/envoy1084/awesome-badges
 ## 5.2 Backend
 |  |  |
 |-----------------|-----------------|
-| React    |  <img src="https://github.com/user-attachments/assets/e3b49dbb-981b-4804-acf9-012c854a2fd2" alt="React" width="100"> |
+| Java 17   |  <img src="https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 17" width="100"> |
+| Spring Boot 3.x    |  <img src="https://img.shields.io/badge/Spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white" alt="Spring Boot" width="100">    |
+| MyBatis    |  <img src="https://img.shields.io/badge/Spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white" alt="MyBatis" width="100">    |
+| Oracle SQL    |  <img src="https://img.shields.io/badge/Oracle-F80000?style=for-the-badge&logo=oracle&logoColor=black" alt="SqlDeveloper" width="100">    |
 
 <br/>
 
 ## 5.3 Framework / Library
 |  |  |
 |-----------------|-----------------|
-| SqlDeveloper    |  <img src="https://img.shields.io/badge/Oracle-F80000?style=for-the-badge&logo=oracle&logoColor=black" alt="SqlDeveloper" width="100">    |
+| Naver OCR API    |  <img src="https://velog.velcdn.com/images/cptbluebear/post/58558a5c-292a-41f9-8b1d-43eec5a8822b/image.png" alt="Naver OCR API" width="100">    |
+| Kakao API    |  <img src="https://blog.kakaocdn.net/dna/bcfkIw/btrQBLdRoMf/AAAAAAAAAAAAAAAAAAAAAMGfOHWzL0N8tChshpIQzKfPhrkMiOPf6jMQAmIzwLS0/img.png?credential=yqXZFxpELC7KVnFOS48ylbz2pIh7yKj8&expires=1772290799&allow_ip=&allow_referer=&signature=O5BpkPBaogA2aOrf2DliW8A6yHk%3D" alt="Kakao API" width="100">    |
+| Spring WebSocket    |  <img src="https://img.shields.io/badge/Spring-6DB33F?style=for-the-badge&logo=spring&logoColor=white" alt="Spring WebSocket" width="100">    |
+| STOMP    |  <img src="" alt="" width="100">    |
+| SocketJS    |  <img src="" alt="" width="100">    |
+| Spring Security Crypto    |  <img src="https://img.shields.io/badge/Spring_Security-6DB33F?style=for-the-badge&logo=Spring-Security&logoColor=white" alt="Spring Security Crypto" width="100">    |
+| JWT    |  <img src="https://reynaldineo.com/images/blog/auth/jwt-logo.webp" alt="JWT" width="100">    |
+| GSON    |  <img src="https://www.appbrain.com/stats/libraries/square-icon/google_gson.png" alt="GSON" width="100">    |
+| Axios    |  <img src="https://media2.dev.to/dynamic/image/width=1000,height=420,fit=cover,gravity=auto,format=auto/https%3A%2F%2Fdev-to-uploads.s3.amazonaws.com%2Fuploads%2Farticles%2Fedgh3udmxvdi2g3oignq.png" alt="Axios" width="100">    |
+
 <br/>
 
 ## 5.3 Tool
 |  |  |
 |-----------------|-----------------|
-| SqlDeveloper    |  <img src="https://img.shields.io/badge/Oracle-F80000?style=for-the-badge&logo=oracle&logoColor=black" alt="SqlDeveloper" width="100">    |
+| STS4    |  <img src="" alt="STS4" width="100">    |
+| Visual Studio    |  <img src="https://img.shields.io/badge/Visual_Studio-5C2D91?style=for-the-badge&logo=visual%20studio&logoColor=white" alt="Visual Studio" width="100">    |
+| Maven    |  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStoKKgJxrA7anfovuDqiRpj6R6k-LZbKugfg&s" alt="Maven" width="100">    |
+| Lombok    |  <img src="https://img1.daumcdn.net/thumb/R750x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbsCjBi%2FbtsIHcJ3Ani%2FAAAAAAAAAAAAAAAAAAAAAKatBIBqW8Nywf8wacqUt88CTgw9STmNSLgb7CBouZ68%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1772290799%26allow_ip%3D%26allow_referer%3D%26signature%3D5r0VTGdR1CPirPFswyUwR%252FFSh9Y%253D" alt="Lombok" width="100">    |
+| OJDBC    |  <img src="https://mblogthumb-phinf.pstatic.net/MjAxNzEyMjJfNjAg/MDAxNTEzOTQ2MzMyODcw.4ANHLh79PbWjz29Fr3xboLVhhqtyLro8i5zK-E7cdFYg.8WMdbziW2Vo6yxG3uEwsT85_tUPuEC3vt6ymo9S1nlog.PNG.scw0531/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7_2017-12-22_%EC%98%A4%ED%9B%84_9.37.02.png?type=w420" alt="OJDBC" width="100">    |
+| Node.js    |  <img src="https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" width="100">    |
 <br/>
 
 ## 5.4 Cooperation
