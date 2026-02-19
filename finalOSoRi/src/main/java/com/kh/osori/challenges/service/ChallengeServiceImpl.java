@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.kh.osori.badge.dao.BadgeDao;
+import com.kh.osori.badge.model.dto.MergeUserBadgeParam;
 import com.kh.osori.badge.service.BadgeService;
 import com.kh.osori.challenges.model.dao.ChallengeDao;
 
@@ -321,14 +322,15 @@ public class ChallengeServiceImpl implements ChallengeService {
 	        // 4. 성공 시 뱃지 지급 (추가된 부분)
 	        // 상태가 'SUCCESS'로 업데이트된 직후에 실행됩니다.
 	        if (isSuccess) {
-	            Map<String, Object> badgeParam = new HashMap<>();
-	            badgeParam.put("userId", ch.getUserId());
-	            badgeParam.put("challengeId", ch.getChallengeId());
-	            
-	            // challenge-mapper.xml에 정의된 insertBadgeForSuccess를 호출합니다.
-	            sqlSession.insert("challengeMapper.mergeUserBadge", badgeParam);
-	            System.out.println("[DEBUG] 개인 챌린지 성공 뱃지 지급: 유저 " + ch.getUserId() + ", 챌린지 " + ch.getChallengeId());
+
+	            MergeUserBadgeParam param1 = new MergeUserBadgeParam();
+	            param1.setUserId(ch.getUserId());
+	            param1.setChallengeId(ch.getChallengeId());
+	            param1.setGroupId(null); // 개인 챌린지는 그룹 없음
+
+	            badgeDao.mergeUserBadge(sqlSession, param1);
 	        }
+
 	    }
 	}
 	
@@ -598,8 +600,8 @@ public class ChallengeServiceImpl implements ChallengeService {
         int res2 = dao.joinGroupChallResult(sqlSession, param);
         
         return (res1 > 0 && res2 > 0) ? 1 : 0;
+      
     }
-
 
     //무지출 챌린지 중 지출 등록 시 바로 실패
     @Override
@@ -619,6 +621,12 @@ public class ChallengeServiceImpl implements ChallengeService {
     @Override
     @Transactional
     public void runGroupChallengeScheduler() {
+    	
+    	//무지출 챌린지 예약해놓고 시작
+        dao.startReservedZeroChallenges(sqlSession);
+        //result 테이블도 동기화
+        dao.syncReservedResultToProceeding(sqlSession);
+    	
         //result 테이블이 proceeding인것을 closed 로 변경
         List<Map<String, Object>> endedCompetitions = dao.selectEndedCompetitionChallenges(sqlSession);
 
@@ -635,16 +643,20 @@ public class ChallengeServiceImpl implements ChallengeService {
 
         List<Map<String, Object>> rewardList = dao.selectUsersToRewardFromResult(sqlSession);
         if (rewardList != null && !rewardList.isEmpty()) {
-            System.out.println("[SCHED] 뱃지 지급 대상 발견: " + rewardList.size() + "명");
-            for (Map<String, Object> r : rewardList) {
-            	Map<String, Object> badgeParam = new HashMap<>();
+        	for (Map<String, Object> r : rewardList) {
 
-                badgeParam.put("userId", r.get("USER_ID"));
-                
-                badgeParam.put("challengeId", r.get("CHALLENGE_ID"));
+        	    MergeUserBadgeParam param = new MergeUserBadgeParam();
 
-                dao.mergeUserBadge(sqlSession, badgeParam);
-            }
+        	    param.setUserId(((Number) r.get("userId")).intValue());
+        	    param.setChallengeId(String.valueOf(r.get("challengeId")));
+
+
+        	    Object g = r.get("groupId");
+        	    param.setGroupId(g == null ? null : ((Number) g).intValue());
+
+        	    dao.mergeUserBadge(sqlSession, param);
+        	}
+
         } 
     }
 	
@@ -688,6 +700,11 @@ public class ChallengeServiceImpl implements ChallengeService {
 	    }
 	    
 	    return list;
+	}
+
+	@Override
+	public int insertChallenge(Challenge challenge) {
+		return dao.insertChallenge(sqlSession, challenge);
 	}
 
 

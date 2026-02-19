@@ -8,6 +8,7 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import com.kh.osori.badge.model.dto.MergeUserBadgeParam;
 import com.kh.osori.badge.model.vo.Badge;
 
 @Repository
@@ -24,8 +25,15 @@ public class BadgeDao {
         return sqlSession.insert("badgeMapper.insertDefaultBadge", params);
     }
 
-    // 뱃지 조회
+     //뱃지 조회
     public List<Badge> selectUserBadges(int userId) {
         return sqlSession.selectList("badgeMapper.selectUserBadges", userId);
     }
+    
+    //새로운 뱃지 조회
+    public int mergeUserBadge(SqlSessionTemplate sqlSession,
+            MergeUserBadgeParam param) {
+	return sqlSession.insert("badgeMapper.selectUserBadges", param);
+	}
+
 }

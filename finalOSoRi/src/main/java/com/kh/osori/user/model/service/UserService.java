@@ -1,5 +1,6 @@
 package com.kh.osori.user.model.service;
 
+import java.sql.Timestamp;
 import java.util.Map;
 
 import com.kh.osori.user.model.dto.UserRegisterRequest;
@@ -25,6 +26,13 @@ public interface UserService {
 	//카카오 연동 해제 메소드 
 	boolean unlinkKakao(int userId);
 	
+	User updateLoginCount(User loginUser); 
+	
+	// 아이디는 잘 입력했는데 비밀번호를 잘못 입력했을때 작동하는 메소드
+	boolean compareLockUntil(Timestamp lockUntil, String loginId);
+	
+	// 아이디,비밀번호 둘 다 잘 입력했을때 작동하는 메소드
+	boolean compareLockUntil2(Timestamp lockUntil, String loginId); 
 	
 	
 	

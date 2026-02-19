@@ -1,5 +1,6 @@
 package com.kh.osori.challenges.controller;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 import java.util.HashMap;
@@ -134,12 +135,14 @@ public class ChallengeController {
 	
 	@PostMapping("/group")
     public ResponseEntity<?> joinGroupChallenge(@RequestBody JoinGroupChallengeRequest req) {
-        // 1. 요청 데이터를 바탕으로 GroupChall 객체 생성
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime calculatedEndDate = now.plusDays(req.getDuration());
+
         GroupChall groupChall = GroupChall.builder()
                 .challengeId(req.getChallengeId())
                 .groupbId(req.getGroupbId())
-                .startDate(req.getStartDate())   
-                .endDate(req.getEndDate())      
+                .startDate(now)   
+                .endDate(calculatedEndDate)      
                 .status("PROCEEDING")
                 .build();
 
@@ -197,6 +200,25 @@ public class ChallengeController {
         }
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("진행 중인 챌린지 데이터를 찾을 수 없습니다.");
     }
+    
+    @PostMapping
+    public ResponseEntity<?> createChallenge(@RequestBody Challenge challenge) {
+    	
+        try {
+            // 프론트에서 생성한 ID와 필드들이 VO에 자동 매핑됩니다.
+            int result = service.insertChallenge(challenge);
+            
+            if (result > 0) {
+                return ResponseEntity.ok("챌린지 저장 성공!");
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("저장 실패");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("서버 오류: " + e.getMessage());
+        }
+    }
+    
 	
 	
 	

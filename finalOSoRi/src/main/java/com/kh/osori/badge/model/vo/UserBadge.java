@@ -10,6 +10,7 @@ public class UserBadge {
 	    private int userId;
 	    private int badgeId;
 	    private Date earnedAt; // 획득 날짜
+	    private Integer groupbId;
 	
 
 }
