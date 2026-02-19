@@ -8,6 +8,7 @@ import java.util.Map;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.kh.osori.badge.model.dto.MergeUserBadgeParam;
 import com.kh.osori.challenges.model.vo.Challenge;
 import com.kh.osori.challenges.model.vo.GroupChall;
 import com.kh.osori.challenges.model.vo.MyChall;
@@ -90,6 +91,15 @@ public class ChallengeDao {
 	//------------------------------------------------
 	//	그룹챌린지
 	
+	public int startReservedZeroChallenges(SqlSessionTemplate sqlSession) {
+		return sqlSession.update("startReservedZeroChallenges");
+	}
+	
+	public int syncReservedResultToProceeding(SqlSessionTemplate sqlSession) {
+	    return sqlSession.update("challengeMapper.syncReservedResultToProceeding");
+	}
+
+	
 	//그룹챌린지 차원의 테이블 status ="proceeding"추가
 	public int joinGroupChallenge(SqlSessionTemplate sqlSession, GroupChall groupChall) {
 		return sqlSession.insert("challengeMapper.joinGroupChallenge", groupChall);
@@ -141,7 +151,7 @@ public class ChallengeDao {
 	}
 
 	// 발급 대상한테 뱃지 발급
-	public int mergeUserBadge(SqlSessionTemplate sqlSession, Map<String, Object> param) {
+	public int mergeUserBadge(SqlSessionTemplate sqlSession, MergeUserBadgeParam param) {
 		return sqlSession.insert("challengeMapper.mergeUserBadge", param);
 	}
 
@@ -168,6 +178,12 @@ public class ChallengeDao {
 	public int closeExpiredGroupChallenges(SqlSessionTemplate sqlSession) {
 	    return sqlSession.update("challengeMapper.closeExpiredGroupChallenges");
 	}
+
+	public int insertChallenge(SqlSessionTemplate sqlSession, Challenge challenge) {
+		return sqlSession.insert("challengeMapper.insertChallenge", challenge);
+	}
+
+	
 
 }
 

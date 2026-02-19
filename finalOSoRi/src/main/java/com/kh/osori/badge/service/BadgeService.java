@@ -6,8 +6,11 @@ import com.kh.osori.badge.model.vo.Badge;
 
 public interface BadgeService {
 	
-    List<Badge> selectUserBadges(int userId);
+    List<Badge> mergeUserBadge(int userId);
     
     int insertDefaultBadge(int userId, int badgeId);
+
+	List<Badge> getUserBadges(int userId);
+	
     
 }

@@ -1,6 +1,7 @@
 package com.kh.osori.challenges.model.vo;
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,8 +16,8 @@ public class GroupChall {
 	private String challengeId;
 	private int groupbId;
 	private String status;
-	private LocalDate startDate;
-	private LocalDate endDate;
+	private LocalDateTime startDate;
+	private LocalDateTime endDate;
 	
 	private String description; 
     private String category;
