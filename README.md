@@ -50,7 +50,7 @@ $ npm start
 # 4. Tasks & Responsibilities (작업 및 역할 분담)
 |  |  |  |
 |-----------------|-----------------|-----------------|
-| 서채원    |  <img src="https://avatars.githubusercontent.com/u/250162373?s=400&u=59aa0a768a3383c0fdbf0a71b1e54e56bcff3ff5&v=4" alt="서채원" width="100"> | <ul><li>프로젝트 계획 및 관리</li><li>팀 리딩 및 커뮤니케이션</li><li>메인 페이지 구현</li><li>마이 페이지 - 진행중인 가계부 목록/이전 가계부 목록 조회 기능 구현</li><li>그룹 가계부 이메일로 회원 초대 기능 구현</li><li>실시간 그룹 가계부 초대 요청 알림 수락/거절 기능 구현</li><li이전 그룹 가계부 목록 조</li><li>그룹 가계부 상세 페이지 구현</li><li>그룹 가계부 수입/지출 내역 목록 조회/삭제 기능 구현</li><li>가계부 관리자 기능 구현(예산 금액 수정, 멤버 추가/삭제, 가계부 삭제)</li><li>질문봇 기능 구현</li><li>수입/지출 내역 추가시 실시간 알림 기능 구현</li></ul>     |
+| 서채원    |  <img src="https://avatars.githubusercontent.com/u/250162373?s=400&u=59aa0a768a3383c0fdbf0a71b1e54e56bcff3ff5&v=4" alt="서채원" width="100"> | <ul><li>프로젝트 계획 및 관리</li><li>팀 리딩 및 커뮤니케이션</li><li>메인 페이지 구현</li><li>마이 페이지 - 진행중인 가계부 목록/이전 가계부 목록 조회 기능 구현</li><li>그룹 가계부 이메일로 회원 초대 기능 구현</li><li>실시간 그룹 가계부 초대 요청 알림 수락/거절 기능 구현</li><li>이전 그룹 가계부 목록 조</li><li>그룹 가계부 상세 페이지 구현</li><li>그룹 가계부 수입/지출 내역 목록 조회/삭제 기능 구현</li><li>가계부 관리자 기능 구현(예산 금액 수정, 멤버 추가/삭제, 가계부 삭제)</li><li>질문봇 기능 구현</li><li>수입/지출 내역 추가시 실시간 알림 기능 구현</li></ul>     |
 | 전성중   |  <img src="https://avatars.githubusercontent.com/u/223277907?v=4" alt="전성중" width="100">| <ul><li>회원 가입 페이지 구현</li><li>회원가입 기능 구현</li><li>로그인 페이지/기능 구현(소셜 로그인(API) 포함)</li><li>회원 상태에 따른 서비스 제한 기능 구현</li><li>내 가계부 고정 지출 등록 기능 구현</li><li>회원정보 수정 페이지 구현</li><li>수정 기능(프로필 사진 변경, 비밀번호 수정, 회원 탈퇴) 구현</li></ul> |
 | 조수인   |  <img src="https://avatars.githubusercontent.com/u/250043719?v=4" alt="조수인" width="100">    |     <ul><li>가계부 종료까지 남은 기간/예산 계산 기능 구현 (예산 초과시 경고)</li><li>개인 소비 패턴(전월 대비, 카테고리별) 분석 기능 구현</li><li>개인/그룹 챌린지 달성시 뱃지 지급 기능 구현</li><li>마이 뱃지 페이지 구현</li><li>회원 별 보유중인 뱃지 목록 조회, 뱃지 분석 기능 구현</li><li>새로운 챌린지 신청 기능 구현</li><li>캘린더뷰 구현/금액, 내용, 카테고리 별 복합 검색 기능 구현</li></ul>  |
 | 강민채    |  <img src="https://avatars.githubusercontent.com/u/216668731?v=4" alt="강민채" width="100">    | <ul><li>(개인/그룹)새로운 가계부 추가 페이지 구현</li><li>가계부 정보 입력폼 구현</li><li>개인 가계부 상세페이지 구현</li><li>개인 가계부 수입/지출 내역 목록 조회 기능 구현</li><li>예산 금액 수정 기능 구현</li><li>수입/지출 내역 추가 기능 구현</li><li>최근 수입/지출 내역 목록 조회/선택시 자동 입력 기능 구현</li><li>영수증 분석하기 (네이버 클로바/카카오 검색 API) 기능 구현</li></ul>    |
@@ -115,23 +115,29 @@ https://github.com/envoy1084/awesome-badges
 
 # 6. Project Structure (프로젝트 구조)
 ```plaintext
-project/
-├── public/
-│   ├── index.html           # HTML 템플릿 파일
-│   └── favicon.ico          # 아이콘 파일
+finalOSoRi/
+├── upload/
+│   └── profiles/                            # 프로필 사진 파일 관리
 ├── src/
-│   ├── assets/              # 이미지, 폰트 등 정적 파일
-│   ├── components/          # 재사용 가능한 UI 컴포넌트
-│   ├── hooks/               # 커스텀 훅 모음
-│   ├── pages/               # 각 페이지별 컴포넌트
-│   ├── App.js               # 메인 애플리케이션 컴포넌트
-│   ├── index.js             # 엔트리 포인트 파일
-│   ├── index.css            # 전역 css 파일
-│   ├── firebaseConfig.js    # firebase 인스턴스 초기화 파일
-│   package-lock.json    # 정확한 종속성 버전이 기록된 파일로, 일관된 빌드를 보장
-│   package.json         # 프로젝트 종속성 및 스크립트 정의
-├── .gitignore               # Git 무시 파일 목록
-└── README.md                # 프로젝트 개요 및 사용법
+│   └── main/     
+│   │   ├── java/com/kh/osori/
+│   │   │   ├── badge/                       # 뱃지 조회 조회
+│   │   │   ├── challenges/                  # 챌린지 목록 조회, 개인 챌린지 참여/조회, 그룹 챌린지 참여/조회/생성 
+│   │   │   ├── config/                      # 비밀번호 보안, 파일 경로 매핑 
+│   │   │   ├── faq/model/                   # 질문봇 조회, 새로운 질문 저장 
+│   │   │   ├── fixedtrans/                  # 고정 지출 내역 조회/삭제/수정/생성
+│   │   │   ├── groupBudget/                 # 그룹 가계부 조회/생성, 멤버 목록 조회/생성/수정/삭제, 알림 기
+│   │   │   ├── groupBudgetMem/              # 그룹 멤버 조회
+│   │   │   ├── notification/model/          # 실시간 알림 전송
+│   │   │   ├── receipt/                     # OCR API
+│   │   │   ├── trans/                       # 개인/그룹 가계부 내역 추가/수정/삭제
+│   │   │   ├── user/                        # 로그인, 로그아웃, 닉네임/이메일 중복 체크, 회원 수정/삭제/가입, 카카오 로그인 API
+│   │   │   ├── util/                        # 사용자 인증, JWT 전용
+│   │   │   └── FinalOSoRiApplication.java   # 스프링 부트 애플리케이션 가동/활성화
+│   │   └── resources/                       # 매퍼/ 뱃지 사진 파일 관리 
+│   │   │   └── application.properties       # 기본 정보 및 서버 설정/DB 연결/매핑 설정/보안 설정
+├── .gitignore                               # Git 무시 파일 목록
+└── pom.xml                                  # 프로젝트 의존성/빌드 설정/프로젝트 정보
 ```
 
 <br/>
