@@ -1,9 +1,7 @@
 package com.kh.osori.user.model.service;
 
+import java.sql.Timestamp;
 import java.util.HashMap;
-
-
-
 import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
@@ -163,6 +161,15 @@ public class UserServiceImpl implements UserService {
 	    		
 	    		return result;
 	    } else {
+	    	
+	    		if(user.getLockUntil() != null) { // 카카오로 로그인을 한다 하더라도 잠금 시간이 설정 되어 있는지 확인해야 한다.
+	    			boolean canLogin = compareLockUntil(user.getLockUntil(), user.getLoginId());
+	    			
+	    			if(!canLogin) { // false 일 때만 메시지 띄우기 
+	    				result.put("message", "잠금 모드가 해제 되는 시간은 " + user.getLockUntil() + "입니다.");
+	    				return result; 
+	    			}
+	    		}
 	    	
 	    		if(user.getEmail().equals(email)) { // 연동 해제 후, 다시 재 연동을 하려고 할 때 (연동을 한번이상 했던 사람들에 한해서만)
 	    			//즉, 카카오에서 받아온 이메일이랑 로컬 정보의 이메일이 같을때
@@ -339,5 +346,112 @@ public class UserServiceImpl implements UserService {
 		return result; 
 		
 	}
+	
+	// 추가 메소드 (로그인 카운트 갱신)
+	@Transactional 
+	@Override
+	public User updateLoginCount(User loginUser) {
+		
+		int result = dao.updateLoginCount(sqlSession, loginUser);
+		
+		if(result > 0) { // 이건 일반적으로 로그인 카운트가 업데이트 될 때 
+			loginUser = dao.selectUser(sqlSession, loginUser); // 로그인 횟수가 갱신된 객체를 반환 
+			
+			if(loginUser.getLoginCount()>=5) { // 로그인 실패 횟수가 5회 이상이면 
+				
+				int result2 = dao.lockAccount(sqlSession, loginUser); // 잠금 처리하기 
+				
+				if(result2 > 0) { 	// 잠금 처리가 됐다면
+					return dao.selectUser(sqlSession, loginUser);
+				} else { // 잠금 처리가 안됐다면
+					return null; 
+				}
+				
+			}
+			
+			return loginUser; 
+		} else { // 여기서는 로그인 카운트가 업데이트가 안되면 null 반환 
+			loginUser = null;
+			
+			return loginUser; 
+		}
+		
+	}
+	
+	// 컨트롤러에서 평문이랑 암호화 된 비밀번호랑 일치하지 않을 때 쓰는 메소드 
+	@Override
+	public boolean compareLockUntil(Timestamp lockUntil, String loginId) {
+		
+		// 1. 잠금 시간 자체가 없으면 바로 로그인 가능
+	    if (lockUntil == null) {
+//	        int result = dao.resetLoginLock2(sqlSession, loginId); 
+//	        
+//	        if(result > 0) { // LOGIN_COUNT를 0으로 리셋 했다면 
+//	        	return true; 
+//	        } 
+//	    	
+//	        return false;
+	    	
+	    	return true; 
+	    	
+	    }
+
+	    Timestamp now = new Timestamp(System.currentTimeMillis());
+
+	    // 2. 현재 시간이 잠금 해제 시간을 지났다면?
+	    if (now.after(lockUntil)) {
+	        // 시간이 지났으니 DB의 카운트와 잠금시간을 초기화(null) 합니다.
+	      
+	        int result = dao.resetLoginLock(sqlSession, loginId); 
+	        
+	        if(result > 0) { // 시간이 지났고 갱신을 했으면 true를 반환 
+	        	return true; 
+	        }
+	        
+	        return false; // 갱신 못하면 false 반환 
+	    }
+
+	    // 3. 아직 시간이 안 지났다면
+	    return false; // 여전히 잠금 상태
+		
+	}
+	
+	//컨트롤러에서 평문이랑 암호화 된 비밀번호가 일치할 때 쓰는 메소드 
+	@Override
+	public boolean compareLockUntil2(Timestamp lockUntil, String loginId) {
+		
+		// 1. 잠금 시간 자체가 없으면 바로 로그인 가능
+	    if (lockUntil == null) {
+	        int result = dao.resetLoginLock2(sqlSession, loginId); 
+	        
+	        if(result > 0) { // LOGIN_COUNT를 0으로 리셋 했다면 
+	        	return true; 
+	        } 
+	    	
+	        return false;
+	    	
+	    }
+
+	    Timestamp now = new Timestamp(System.currentTimeMillis());
+
+	    // 2. 현재 시간이 잠금 해제 시간을 지났다면?
+	    if (now.after(lockUntil)) {
+	        // 시간이 지났으니 DB의 카운트와 잠금시간을 초기화(null) 합니다.
+	      
+	        int result = dao.resetLoginLock(sqlSession, loginId); 
+	        
+	        if(result > 0) { // 시간이 지났고 갱신을 했으면 true를 반환 
+	        	return true; 
+	        }
+	        
+	        return false; // 갱신 못하면 false 반환 
+	    }
+
+	    // 3. 아직 시간이 안 지났다면
+	    return false; // 여전히 잠금 상태
+		
+	}
+	
+	
 
 }
