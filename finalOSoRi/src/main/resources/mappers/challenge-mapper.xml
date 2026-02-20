@@ -116,6 +116,20 @@
       AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
       AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
   </select>
+  
+  <!-- 기간 내 지출 요약 (MYTRANS) --> 
+  <select id="getExpenseSummaryByRange"
+          parameterType="map"
+          resultType="hashmap">
+    SELECT
+      NVL(SUM(ORIGINAL_AMOUNT), 0) AS "sum",
+      COUNT(*) AS "cnt"
+    FROM MYTRANS
+    WHERE USER_ID = #{userId}
+      AND TYPE = 'OUT'
+      AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
+      AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
+  </select>
 
   <!-- 기간 내 지출 요약 (MYTRANS) -->
   <select id="getExpenseSumByRange" parameterType="map" resultType="hashmap">
@@ -217,20 +231,20 @@ AND CATEGORY = #{category}
 </select>
 
   <!-- 일자별 지출 합계 (하루당 제한형) -->
-  <select id="getDailyExpenseSumsByRange" parameterType="map" resultType="hashmap">
-    SELECT
-        TO_CHAR(TRANS_DATE, 'YYYY-MM-DD') AS "day",
-        NVL(SUM(ORIGINAL_AMOUNT), 0) AS "sum"
-    FROM MYTRANS
-    WHERE USER_ID = #{userId}
-      AND TYPE = 'OUT'
-      AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
-      AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
-    <if test="category != null and category != ''">
-      AND CATEGORY = #{category}
-    </if>
-    GROUP BY TO_CHAR(TRANS_DATE, 'YYYY-MM-DD')
-  </select>
+<select id="getDailyExpenseSumsByRange" parameterType="map" resultType="hashmap">
+SELECT
+TO_CHAR(TRANS_DATE, 'YYYY-MM-DD') AS "day",
+NVL(SUM(ORIGINAL_AMOUNT), 0) AS "sum"
+FROM MYTRANS
+WHERE USER_ID = #{userId}
+AND TYPE = 'OUT'
+AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
+AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
+<if test="category != null and category != ''">
+AND CATEGORY = #{category}
+</if>
+GROUP BY TO_CHAR(TRANS_DATE, 'YYYY-MM-DD')
+</select>
   
   
   <!-- 그룹챌린지 관련 -->
@@ -570,5 +584,7 @@ AND CATEGORY = #{category}
 	
 
 </mapper>
+
+
 
 
