@@ -61,7 +61,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 		return dao.getMyPastChallengeList(sqlSession, req);
 	}
 	
-	// [ADDED] 특정 유저가 진행 중인 챌린지의 실시간 수치를 계산하여 반환
+	// 특정 유저가 진행 중인 챌린지의 실시간 수치를 계산하여 반환
     @Override
     public Map<String, Object> getChallengeProgress(int userId, String challengeId) {
         HashMap<String, Object> req = new HashMap<>();
@@ -104,7 +104,7 @@ public class ChallengeServiceImpl implements ChallengeService {
             result.put("currentValue", toInt(res != null ? (res.get("SUM") != null ? res.get("SUM") : res.get("sum")) : 0));
         }
 
-        // [ADDED] 3일 챌린지 등 일자별 관리가 필요한 경우 상세 내역 추가
+        // 3일 챌린지 등 일자별 관리가 필요한 경우 상세 내역 추가
         if (base.getDescription().contains("하루") || challengeId.contains("3days")) {
             ArrayList<HashMap<String, Object>> daily = dao.getDailyExpenseSumsByRange(sqlSession, param);
             result.put("dailyDetails", daily);
@@ -113,9 +113,6 @@ public class ChallengeServiceImpl implements ChallengeService {
         return result;
     }
 
-    // ... 기존 promoteReservedToProceeding, closeExpiredProceedingToResult 등 유지 ...
-
-	
 	// MYTRANS(내역) 기준으로 서버에서 직접 계산함
 	public int joinMyChallengeWithBalanceCheck(
 			MyChall myChall,
@@ -221,7 +218,7 @@ public class ChallengeServiceImpl implements ChallengeService {
 		);
 	}
 
-	// [ADDED] 챌린지별 "필요 잔액" 계산
+	// 챌린지별 "필요 잔액" 계산
 	// - 쇼핑: 200,000 이상(요구사항 하드코딩)
 	// - 하루당 제한형(예: 10,000원 이하 3일): target * duration
 	// - 그 외 target 있는 경우: target
@@ -333,27 +330,6 @@ public class ChallengeServiceImpl implements ChallengeService {
 
 	    }
 	}
-	
-	/*
-	public int closeExpiredProceedingToResult() {
-		ArrayList<MyChallHistory> endedList = dao.selectEndedProceedingChallenges(sqlSession);
-		if (endedList == null || endedList.isEmpty()) return 0;
-
-		int updated = 0;
-		for (MyChallHistory h : endedList) {
-			boolean success = evaluateSuccess(h);
-			HashMap<String, Object> param = new HashMap<>();
-			param.put("userId", h.getUserId());
-			param.put("challengeId", h.getChallengeId());
-			param.put("startDate", h.getStartDate());
-			param.put("endDate", h.getEndDate());
-			param.put("status", success ? "SUCCESS" : "FAILED");
-
-			updated += dao.updateMyChallStatus(sqlSession, param);
-		}
-		return updated;
-	}
-	*/
 
 	// -------------------------
 	// 성공 판정 로직 (MYTRANS 기반)
@@ -553,90 +529,6 @@ public class ChallengeServiceImpl implements ChallengeService {
 	    return false;
 	}
 
-//	private boolean evaluateViolationNow(MyChallHistory h) {
-//	    if (h == null) return false;
-//
-//	    final String challengeId = h.getChallengeId() == null ? "" : h.getChallengeId();
-//	    final String desc = h.getDescription() == null ? "" : h.getDescription();
-//	    final String category = h.getCategory();
-//	    final int target = h.getTarget();
-//	    final int targetCount = h.getTargetCount();
-//
-//	    String fromDate = toIsoDate(h.getStartDate());
-//	    String toDate = toIsoDate(LocalDate.now(ZoneId.systemDefault())); 
-//	    if (fromDate == null || toDate == null) return false;
-//
-//	    // 1) 횟수 제한형 (쇼핑 등) - 기존 로직 유지
-//	    if (targetCount > 0) {
-//	        HashMap<String, Object> p = new HashMap<>();
-//	        p.put("userId", h.getUserId());
-//	        p.put("fromDate", fromDate);
-//	        p.put("toDate", toDate);
-//	        p.put("category", category);
-//
-//	        Map<String, Object> resultMap = dao.getExpenseCountByRange(sqlSession, p);
-//	        int cnt = 0;
-//	        if (resultMap != null) {
-//	            for (Object v : resultMap.values()) {
-//	                if (v instanceof Number) {
-//	                    cnt = ((Number) v).intValue();
-//	                    break;
-//	                }
-//	            }
-//	        }
-//	        if (cnt > targetCount) return true;
-//	    }
-//
-//	    // 2) 일일 제한형 (교통 10,000원 이하 등) - ✅ 이 부분을 확실하게 수정
-//	    boolean looksDaily = desc.contains("하루") || challengeId.contains("3days") || challengeId.contains("daily");
-//	    if (looksDaily && target > 0) {
-//	        HashMap<String, Object> p = new HashMap<>();
-//	        p.put("userId", h.getUserId());
-//	        p.put("fromDate", fromDate);
-//	        p.put("toDate", toDate);
-//	        p.put("category", category);
-//
-//	        // DB에서 일자별 합계를 가져옴
-//	        ArrayList<HashMap<String, Object>> rows = dao.getDailyExpenseSumsByRange(sqlSession, p);
-//	        if (rows != null) {
-//	            for (HashMap<String, Object> r : rows) {
-//	                int daySum = 0;
-//	                // DB가 SUM, sum, CNT, cnt 중 무엇으로 반환해도 대응 가능합니다.
-//	                for (Object v : r.values()) {
-//	                    if (v instanceof Number) {
-//	                        daySum = ((Number) v).intValue();
-//	                        
-//	                        if (daySum > target) return true; 
-//	                    }
-//	                }
-//	            }
-//	        }
-//	        return false;
-//	    }
-//
-//	    // 3) 총액 제한형 - 기존 로직 유지
-//	    if (target > 0) {
-//	        HashMap<String, Object> p = new HashMap<>();
-//	        p.put("userId", h.getUserId());
-//	        p.put("fromDate", fromDate);
-//	        p.put("toDate", toDate);
-//	        p.put("category", category);
-//
-//	        Map<String, Object> resultMap = dao.getExpenseSumByRange(sqlSession, p);
-//	        int totalSum = 0;
-//	        if (resultMap != null) {
-//	            for (Object v : resultMap.values()) {
-//	                if (v instanceof Number) {
-//	                    totalSum = ((Number) v).intValue();
-//	                    break;
-//	                }
-//	            }
-//	        }
-//	        if (totalSum > target) return true;
-//	    }
-//	    return false;
-//	}
-	
 	//그룹 챌린지
 	
 	//그룹챌린지 참여
