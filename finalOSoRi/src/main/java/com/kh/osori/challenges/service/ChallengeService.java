@@ -28,7 +28,6 @@ public interface ChallengeService {
 		
 	// 스케줄러용: 상태 자동 갱신
 	int promoteReservedToProceeding();
-	//int closeExpiredProceedingToFailed();
 
 //	그룹챌린지용
 	
@@ -38,25 +37,14 @@ public interface ChallengeService {
     // ✅ 스케줄러: 그룹 챌린지 종료/결과 확정/뱃지 지급까지 한 번에
     void runGroupChallengeScheduler();
 
-
 	int handleZeroChallengeExpense(int groupbId, int userId, Date transDate);
 	
-//	int joinGroupChallenge(GroupChall groupChall); 
-//	
 	List<GroupChall> getGroupJoinedList(int groupbId, int userId);
 //
-//	int failActiveZeroChallenge(int groupBId);
-//	
 	List<Map<String, Object>> getGroupRanking(int groupbId, String challengeId);
 //
 	List<Map<String, Object>> getGroupPastChallengeList(int groupbId, int userId);
 //
-//	void closeExpiredChallenges();
-
-	
-	
-
-	// [ADDED] 실시간 진행 현황 조회를 위한 추상 메서드 추가
     Map<String, Object> getChallengeProgress(int userId, String challengeId);
 
 
