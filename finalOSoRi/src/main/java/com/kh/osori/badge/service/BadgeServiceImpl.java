@@ -13,11 +13,6 @@ public class BadgeServiceImpl implements BadgeService {
 
     @Autowired
     private BadgeDao badgeDao;
-
-//    @Override
-//    public List<Badge> mergeUserBadge(int userId) {
-//        return badgeDao.selectUserBadges(userId);
-//    }
     
     @Override
     public List<Badge> getUserBadges(int userId) {
@@ -33,7 +28,6 @@ public class BadgeServiceImpl implements BadgeService {
 
 	@Override
 	public List<Badge> mergeUserBadge(int userId) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

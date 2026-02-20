@@ -141,11 +141,6 @@ public class UserController {
 
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(map); // 비회원일때 처리
 
-		/*
-		 * // 오류가 있을 경우 map.put("code", "UNKNOWN"); map.put("message", "로그인 처리 중 오류");
-		 * return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
-		 */
-
 	}
 
 	//회원 가입
