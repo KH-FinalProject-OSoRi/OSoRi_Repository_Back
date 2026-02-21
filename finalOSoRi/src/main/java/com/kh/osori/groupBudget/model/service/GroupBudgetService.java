@@ -15,9 +15,11 @@ public interface GroupBudgetService {
 	public int addNewGroupB(GroupBudget gb); //그룹가계부 생성
 	public int addGroupAdmin(BudgetMem newMem); //그룹가계부 관리자생성
 	public List<User> searchGroupMemberList(String keyword); //그룹가계부 회원리스트
+	public List<User> currentMemberList(String groupId); //현재 그룹 가계부 회원 리스
 	public void deleteUser(); //그룹가계부 회원 삭제
 	public int deleteGroupBudget(int groupbId); //그룹가계부 삭제
 	public int addGroupMember(BudgetMem mem); //회원 추가
+	public int deleteGroupMember(BudgetMem mem); //회원 삭제
 	public int updateGroupB(GroupBudget gb); //예산금액 수정
 	public String getAdminId(int groupbId); //관리자 아이디
 	public String getLoginid(int userId); //회훤아이디 로그인아이디로
@@ -27,5 +29,5 @@ public interface GroupBudgetService {
 	public List<Grouptrans> groupTransactionList(int groupbId);
 	public int groupCheckAdmin(int groupbId); //관리자 아이디 조회
 	public String getGroupName(int groupbId); //그룹가계부 이름 조회
-	public List<Grouptrans> groupBudgetAll(); //그룹가계부 전체 조회
+	public List<Grouptrans> groupBudgetAll(int userId); //그룹가계부 전체 조회
 }
