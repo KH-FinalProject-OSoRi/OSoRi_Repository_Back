@@ -107,6 +107,17 @@ public class GroupBudgetController {
 		}
 	}
 	
+	@GetMapping("/currentMem")
+	public ResponseEntity<?> currentMemberList(@RequestParam("groupId") String groupId) {
+		List<User> userList = service.currentMemberList(groupId);
+		
+		if(userList != null && !userList.isEmpty()) {
+			return ResponseEntity.ok(userList);
+		}else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("회원 검색목록 불러오기 실패");
+		}
+	}
+	
 	@PostMapping("/gbAddMem")
 	public ResponseEntity<?> addGroupMember(@RequestBody BudgetMem mem){
 		int result = service.addGroupMember(mem);
@@ -121,6 +132,19 @@ public class GroupBudgetController {
 			return ResponseEntity.status(HttpStatus.CREATED).body("멤버 추가 성공");
 		}else {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("멤버 추가에 실패했습니다");
+		}
+	}
+	
+	@PostMapping("/deleteMemList")
+	public ResponseEntity<?> deleteGroupMember(@RequestBody BudgetMem mem){
+		int result = service.deleteGroupMember(mem);
+		
+		if(result > 0) {
+			String groupName = service.getGroupName(mem.getGroupbId());
+			
+			return ResponseEntity.status(HttpStatus.CREATED).body("멤버 삭제 성공");
+		}else {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("멤버 삭제에 실패했습니다");
 		}
 	}
 	
@@ -216,8 +240,8 @@ public class GroupBudgetController {
 	}
 	
 	@GetMapping("/gbAll")
-	public ResponseEntity<?> groupBudgetAll(){
-		List<Grouptrans> list = service.groupBudgetAll(); 
+	public ResponseEntity<?> groupBudgetAll(@RequestParam(value="userId") int userId){
+		List<Grouptrans> list = service.groupBudgetAll(userId); 
 	    
 	    if(list != null) {
 	        return ResponseEntity.ok(list);

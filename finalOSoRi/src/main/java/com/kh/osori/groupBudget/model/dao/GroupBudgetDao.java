@@ -88,8 +88,16 @@ public class GroupBudgetDao {
 		return sqlSession.selectOne("groupBudgetMapper.getGroupName",groupbId);
 	}
 
-	public List<Grouptrans> groupBudgetAll(SqlSessionTemplate sqlSession) {
-		return sqlSession.selectList("groupBudgetMapper.groupBudgetAll");
+	public List<Grouptrans> groupBudgetAll(SqlSessionTemplate sqlSession, int userId) {
+		return sqlSession.selectList("groupBudgetMapper.groupBudgetAll",userId);
+	}
+
+	public List<User> currentMemberList(SqlSessionTemplate sqlSession, String groupId) {
+		return sqlSession.selectList("groupBudgetMapper.currentMemberList",groupId);
+	}
+
+	public int deleteGroupMember(SqlSessionTemplate sqlSession, BudgetMem mem) {
+		return sqlSession.delete("groupBudgetMapper.deleteGroupMember",mem);
 	}
 
 	
