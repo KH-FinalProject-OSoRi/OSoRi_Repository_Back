@@ -59,9 +59,17 @@ public class UserController {
 		// LOGIN_ID로 사용자 조회 (해시 password까지 가져오기)
 		User loginUser = service.selectUser(user);
 
-		if (loginUser != null && bcrypt.matches(user.getPassword(), loginUser.getPassword())) { // 평문과 암호화된 비밀번호 비교, 로그인
-																								// 유저가 실제로 존재하는 값인지도 보기
+		if (loginUser != null && bcrypt.matches(user.getPassword(), loginUser.getPassword())) { // 평문과 암호화된 비밀번호 비교, 로그인 유저가 실제로 존재하는 값인지도 보기
 
+			// status 상태값을 비교하기 전에 만약에 LOCK_UNTIL이 있다면?
+			boolean canLogin = service.compareLockUntil2(loginUser.getLockUntil(), loginUser.getLoginId());
+			
+			if(!canLogin) { // false 일 때만 메시지 띄우기 
+				map.put("message", "보안을 위해 계정이 일시적으로 잠겨 있습니다.\n해제 예정 시간 : " + loginUser.getLockUntil());
+				return ResponseEntity.status(HttpStatus.FORBIDDEN).body(map); // [수정] OK가 아닌 FORBIDDEN 권장
+			}
+			
+			
 			if ("Y".equals(loginUser.getStatus())) {
 
 				String token = jwtUtil.generateToken(loginUser.getLoginId()); // 아이디를 기반으로 토큰 가져오기
@@ -82,29 +90,56 @@ public class UserController {
 
 				map.put("token", token);
 				map.put("user", loginUser);
-				map.put("message", "휴면 회원 입니다. 프로필 설정 페이지에서 휴면 해제 후, 서비스 이용 가능합니다.");
+				map.put("message", "휴면 회원 상태인 계정입니다.\n프로필 설정 페이지에서 휴면 해제 후, 서비스 이용 가능합니다.");
 
 				return ResponseEntity.ok(map);
 
 			} else if ("N".equals(loginUser.getStatus())) {
 
-				map.put("message", "탈퇴한 회원입니다.");
+				map.put("message", "탈퇴 처리된 계정입니다. 고객 센터에 문의해주세요.");
 				return ResponseEntity.status(HttpStatus.FORBIDDEN).body(map);
 			}
 
-		} else {
+		} else { // 원래는 else에 code,message만 담는 구문이 있었는데 조건을 세분화 함. 
+			
+			if(loginUser != null) { // 아이디는 잘 입력 했는데 비밀번호는 틀린 경우 
+				
+				service.compareLockUntil(loginUser.getLockUntil(), loginUser.getLoginId()); // 비교를 한 다음에 갱신 하기
+				
+				loginUser = service.selectByLoginId(loginUser.getLoginId()); // 갱신한 데이터 갖고오기 
+				
+				if(loginUser.getLoginCount() < 5) { // 5회 미만일때 갱신 해줘야 하는 구문 
+					loginUser = service.updateLoginCount(loginUser); // 로그인 카운트가 갱신된 이후에 loginUser를 갖고오기
+				} // 5회 이상이면 그냥 loginUser 갖고오면 된다. 
+	
+				if(loginUser == null) { // 로그인 카운트 갱신이 실패했다면 (여기서는 로그인 횟수가 갱신되지 않은 loginUser) 
+					map.put("message", "로그인 처리중 오류가 발생했습니다. 잠시 후에 로그인 해주세요.");
+					
+					return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map); 
+				}
+				
+				if(loginUser.getLoginCount() < 5) { // 로그인 시도 횟수가 5회 미만이면 
+					
+					map.put("message", "로그인 실패했습니다. \n" + "로그인 실패 횟수 : " + loginUser.getLoginCount() + " / " + "5 \n" 
+							+"5회 실패 시 10분동안 계정 잠금 처리됩니다.");
+					
+				} else if(loginUser.getLoginCount() >= 5) { // 로그인 시도 횟수가 5회 이상이면 
+					
+					map.put("message", "로그인 5회 오류로 회원님의 계정이 10분동안 잠금 처리됩니다.\n10분 후에 다시 로그인 해주세요. \n"
+							+ "잠금 해제 시간 : " + loginUser.getLockUntil());
+					
+				}
+												
+			} else { // 이건 회원 정보가 아예 없을 경우 뭐가 틀렸는지 구분하지 않게 하기 위함 (보안) 혹은 비회원 
+				
+				map.put("code", "LOGIN_FAIL");
+				map.put("message", "아이디와 비밀번호를 다시 입력해주세요.");
+				
+			}
 
-			map.put("code", "LOGIN_FAIL");
-			map.put("message", "아이디와 비밀번호를 다시 입력해주세요.");
-
-		}
+		} 
 
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(map); // 비회원일때 처리
-
-		/*
-		 * // 오류가 있을 경우 map.put("code", "UNKNOWN"); map.put("message", "로그인 처리 중 오류");
-		 * return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(map);
-		 */
 
 	}
 
@@ -440,6 +475,14 @@ public class UserController {
 	@GetMapping("/kakao/callback")
     public ResponseEntity<?> kakaoLogin(@RequestParam String code) {
         Map<String, Object> result = service.processKakaoLogin(code); // 인가 코드를 받기 
+        
+        Object messageObj = result.get("message");
+        
+        String message = String.valueOf(messageObj);
+        
+        if(message.contains("잠금 모드")) {
+        	return ResponseEntity.status(HttpStatus.FORBIDDEN).body(result);
+        }
         
         return ResponseEntity.ok(result);
     }

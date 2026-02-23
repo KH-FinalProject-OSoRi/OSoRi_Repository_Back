@@ -116,8 +116,8 @@
       AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
       AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
   </select>
-
-  <!-- 기간 내 지출 요약 (MYTRANS) -->
+  
+  <!-- 기간 내 지출 요약 (MYTRANS) --> 
   <select id="getExpenseSummaryByRange"
           parameterType="map"
           resultType="hashmap">
@@ -130,6 +130,20 @@
       AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
       AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
   </select>
+
+  <!-- 기간 내 지출 요약 (MYTRANS) -->
+  <select id="getExpenseSumByRange" parameterType="map" resultType="hashmap">
+    SELECT NVL(SUM(ORIGINAL_AMOUNT), 0) AS "SUM"
+    FROM MYTRANS
+    WHERE USER_ID = #{userId}
+      AND TYPE = 'OUT'
+      AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
+      AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
+    <if test="category != null and category != ''">
+      AND CATEGORY = #{category}
+    </if>
+  </select>
+  
 
   <!-- ========================= -->
   <!-- 스케줄러: MYCHALL 상태 자동 갱신 -->
@@ -201,53 +215,36 @@
   </update>
 
   <!-- 기간 내 지출 합계 (카테고리 선택) -->
-  <select id="getExpenseSumByRange"
-          parameterType="map"
-          resultType="hashmap">
-    SELECT NVL(SUM(ORIGINAL_AMOUNT), 0) AS sum
-    FROM MYTRANS
-    WHERE USER_ID = #{userId}
-      AND TYPE = 'OUT'
-      AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
-      AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
-    <if test="category != null and category != ''">
-      AND CATEGORY = #{category}
-    </if>
-  </select>
+  
 
   <!-- 기간 내 지출 건수 (카테고리 선택) -->
-  <select id="getExpenseCountByRange"
-          parameterType="map"
-          resultType="hashmap">
-    SELECT COUNT(*) AS cnt
-    FROM MYTRANS
-    WHERE USER_ID = #{userId}
-      AND TYPE = 'OUT'
-      AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
-      AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
-    <if test="category != null and category != ''">
-      AND CATEGORY = #{category}
-    </if>
-  </select>
+<select id="getExpenseCountByRange" parameterType="map" resultType="hashmap">
+SELECT COUNT(*) AS "CNT"
+FROM MYTRANS
+WHERE USER_ID = #{userId}
+AND TYPE = 'OUT'
+AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
+AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
+<if test="category != null and category != ''">
+AND CATEGORY = #{category}
+</if>
+</select>
 
   <!-- 일자별 지출 합계 (하루당 제한형) -->
-  <select id="getDailyExpenseSumsByRange"
-          parameterType="map"
-          resultType="hashmap">
-    SELECT
-      TO_CHAR(TRUNC(TRANS_DATE), 'YYYY-MM-DD') AS day,
-      NVL(SUM(ORIGINAL_AMOUNT), 0)             AS sum
-    FROM MYTRANS
-    WHERE USER_ID = #{userId}
-      AND TYPE = 'OUT'
-      AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
-      AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
-    <if test="category != null and category != ''">
-      AND CATEGORY = #{category}
-    </if>
-    GROUP BY TRUNC(TRANS_DATE)
-    ORDER BY TRUNC(TRANS_DATE)
-  </select>
+<select id="getDailyExpenseSumsByRange" parameterType="map" resultType="hashmap">
+SELECT
+TO_CHAR(TRANS_DATE, 'YYYY-MM-DD') AS "day",
+NVL(SUM(ORIGINAL_AMOUNT), 0) AS "sum"
+FROM MYTRANS
+WHERE USER_ID = #{userId}
+AND TYPE = 'OUT'
+AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
+AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
+<if test="category != null and category != ''">
+AND CATEGORY = #{category}
+</if>
+GROUP BY TO_CHAR(TRANS_DATE, 'YYYY-MM-DD')
+</select>
   
   
   <!-- 그룹챌린지 관련 -->
@@ -374,7 +371,7 @@
 	  WHERE GROUPB_ID = #{groupbId}
 	    AND CHALLENGE_ID = 'group_zero_challenge'
 	    AND STATUS = 'PROCEEDING'
-	    AND #{transDate} BETWEEN START_DATE AND END_DATE
+	    AND TRUNC(#{transDate}) BETWEEN TRUNC(START_DATE) AND TRUNC(END_DATE)
 	</update>
 
 	
@@ -515,21 +512,25 @@
 	
 	<!--지출 적게 쓰기 챌린지 순위 매기기 함수-->
 	<select id="getGroupRanking" resultType="map">
-	  SELECT
-	      GT.USER_ID AS "userId",
-	      GT.NICKNAME AS "nickname",
-	      SUM(GT.ORIGINAL_AMOUNT) AS "totalAmount",
-	      RANK() OVER (ORDER BY SUM(GT.ORIGINAL_AMOUNT) ASC) AS "rank"
-	  FROM GROUPTRANS GT
-	  JOIN GROUPCHALL GC
-	    ON GC.GROUPB_ID = GT.GROUPB_ID
-	   AND GC.CHALLENGE_ID = #{challengeId}
-	   AND GC.STATUS = 'PROCEEDING'
-	  WHERE GT.GROUPB_ID = #{groupbId}
-	    AND GT.TYPE = 'OUT'
-	    AND GT.TRANS_DATE BETWEEN GC.START_DATE
-	                          AND (GC.END_DATE + 0.99999)
-	  GROUP BY GT.USER_ID, GT.NICKNAME
+	  SELECT 
+	      U.USER_ID AS "userId",
+	      U.NICKNAME AS "nickname",
+	      COALESCE(SUM(GT.ORIGINAL_AMOUNT), 0) AS "totalAmount",
+	      RANK() OVER (ORDER BY COALESCE(SUM(GT.ORIGINAL_AMOUNT), 0) ASC) AS "rank"
+	  FROM USERS U
+	  JOIN GROUPCHALL GC 
+	    ON GC.CHALLENGE_ID = #{challengeId}
+	    AND GC.GROUPB_ID = #{groupbId}
+	    AND GC.STATUS = 'PROCEEDING'
+	  LEFT JOIN GROUPTRANS GT 
+	    ON U.USER_ID = GT.USER_ID
+	   AND GT.GROUPB_ID = #{groupbId}
+	   AND GT.TYPE = 'OUT'
+	   /* TRUNC를 사용하여 START_DATE 당일의 00시 00분부터 집계하도록 수정 */
+	   AND GT.TRANS_DATE BETWEEN TRUNC(GC.START_DATE) 
+	                         AND (GC.END_DATE + 0.99999)
+	  WHERE U.USER_ID IN (SELECT USER_ID FROM BUDGETMEM WHERE GROUPB_ID = #{groupbId})
+	  GROUP BY U.USER_ID, U.NICKNAME
 	  ORDER BY "rank" ASC
 	</select>
 
@@ -583,5 +584,7 @@
 	
 
 </mapper>
+
+
 
 

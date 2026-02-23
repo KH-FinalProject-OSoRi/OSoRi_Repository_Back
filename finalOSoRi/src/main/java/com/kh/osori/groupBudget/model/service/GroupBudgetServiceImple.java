@@ -108,8 +108,18 @@ public class GroupBudgetServiceImple implements GroupBudgetService {
 	}
 
 	@Override
-	public List<Grouptrans> groupBudgetAll() {
-		return dao.groupBudgetAll(sqlSession);
+	public List<Grouptrans> groupBudgetAll(int userId) {
+		return dao.groupBudgetAll(sqlSession,userId);
+	}
+
+	@Override
+	public List<User> currentMemberList(String groupId) {
+		return dao.currentMemberList(sqlSession,groupId);
+	}
+
+	@Override
+	public int deleteGroupMember(BudgetMem mem) {
+		return dao.deleteGroupMember(sqlSession,mem);
 	}
 
 }
