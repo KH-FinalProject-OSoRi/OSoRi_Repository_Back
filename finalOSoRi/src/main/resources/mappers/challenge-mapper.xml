@@ -377,6 +377,13 @@ GROUP BY TO_CHAR(TRANS_DATE, 'YYYY-MM-DD')
 	    AND STATUS = 'PROCEEDING'
 	    AND TRUNC(#{transDate}) BETWEEN TRUNC(START_DATE) AND TRUNC(END_DATE)
 	</update>
+	<update id="failGroupZeroChallenge" parameterType="map">
+	  UPDATE GROUPCHALL
+	  SET STATUS = 'CLOSED'
+	  WHERE GROUPB_ID = #{groupbId}
+	    AND CHALLENGE_ID = 'group_zero_challenge'
+	    AND STATUS = 'PROCEEDING'
+	</update>
 
 	
 	<!-- 종료 시점에 남은 proceeding들 모두 success로 처리 -->
