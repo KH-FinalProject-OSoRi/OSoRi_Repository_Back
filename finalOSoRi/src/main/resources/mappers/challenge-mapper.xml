@@ -129,6 +129,7 @@
       AND TYPE = 'OUT'
       AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
       AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
+      AND FIXED_ID IS NULL
   </select>
 
   <!-- 기간 내 지출 요약 (MYTRANS) -->
@@ -139,6 +140,7 @@
       AND TYPE = 'OUT'
       AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
       AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
+	  AND FIXED_ID IS NULL
     <if test="category != null and category != ''">
       AND CATEGORY = #{category}
     </if>
@@ -225,6 +227,7 @@ WHERE USER_ID = #{userId}
 AND TYPE = 'OUT'
 AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
 AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
+AND FIXED_ID IS NULL
 <if test="category != null and category != ''">
 AND CATEGORY = #{category}
 </if>
@@ -240,6 +243,7 @@ WHERE USER_ID = #{userId}
 AND TYPE = 'OUT'
 AND TRUNC(TRANS_DATE) &gt;= TO_DATE(#{fromDate}, 'YYYY-MM-DD')
 AND TRUNC(TRANS_DATE) &lt;= TO_DATE(#{toDate}, 'YYYY-MM-DD')
+AND FIXED_ID IS NULL
 <if test="category != null and category != ''">
 AND CATEGORY = #{category}
 </if>
