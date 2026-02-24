@@ -114,6 +114,10 @@ public class ChallengeDao {
 	public int failUserOnZeroChallengeExpense(SqlSessionTemplate sqlSession, Map<String, Object> param) {
 		return sqlSession.update("challengeMapper.failUserOnZeroChallengeExpense", param);
 	}
+	public int failGroupZeroChallenge(SqlSessionTemplate sqlSession, Map<String, Object> param) {
+	    return sqlSession.update("challengeMapper.failGroupZeroChallenge", param);
+	}
+	
 
 	// 무지출 챌린지 종료 까지 proceeding인 경우 (failed가 안 된 경우)  result 테이블 success 처리
 	public int successRemainingZeroChallengeUsers(SqlSessionTemplate sqlSession) {
@@ -182,6 +186,8 @@ public class ChallengeDao {
 	public int insertChallenge(SqlSessionTemplate sqlSession, Challenge challenge) {
 		return sqlSession.insert("challengeMapper.insertChallenge", challenge);
 	}
+
+	
 
 	
 
