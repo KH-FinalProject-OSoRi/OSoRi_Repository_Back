@@ -243,3 +243,6 @@ UI개발을 위한 라이브러리 styled-components 설치
 
 ## 프로필 설정 탭
 <img width="1669" height="766" alt="image" src="https://github.com/user-attachments/assets/4f5b43cc-a996-44a3-9a67-1187cceb439d" />
+
+## 질문봇
+<img width="286" height="443" alt="image" src="https://github.com/user-attachments/assets/d6e7aa55-794a-4012-a7b1-36067e0afaab" />
