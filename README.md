@@ -215,6 +215,7 @@ UI개발을 위한 라이브러리 styled-components 설치
 ## 마이페이지 / 자산관리 탭
 <img width="1662" height="763" alt="image" src="https://github.com/user-attachments/assets/a6e1601b-856f-4976-acc6-d4ed77033b34" />
 <img width="382" height="437" alt="image" src="https://github.com/user-attachments/assets/1a3fb820-04ea-43fc-a7a7-832bad5925c0" />
+<img width="554" height="595" alt="image" src="https://github.com/user-attachments/assets/62cb43c2-8152-47bb-ba90-6381f7278669" />
 
 ### 내 가계부
 <img width="1370" height="739" alt="image" src="https://github.com/user-attachments/assets/56608993-2a9b-4c6f-8bd5-2aaf8bb17330" />
@@ -223,7 +224,6 @@ UI개발을 위한 라이브러리 styled-components 설치
 ### 그룹 가계부
 <img width="1359" height="733" alt="image" src="https://github.com/user-attachments/assets/4f6f8f34-6970-4256-bb43-4c3bf6de34d2" />
 <img width="624" height="596" alt="image" src="https://github.com/user-attachments/assets/68afd2b5-7082-467c-a3ed-08e12ae83575" />
-<img width="554" height="595" alt="image" src="https://github.com/user-attachments/assets/62cb43c2-8152-47bb-ba90-6381f7278669" />
 
 ## 캘린더뷰 탭
 <img width="1676" height="774" alt="image" src="https://github.com/user-attachments/assets/25d57f4b-e7df-47bf-ae04-638e91df2000" />
