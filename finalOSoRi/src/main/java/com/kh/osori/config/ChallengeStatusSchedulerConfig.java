@@ -32,7 +32,6 @@ public class ChallengeStatusSchedulerConfig {
   //실제엔 0 0으로(every hour) 변경할것
   @Scheduled(cron = "0 * * * * *")
   public void checkChallengeExpiry() {
-      System.out.println("[SCHED] checkChallengeExpiry tick");
       challengeService.runGroupChallengeScheduler();
   }
 

@@ -562,7 +562,15 @@ public class ChallengeServiceImpl implements ChallengeService {
         p.put("transDate", transDate);
 
         // 결과 테이블에서 해당 유저를 즉시 FAILED로
-        return dao.failUserOnZeroChallengeExpense(sqlSession, p);
+        int resultCount = dao.failUserOnZeroChallengeExpense(sqlSession, p);
+
+        // 2️⃣ 실제로 실패가 발생했을 경우에만 GROUPCHALL도 FAILED 처리
+        if (resultCount > 0) {
+            dao.failGroupZeroChallenge(sqlSession, p);
+        }
+
+        return resultCount;
+        
     }
 
     // 제일 핵심. 종료 처리, 결과 확정, 뱃지 발급
@@ -570,12 +578,9 @@ public class ChallengeServiceImpl implements ChallengeService {
     @Transactional
     public void runGroupChallengeScheduler() {
     	
-    	//무지출 챌린지 예약해놓고 시작
         dao.startReservedZeroChallenges(sqlSession);
-        //result 테이블도 동기화
         dao.syncReservedResultToProceeding(sqlSession);
     	
-        //result 테이블이 proceeding인것을 closed 로 변경
         List<Map<String, Object>> endedCompetitions = dao.selectEndedCompetitionChallenges(sqlSession);
 
         if (endedCompetitions != null && !endedCompetitions.isEmpty()) {
