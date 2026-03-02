@@ -16,7 +16,8 @@
         JOIN 
             USERS U ON BM.USER_ID = U.USER_ID
         WHERE 
-            BM.GROUPB_ID = #{groupId}
+            BM.GROUPB_ID = #{groupId} AND
+            BM.STATUS = 'ACCEPTED'
 </select>
 	
 	
