@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kh.osori.badge.model.vo.Badge;
 import com.kh.osori.badge.service.BadgeService;
 
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 @RequestMapping("/api/badges")
 public class BadgeController {
