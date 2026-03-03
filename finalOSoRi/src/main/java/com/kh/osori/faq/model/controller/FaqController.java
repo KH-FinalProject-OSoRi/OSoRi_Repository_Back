@@ -35,8 +35,8 @@ public class FaqController {
         String userQuestion = request.get("question");
         
         // 1. Gemini 1.5 Flash model 엔드포인트 URL
-        String url = "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=" + geminiKey;
-        System.out.println("API KEY: " + geminiKey);
+        String url = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=" + geminiKey;
+
         RestTemplate restTemplate = new RestTemplate();
         
         // 2. 요청 바디(Body) 구성
