@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.kh.osori.badge.model.vo.Badge;
 import com.kh.osori.badge.service.BadgeService;
 
-@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/badges")
 public class BadgeController {

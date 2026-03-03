@@ -18,9 +18,13 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // 모든 API 경로에 대해
-                .allowedOrigins("http://localhost:5173") // 프론트 주소
+                .allowedOrigins("http://localhost:5173",    // 로컬 테스트용
+                				"http://13.239.33.140",
+		                        "http://13.239.33.140:8080", 
+		                        "http://13.239.33.140:5173") // 프론트 주소
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders("*")
-                .allowCredentials(true); // 쿠키/인증 필요하면 유지 (JWT면 없어도 되긴 함)
+                .allowCredentials(true)
+                .maxAge(3600); // 쿠키/인증 필요하면 유지 (JWT면 없어도 되긴 함)
     }
 }
