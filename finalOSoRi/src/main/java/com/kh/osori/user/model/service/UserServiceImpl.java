@@ -1,6 +1,8 @@
 package com.kh.osori.user.model.service;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -396,7 +398,7 @@ public class UserServiceImpl implements UserService {
 	    	
 	    }
 
-	    Timestamp now = new Timestamp(System.currentTimeMillis());
+	    Timestamp now = Timestamp.valueOf(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
 
 	    // 2. 현재 시간이 잠금 해제 시간을 지났다면?
 	    if (now.after(lockUntil)) {
@@ -432,7 +434,7 @@ public class UserServiceImpl implements UserService {
 	    	
 	    }
 
-	    Timestamp now = new Timestamp(System.currentTimeMillis());
+	    Timestamp now = Timestamp.valueOf(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
 
 	    // 2. 현재 시간이 잠금 해제 시간을 지났다면?
 	    if (now.after(lockUntil)) {
