@@ -121,7 +121,7 @@ public class UserServiceImpl implements UserService {
 	    MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 	    params.add("grant_type", "authorization_code");
 	    params.add("client_id", "fbeeefb1ab0d16e849dfdfdd01f9222b"); //
-	    params.add("redirect_uri", "http://localhost:5173/auth/kakao/callback");
+	    params.add("redirect_uri", "http://13.239.33.140/auth/kakao/callback");
 	    params.add("code", code);
 
 	    // 카카오 보안 설정에서 Client Secret을 생성했다면 반드시 아래 코드를 추가해야 401 에러가 안 납니다.

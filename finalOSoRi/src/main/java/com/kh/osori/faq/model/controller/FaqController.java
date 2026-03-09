@@ -31,22 +31,46 @@ public class FaqController {
 	private String geminiKey;
 	
 	@PostMapping("/ask-ai")
-    public ResponseEntity<?> askAi(@RequestBody Map<String, String> request) {
-        String userQuestion = request.get("question");
+    public ResponseEntity<?> askAi(@RequestBody Map<String, Object> request) {
+        String userQuestion = (String)request.get("question");
+        Map<String, Object> context = (Map<String, Object>) request.get("analysisContext");
+        
+        String aiReference = "정보 없음";
+        if (context != null && "분석 완료".equals(context.get("status"))) {
+            aiReference = String.format(
+                "이번 달 예상 지출: %s원, 다음 달 예측: %s원, 월평균: %s원",
+                context.get("currentPredict"), 
+                context.get("nextPredict"), 
+                context.get("avg")
+            );
+        }
+        
+        String finalPrompt = String.format(
+    	    "너는 가계부 앱 'OSORI'의 친절하고 유능한 금융 비서야.\n\n" +
+    	    "### [참고용 사용자 분석 데이터] ###\n" +
+    	    "%s\n" +
+    	    "###################################\n\n" +
+    	    "**답변 지침:**\n" +
+    	    "1. 사용자가 지출 현황이나 예측을 직접 물어볼 때만 위 데이터를 구체적인 수치와 함께 언급해.\n" +
+    	    "2. 점심 메뉴 추천이나 일상적인 대화에서는 위 데이터를 '배경 지식'으로만 활용해. (예: 지출이 많으니 가성비 메뉴를 추천하는 식)\n" +
+    	    "3. 모든 답변에 예상 지출 수치를 나열하지 마. 질문의 맥락에 집중해.\n" +
+    	    "4. 친절하고 자연스러운 한국어로 대답해.\n\n" +
+    	    "사용자 질문: %s", 
+    	    aiReference, userQuestion
+    	);
         
         // 1. Gemini 1.5 Flash model 엔드포인트 URL
-        String url = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=" + geminiKey;
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + geminiKey;
 
         RestTemplate restTemplate = new RestTemplate();
         
         // 2. 요청 바디(Body) 구성
         // GPT에게 역할을 부여하고 질문을 전달합니다.
         Map<String, Object> contents = Map.of(
-        	"parts", List.of(Map.of("text", "너는 가계부 앱 'OSORI'의 전문 상담사야. 사용자의 질문에 친절하게 한국어로 답변해줘. 질문: " + userQuestion))
+        	"parts", List.of(Map.of("text", finalPrompt))
         );
         Map<String, Object> body = Map.of("contents", List.of(contents));
         
-
         try {
             // 3. Gemini 서버로 POST 요청 보내기
         	ResponseEntity<Map> response = restTemplate.postForEntity(url, body, Map.class);
